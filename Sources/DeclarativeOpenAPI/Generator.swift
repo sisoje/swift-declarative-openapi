@@ -652,32 +652,53 @@ extension SpecGenerator {
         }
         output += "\n"
         output += "        /// request → transport → evaluate → decode, wired per operation.\n"
+        output += "        /// The mechanics live once in three pack-generic helpers; the table\n"
+        output += "        /// below is pure facts — case constructor, response type.\n"
         output += "        static func live(\n"
         output += "            request: @escaping (Operation) throws -> URLRequest,\n"
         output += "            transport: @escaping (URLRequest) async throws -> (Data, URLResponse) = { try await URLSession.shared.data(for: $0) },\n"
         output += "            decoder: @escaping (Operation) -> JSONDecoder = { _ in JSONDecoder() }\n"
         output += "        ) -> Client {\n"
-        output += "            Client(\n"
+        output += "            func raw<each Input>(\n"
+        output += "                _ makeCase: @escaping (repeat each Input) -> Operation\n"
+        output += "            ) -> (repeat each Input) async throws -> Data {\n"
+        output += "                { (input: repeat each Input) in\n"
+        output += "                    let operation = makeCase(repeat each input)\n"
+        output += "                    return try Responses.evaluate(operation, try await transport(request(operation)))\n"
+        output += "                }\n"
+        output += "            }\n"
+        output += "            func endpoint<each Input, Output: Decodable>(\n"
+        output += "                _ makeCase: @escaping (repeat each Input) -> Operation,\n"
+        output += "                _ output: Output.Type\n"
+        output += "            ) -> (repeat each Input) async throws -> Output {\n"
+        output += "                { (input: repeat each Input) in\n"
+        output += "                    let operation = makeCase(repeat each input)\n"
+        output += "                    let data = try Responses.evaluate(operation, try await transport(request(operation)))\n"
+        output += "                    return try decoder(operation).decode(Output.self, from: data)\n"
+        output += "                }\n"
+        output += "            }\n"
+        output += "            func fire<each Input>(\n"
+        output += "                _ makeCase: @escaping (repeat each Input) -> Operation\n"
+        output += "            ) -> (repeat each Input) async throws -> Void {\n"
+        output += "                { (input: repeat each Input) in\n"
+        output += "                    let operation = makeCase(repeat each input)\n"
+        output += "                    _ = try Responses.evaluate(operation, try await transport(request(operation)))\n"
+        output += "                }\n"
+        output += "            }\n"
+        output += "            return Client(\n"
         for (index, operation) in operations.enumerated() {
             let parameters = clientParameters(operation)
-            let bindings = parameters.map(\.name).joined(separator: ", ")
-            let header = parameters.isEmpty ? "{" : "{ \(bindings) in"
-            let construct = parameters.isEmpty
-                ? "Operation.\(operation.caseName)"
-                : "Operation.\(operation.caseName)(" + parameters.map { "\($0.name): \($0.name)" }.joined(separator: ", ") + ")"
-            let comma = index == operations.count - 1 ? "" : ","
-            output += "                \(operation.caseName): \(header)\n"
-            output += "                    let operation = \(construct)\n"
-            switch operation.successType {
-            case "Void":
-                output += "                    _ = try Responses.evaluate(operation, try await transport(request(operation)))\n"
-            case "Data":
-                output += "                    return try Responses.evaluate(operation, try await transport(request(operation)))\n"
-            default:
-                output += "                    let data = try Responses.evaluate(operation, try await transport(request(operation)))\n"
-                output += "                    return try decoder(operation).decode(\(operation.successType).self, from: data)\n"
+            // A payload-less case is a value, not a constructor — thunk it.
+            let constructor = parameters.isEmpty
+                ? "{ Operation.\(operation.caseName) }"
+                : "Operation.\(operation.caseName)"
+            let entry = switch operation.successType {
+            case "Void": "fire(\(constructor))"
+            case "Data": "raw(\(constructor))"
+            default: "endpoint(\(constructor), \(operation.successType).self)"
             }
-            output += "                }\(comma)\n"
+            let comma = index == operations.count - 1 ? "" : ","
+            output += "                \(operation.caseName): \(entry)\(comma)\n"
         }
         output += "            )\n"
         output += "        }\n"

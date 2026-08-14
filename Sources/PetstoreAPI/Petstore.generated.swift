@@ -102,26 +102,43 @@ enum SwaggerPetstore {
         var showPetById: (_ petId: String) async throws -> Pet
 
         /// request → transport → evaluate → decode, wired per operation.
+        /// The mechanics live once in three pack-generic helpers; the table
+        /// below is pure facts — case constructor, response type.
         static func live(
             request: @escaping (Operation) throws -> URLRequest,
             transport: @escaping (URLRequest) async throws -> (Data, URLResponse) = { try await URLSession.shared.data(for: $0) },
             decoder: @escaping (Operation) -> JSONDecoder = { _ in JSONDecoder() }
         ) -> Client {
-            Client(
-                listPets: { limit in
-                    let operation = Operation.listPets(limit: limit)
-                    let data = try Responses.evaluate(operation, try await transport(request(operation)))
-                    return try decoder(operation).decode(Pets.self, from: data)
-                },
-                createPets: { body in
-                    let operation = Operation.createPets(body: body)
-                    _ = try Responses.evaluate(operation, try await transport(request(operation)))
-                },
-                showPetById: { petId in
-                    let operation = Operation.showPetById(petId: petId)
-                    let data = try Responses.evaluate(operation, try await transport(request(operation)))
-                    return try decoder(operation).decode(Pet.self, from: data)
+            func raw<each Input>(
+                _ makeCase: @escaping (repeat each Input) -> Operation
+            ) -> (repeat each Input) async throws -> Data {
+                { (input: repeat each Input) in
+                    let operation = makeCase(repeat each input)
+                    return try Responses.evaluate(operation, try await transport(request(operation)))
                 }
+            }
+            func endpoint<each Input, Output: Decodable>(
+                _ makeCase: @escaping (repeat each Input) -> Operation,
+                _ output: Output.Type
+            ) -> (repeat each Input) async throws -> Output {
+                { (input: repeat each Input) in
+                    let operation = makeCase(repeat each input)
+                    let data = try Responses.evaluate(operation, try await transport(request(operation)))
+                    return try decoder(operation).decode(Output.self, from: data)
+                }
+            }
+            func fire<each Input>(
+                _ makeCase: @escaping (repeat each Input) -> Operation
+            ) -> (repeat each Input) async throws -> Void {
+                { (input: repeat each Input) in
+                    let operation = makeCase(repeat each input)
+                    _ = try Responses.evaluate(operation, try await transport(request(operation)))
+                }
+            }
+            return Client(
+                listPets: endpoint(Operation.listPets, Pets.self),
+                createPets: fire(Operation.createPets),
+                showPetById: endpoint(Operation.showPetById, Pet.self)
             )
         }
     }

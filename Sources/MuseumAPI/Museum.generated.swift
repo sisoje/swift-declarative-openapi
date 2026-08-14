@@ -240,50 +240,48 @@ enum RedoclyMuseumAPI {
         var getTicketCode: (_ ticketId: String) async throws -> Data
 
         /// request → transport → evaluate → decode, wired per operation.
+        /// The mechanics live once in three pack-generic helpers; the table
+        /// below is pure facts — case constructor, response type.
         static func live(
             request: @escaping (Operation) throws -> URLRequest,
             transport: @escaping (URLRequest) async throws -> (Data, URLResponse) = { try await URLSession.shared.data(for: $0) },
             decoder: @escaping (Operation) -> JSONDecoder = { _ in JSONDecoder() }
         ) -> Client {
-            Client(
-                getMuseumHours: { startDate, page, limit in
-                    let operation = Operation.getMuseumHours(startDate: startDate, page: page, limit: limit)
-                    let data = try Responses.evaluate(operation, try await transport(request(operation)))
-                    return try decoder(operation).decode(MuseumHours.self, from: data)
-                },
-                listSpecialEvents: { startDate, endDate, page, limit in
-                    let operation = Operation.listSpecialEvents(startDate: startDate, endDate: endDate, page: page, limit: limit)
-                    let data = try Responses.evaluate(operation, try await transport(request(operation)))
-                    return try decoder(operation).decode(SpecialEventCollection.self, from: data)
-                },
-                createSpecialEvent: { body in
-                    let operation = Operation.createSpecialEvent(body: body)
-                    let data = try Responses.evaluate(operation, try await transport(request(operation)))
-                    return try decoder(operation).decode(SpecialEvent.self, from: data)
-                },
-                getSpecialEvent: { eventId in
-                    let operation = Operation.getSpecialEvent(eventId: eventId)
-                    let data = try Responses.evaluate(operation, try await transport(request(operation)))
-                    return try decoder(operation).decode(SpecialEvent.self, from: data)
-                },
-                updateSpecialEvent: { eventId, body in
-                    let operation = Operation.updateSpecialEvent(eventId: eventId, body: body)
-                    let data = try Responses.evaluate(operation, try await transport(request(operation)))
-                    return try decoder(operation).decode(SpecialEvent.self, from: data)
-                },
-                deleteSpecialEvent: { eventId in
-                    let operation = Operation.deleteSpecialEvent(eventId: eventId)
-                    _ = try Responses.evaluate(operation, try await transport(request(operation)))
-                },
-                buyMuseumTickets: { body in
-                    let operation = Operation.buyMuseumTickets(body: body)
-                    let data = try Responses.evaluate(operation, try await transport(request(operation)))
-                    return try decoder(operation).decode(MuseumTicketsConfirmation.self, from: data)
-                },
-                getTicketCode: { ticketId in
-                    let operation = Operation.getTicketCode(ticketId: ticketId)
+            func raw<each Input>(
+                _ makeCase: @escaping (repeat each Input) -> Operation
+            ) -> (repeat each Input) async throws -> Data {
+                { (input: repeat each Input) in
+                    let operation = makeCase(repeat each input)
                     return try Responses.evaluate(operation, try await transport(request(operation)))
                 }
+            }
+            func endpoint<each Input, Output: Decodable>(
+                _ makeCase: @escaping (repeat each Input) -> Operation,
+                _ output: Output.Type
+            ) -> (repeat each Input) async throws -> Output {
+                { (input: repeat each Input) in
+                    let operation = makeCase(repeat each input)
+                    let data = try Responses.evaluate(operation, try await transport(request(operation)))
+                    return try decoder(operation).decode(Output.self, from: data)
+                }
+            }
+            func fire<each Input>(
+                _ makeCase: @escaping (repeat each Input) -> Operation
+            ) -> (repeat each Input) async throws -> Void {
+                { (input: repeat each Input) in
+                    let operation = makeCase(repeat each input)
+                    _ = try Responses.evaluate(operation, try await transport(request(operation)))
+                }
+            }
+            return Client(
+                getMuseumHours: endpoint(Operation.getMuseumHours, MuseumHours.self),
+                listSpecialEvents: endpoint(Operation.listSpecialEvents, SpecialEventCollection.self),
+                createSpecialEvent: endpoint(Operation.createSpecialEvent, SpecialEvent.self),
+                getSpecialEvent: endpoint(Operation.getSpecialEvent, SpecialEvent.self),
+                updateSpecialEvent: endpoint(Operation.updateSpecialEvent, SpecialEvent.self),
+                deleteSpecialEvent: fire(Operation.deleteSpecialEvent),
+                buyMuseumTickets: endpoint(Operation.buyMuseumTickets, MuseumTicketsConfirmation.self),
+                getTicketCode: raw(Operation.getTicketCode)
             )
         }
     }
