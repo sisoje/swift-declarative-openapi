@@ -17,7 +17,6 @@ struct SupabaseAuthClient {
     let baseURL: URL
     @Binding var apikey: String?
     @Binding var accessToken: String?
-    @Binding var refreshToken: String?
 
     func request(_ operation: SupabaseAuthRESTAPI.Operation) throws -> URLRequest {
         try SupabaseAuthRESTAPI.authorized(operation, apiKeyAuth: apikey, userAuth: accessToken)

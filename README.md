@@ -51,11 +51,17 @@ enum SwaggerPetstore {
         }
     }
 
+    // MARK: - Responses (responses)   — evaluate + lossless error, shown below
+
+    // MARK: - Client                  — typed closures, shown below
+
     static let defaultBaseURL = URL(string: "http://petstore.swagger.io/v1")
 }
 ```
 
-Consuming it is a small hand-written client wiring environment (and credentials, where the spec has them) in one place:
+That is `Sources/PetstoreAPI/Petstore.generated.swift`, abridged only where a section gets its own example below — every snippet in this README is verbatim from the checked-in, golden-tested files.
+
+Consuming it is a small hand-written wiring stating environment and policy — this is petstore's **entire** hand-written layer:
 
 ```swift
 struct PetstoreClient {
@@ -64,11 +70,21 @@ struct PetstoreClient {
     func request(_ operation: SwaggerPetstore.Operation) throws -> URLRequest {
         try operation.base(baseURL).request()
     }
-}
 
-let client = PetstoreClient(baseURL: SwaggerPetstore.defaultBaseURL!)
-let request = try client.request(.showPetById(petId: "42"))
-// http://petstore.swagger.io/v1/pets/42, GET
+    /// URLSession as the transport closure — this app's transport policy.
+    private func urlSessionTransport(_ request: URLRequest) async throws -> (Data, URLResponse) {
+        try await URLSession.shared.data(for: request)
+    }
+
+    /// Every operation decodes with a plain `JSONDecoder` — this app's decoding policy.
+    private func plainDecoder(_: SwaggerPetstore.Operation) -> JSONDecoder {
+        JSONDecoder()
+    }
+
+    var api: SwaggerPetstore.Client {
+        .wired(request: request, transport: urlSessionTransport, decoder: plainDecoder)
+    }
+}
 ```
 
 Each operation is itself a `RequestBuildable` block, so the bare chain works too: `try SwaggerPetstore.Operation.showPetById(petId: "42").base(url).request()`.
@@ -76,18 +92,14 @@ Each operation is itself a `RequestBuildable` block, so the bare chain works too
 The top of the ladder is the generated **Client** — the backend as one struct of typed closures, output types read from `responses:` (`204` → `Void`, `image/png` → `Data`, `text/*` → UTF-8 `String`, json `$ref` → the model). Field names carry the operation; wrong pairings are unrepresentable; any field swaps for a stub:
 
 ```swift
-let api = SwaggerPetstore.Client.wired(
-    request: PetstoreClient(baseURL: url).request,
-    transport: { try await URLSession.shared.data(for: $0) },
-    decoder: { _ in JSONDecoder() }
-)
+let api = PetstoreClient(baseURL: url).api
 let pet = try await api.showPetById("42")            // Pet — no type stated, none stateable wrongly
 
 var mock = api
 mock.showPetById = { _ in .init(id: 1, name: "Stub") }   // per-field mocking, no protocols
 ```
 
-`Client.wired` wires the pipeline — request → transport → evaluate → decode — with no parameter defaults and no opinion about realness: pass `URLSession` closures and it's production, pass stubs and it's a mock (`(URLRequest) async throws -> (Data, URLResponse)`, `(Operation) -> JSONDecoder`) — the spec decides shapes, the closures are the escape hatches.
+`Client.wired(request:transport:decoder:)` wires the pipeline — request → transport → evaluate → decode — with no parameter defaults and no opinion about realness: the transport is just `(URLRequest) async throws -> (Data, URLResponse)` and the decoder `(Operation) -> JSONDecoder`; pass `URLSession` closures and it's production, pass stubs and it's a mock.
 
 Every spec also gets a **Responses section** — the modular third layer. The generated `evaluate` gates a transport result on the operation's spec-declared statuses (`deleteSpecialEvent` expects 204, `createPets` 201, …) and throws one lossless error; the layer that cares decodes the spec's typed error model from `error.data`:
 
@@ -102,7 +114,7 @@ struct ResponseError: Error {
 // request → execute → evaluate, each layer separable:
 let request = try client.request(.getSpecialEvent(eventId: id))
 let (data, response) = try await session.data(for: request)
-let payload = try RedoclyMuseumAPI.Responses.evaluate(.getSpecialEvent(eventId: id), (data, response as! HTTPURLResponse))
+let payload = try RedoclyMuseumAPI.Responses.evaluate(.getSpecialEvent(eventId: id), (data, response))
 ```
 
 Specs that declare `security:` also get a **Security section** — gates and attachment factories generated from the spec, so a client wires everything once:
