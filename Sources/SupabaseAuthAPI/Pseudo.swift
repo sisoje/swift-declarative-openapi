@@ -8,8 +8,13 @@ import SwiftUI
 /// never start while one is in flight. `alreadyRefreshing` doubles as the
 /// staleness barrier: a call that joined a refresh ran with the fresh token,
 /// so its failure escalates instead of re-refreshing.
-@MainActor
-struct Pseudo<Operation: Sendable> {
+///
+/// Deliberately minimal — no isolation annotations. Known caveat: as a
+/// nonisolated async function, `executeRefreshed` hops off the caller's
+/// actor (SE-0338), so the nil-gate is not actor-atomic today. Revisit when
+/// `NonisolatedNonsendingByDefault` (SE-0461) lands: nonisolated async will
+/// run on the caller's actor and main-actor callers get exclusivity for free.
+struct Pseudo<Operation> {
     @Binding var refreshTask: Task<Void, Never>?
     @Binding var accessToken: String?
 
