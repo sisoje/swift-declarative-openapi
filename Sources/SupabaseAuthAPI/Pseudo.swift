@@ -1,15 +1,24 @@
 import SwiftUI
 
-struct Pseudo<OP> {
-    @Binding var refreshTask: Task<Void, Never>? // it will update refresh and or access token
+/// 401 → single-flight refresh → one retry, generic over any spec's Operation.
+///
+/// Strategy: try to refresh; if refresh isn't possible or didn't happen, throw
+/// the original error. Single-flight holds by the nil-gate: `refreshTask` stays
+/// non-nil from creation until its creator clears it, so a second refresh can
+/// never start while one is in flight. `alreadyRefreshing` doubles as the
+/// staleness barrier: a call that joined a refresh ran with the fresh token,
+/// so its failure escalates instead of re-refreshing.
+@MainActor
+struct Pseudo<Operation> {
+    @Binding var refreshTask: Task<Void, Never>? // it will update refresh and/or access token
     @Binding var accessToken: String?
 
-    let closure: (OP) async throws -> Data
-    let refreshprocess: @Sendable () async -> Void
+    let execute: @MainActor (Operation) async throws -> Data
+    let refresh: @Sendable () async -> Void
     let isError401: (Error) -> Bool
-    let needsAuth: (OP) -> Bool
+    let needsAuth: (Operation) -> Bool
 
-    func doit(_ operation: OP) async throws -> Data {
+    func run(_ operation: Operation) async throws -> Data {
         let oldtoken = accessToken
         var alreadyRefreshing = false
         if let refreshTask {
@@ -17,34 +26,28 @@ struct Pseudo<OP> {
             await refreshTask.value
         }
         do {
-            return try await closure(operation)
+            return try await execute(operation)
         } catch {
-            guard !alreadyRefreshing else {
-                throw error
-            }
-            guard isError401(error) else {
-                throw error
-            }
-            guard needsAuth(operation) else {
+            guard !alreadyRefreshing, isError401(error), needsAuth(operation) else {
                 throw error
             }
 
             if let refreshTask {
                 await refreshTask.value
             } else if oldtoken == accessToken {
-                let task = Task { [refreshprocess] in
-                    await refreshprocess()
+                let task = Task { [refresh] in
+                    await refresh()
                 }
                 refreshTask = task
                 await task.value
                 refreshTask = nil
             }
-            
-            if oldtoken == accessToken {
+
+            guard oldtoken != accessToken else { // not refreshed
                 throw error
             }
-            
-            return try await closure(operation)
+
+            return try await execute(operation)
         }
     }
 }
