@@ -8,7 +8,8 @@ import SwiftUI
 /// never start while one is in flight. `alreadyRefreshing` doubles as the
 /// staleness barrier: a call that joined a refresh ran with the fresh token,
 /// so its failure escalates instead of re-refreshing.
-struct Pseudo<Operation> {
+@MainActor
+struct Pseudo<Operation: Sendable> {
     @Binding var refreshTask: Task<Void, Never>?
     @Binding var accessToken: String?
 
