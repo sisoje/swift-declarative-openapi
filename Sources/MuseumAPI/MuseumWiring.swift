@@ -40,16 +40,6 @@ struct MuseumClient {
         }.request()
     }
 
-    /// request → execute → evaluate: each layer separable. The transport is
-    /// just a closure — `URLRequest` in, `(Data, URLResponse)` out — inject
-    /// URLSession, a stub, or anything else.
-    func send(
-        _ operation: RedoclyMuseumAPI.Operation,
-        transport: (URLRequest) async throws -> (Data, URLResponse) = { try await URLSession.shared.data(for: $0) }
-    ) async throws -> Data {
-        let (data, response) = try await transport(request(operation))
-        return try RedoclyMuseumAPI.Responses.evaluate(operation, (data, response))
-    }
     /// Fully typed surface over this wiring: RedoclyMuseumAPI.Client field per
     /// operation, defaults to the real transport.
     var api: RedoclyMuseumAPI.Client {

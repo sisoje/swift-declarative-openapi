@@ -22,16 +22,6 @@ struct PetstoreClient {
         try operation.base(baseURL).request()
     }
 
-    /// request → execute → evaluate: each layer separable. The transport is
-    /// just a closure — `URLRequest` in, `(Data, URLResponse)` out — inject
-    /// URLSession, a stub, or anything else.
-    func send(
-        _ operation: SwaggerPetstore.Operation,
-        transport: (URLRequest) async throws -> (Data, URLResponse) = { try await URLSession.shared.data(for: $0) }
-    ) async throws -> Data {
-        let (data, response) = try await transport(request(operation))
-        return try SwaggerPetstore.Responses.evaluate(operation, (data, response))
-    }
     /// Fully typed surface over this wiring: SwaggerPetstore.Client field per
     /// operation, defaults to the real transport.
     var api: SwaggerPetstore.Client {

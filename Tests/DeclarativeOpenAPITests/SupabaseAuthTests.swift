@@ -13,7 +13,7 @@ private let client = SupabaseAuthClient(
 )
 
 @Test func refreshSessionBuildsTokenRefreshRequest() throws {
-    let request = try client.refreshSessionRequest()
+    let request = try client.request(.refreshSession(refreshToken: "4nYUCw0wZR_DNOTSDbSGMQ"))
 
     #expect(request.url?.absoluteString
         == "https://myproject.supabase.co/auth/v1/token?grant_type=refresh_token")
@@ -23,18 +23,6 @@ private let client = SupabaseAuthClient(
 
     let body = try JSONDecoder().decode([String: String].self, from: request.httpBody ?? Data())
     #expect(body == ["refresh_token": "4nYUCw0wZR_DNOTSDbSGMQ"])
-}
-
-@Test func refreshWithoutStoredTokenFails() {
-    let noSession = SupabaseAuthClient(
-        baseURL: projectBaseURL,
-        apikey: .constant("anon-key"),
-        accessToken: .constant(nil),
-        refreshToken: .constant(nil)
-    )
-    #expect(throws: MissingRefreshToken.self) {
-        try noSession.refreshSessionRequest()
-    }
 }
 
 @Test func userEndpointCarriesApikeyAndBearer() throws {

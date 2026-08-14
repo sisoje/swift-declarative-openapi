@@ -107,23 +107,32 @@ private let museumBaseURL = URL(string: "https://redocly.com/_mock/docs/openapi/
     }
 }
 
-@Test func sendComposesLayersThroughInjectedTransport() async throws {
-    let client = MuseumClient(baseURL: museumBaseURL, username: "u", password: "p")
-    let payload = Data("[]".utf8)
-    let data = try await client.send(.getMuseumHours(startDate: nil, page: nil, limit: nil)) { request in
-        #expect(request.url?.path.hasSuffix("/museum-hours") == true)
-        #expect(request.value(forHTTPHeaderField: "Authorization")?.hasPrefix("Basic ") == true)
-        return (payload, HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: nil)!)
-    }
-    #expect(data == payload)
+@Test func wiredClientComposesLayersThroughInjectedTransport() async throws {
+    let wiring = MuseumClient(baseURL: museumBaseURL, username: "u", password: "p")
+    let api = RedoclyMuseumAPI.Client.wired(
+        request: wiring.request,
+        transport: { request in
+            #expect(request.url?.path.hasSuffix("/museum-hours") == true)
+            #expect(request.value(forHTTPHeaderField: "Authorization")?.hasPrefix("Basic ") == true)
+            return (Data("[]".utf8), HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: nil)!)
+        },
+        decoder: { _ in JSONDecoder() }
+    )
+    let hours = try await api.getMuseumHours(nil, nil, nil)
+    #expect(hours.isEmpty)
 }
 
-@Test func sendSurfacesResponseErrorFromInjectedTransport() async {
-    let client = MuseumClient(baseURL: museumBaseURL, username: "u", password: "p")
-    await #expect(throws: RedoclyMuseumAPI.ResponseError.self) {
-        try await client.send(.deleteSpecialEvent(eventId: "e1")) { request in
+@Test func wiredClientSurfacesResponseError() async {
+    let wiring = MuseumClient(baseURL: museumBaseURL, username: "u", password: "p")
+    let api = RedoclyMuseumAPI.Client.wired(
+        request: wiring.request,
+        transport: { request in
             (Data(), HTTPURLResponse(url: request.url!, statusCode: 500, httpVersion: nil, headerFields: nil)!)
-        }
+        },
+        decoder: { _ in JSONDecoder() }
+    )
+    await #expect(throws: RedoclyMuseumAPI.ResponseError.self) {
+        try await api.deleteSpecialEvent("e1")
     }
 }
 
