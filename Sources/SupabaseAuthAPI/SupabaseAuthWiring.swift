@@ -21,6 +21,7 @@ extension RequestBuildable {
 
 extension SupabaseAuthRESTAPIEndpoint {
     struct MissingAccessToken: Error {}
+    struct MissingRefreshToken: Error {}
 
     /// Applies the user bearer only where the spec requires `UserAuth`
     /// (per the generated flag); a required-but-missing token fails the
@@ -42,10 +43,17 @@ extension SupabaseAuthRESTAPIEndpoint {
     /// `POST /token?grant_type=refresh_token` — rides the generated case for
     /// method, path, and query, and lays the real payload over the stub body:
     /// blocks apply in order, so the later `RequestBody.json` wins.
-    static func refreshSession(refreshToken: String) -> some RequestBuildable {
+    ///
+    /// The builder itself never requires the token — there may be none stored
+    /// on this device yet — but a nil token fails the build at `.request`.
+    static func refreshSession(refreshToken: String?) -> some RequestBuildable {
         RequestBlock {
             SupabaseAuthRESTAPIEndpoint.postToken(grantType: "refresh_token", body: PostTokenBody())
-            RequestBody.json(["refresh_token": refreshToken])
+            if let refreshToken {
+                RequestBody.json(["refresh_token": refreshToken])
+            } else {
+                RequestBlock { _ in throw MissingRefreshToken() }
+            }
         }
     }
 }

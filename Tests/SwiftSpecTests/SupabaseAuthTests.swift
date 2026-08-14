@@ -36,6 +36,16 @@ private let projectBaseURL = URL(string: "https://myproject.supabase.co/auth/v1"
     #expect(request.value(forHTTPHeaderField: "Authorization") == "Bearer jwt-access-token")
 }
 
+@Test func refreshWithoutStoredTokenFailsAtRequest() {
+    #expect(throws: SupabaseAuthRESTAPIEndpoint.MissingRefreshToken.self) {
+        try SupabaseAuthRESTAPIEndpoint
+            .refreshSession(refreshToken: nil)
+            .keyed(apikey: "anon-key")
+            .base(projectBaseURL)
+            .request
+    }
+}
+
 @Test func userEndpointWithoutTokenFailsAtRequest() {
     #expect(throws: SupabaseAuthRESTAPIEndpoint.MissingAccessToken.self) {
         try SupabaseAuthRESTAPIEndpoint
