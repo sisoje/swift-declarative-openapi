@@ -10,6 +10,14 @@ struct MissingAPIKey: Error {}
 struct MissingAccessToken: Error {}
 struct MissingRefreshToken: Error {}
 
+extension SupabaseAuthRESTAPI.Operation {
+    /// `POST /token?grant_type=refresh_token` with the generated body model —
+    /// a named constructor for the one `postToken` shape a client refreshes with.
+    static func refreshSession(refreshToken: String) -> Self {
+        .postToken(grantType: .refreshToken, body: .init(refreshToken: refreshToken))
+    }
+}
+
 /// Session + environment in one place; gating on the generated Security
 /// section is its rule. Credentials are optional so the client is
 /// constructible before any session exists — a required-but-missing one
@@ -45,9 +53,6 @@ struct SupabaseAuthClient {
     /// exist on this device yet.
     func refreshSessionRequest(refreshToken: String?) throws -> URLRequest {
         guard let refreshToken else { throw MissingRefreshToken() }
-        return try request(.postToken(
-            grantType: .refreshToken,
-            body: .init(refreshToken: refreshToken)
-        ))
+        return try request(.refreshSession(refreshToken: refreshToken))
     }
 }
