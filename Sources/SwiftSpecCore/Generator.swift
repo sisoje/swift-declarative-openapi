@@ -343,6 +343,16 @@ extension SwiftSpecGenerator {
         output += "    var needsAuth: Bool {\n"
         output += "        !securitySchemes.isEmpty\n"
         output += "    }\n\n"
+
+        // One `needs<Scheme>` flag per scheme the spec actually uses, so
+        // wiring layers gate on a named fact instead of a string lookup.
+        let allSchemes = Set(operations.flatMap(\.securitySchemes)).sorted()
+        for scheme in allSchemes {
+            output += "    /// Whether the spec requires the `\(scheme)` scheme for this endpoint.\n"
+            output += "    var needs\(pascalIdentifier(scheme)): Bool {\n"
+            output += "        securitySchemes.contains(\"\(scheme)\")\n"
+            output += "    }\n\n"
+        }
         return output
     }
 

@@ -135,6 +135,21 @@ enum SupabaseAuthRESTAPIEndpoint: RequestBuildable {
         !securitySchemes.isEmpty
     }
 
+    /// Whether the spec requires the `APIKeyAuth` scheme for this endpoint.
+    var needsAPIKeyAuth: Bool {
+        securitySchemes.contains("APIKeyAuth")
+    }
+
+    /// Whether the spec requires the `AdminAuth` scheme for this endpoint.
+    var needsAdminAuth: Bool {
+        securitySchemes.contains("AdminAuth")
+    }
+
+    /// Whether the spec requires the `UserAuth` scheme for this endpoint.
+    var needsUserAuth: Bool {
+        securitySchemes.contains("UserAuth")
+    }
+
     @RequestBuilder var body: some RequestBuildable {
         switch self {
         case let .getAdminAudit(page, perPage):

@@ -51,6 +51,11 @@ enum RedoclyMuseumAPIEndpoint: RequestBuildable {
         !securitySchemes.isEmpty
     }
 
+    /// Whether the spec requires the `MuseumPlaceholderAuth` scheme for this endpoint.
+    var needsMuseumPlaceholderAuth: Bool {
+        securitySchemes.contains("MuseumPlaceholderAuth")
+    }
+
     @RequestBuilder var body: some RequestBuildable {
         switch self {
         case let .getMuseumHours(startDate, page, limit):
