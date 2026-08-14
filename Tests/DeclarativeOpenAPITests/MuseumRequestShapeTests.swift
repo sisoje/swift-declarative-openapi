@@ -126,3 +126,12 @@ private let museumBaseURL = URL(string: "https://redocly.com/_mock/docs/openapi/
         }
     }
 }
+
+@Test func nonHTTPResponseThrowsItsOwnLosslessError() {
+    let plain = URLResponse(
+        url: museumBaseURL, mimeType: nil, expectedContentLength: 0, textEncodingName: nil
+    )
+    #expect(throws: RedoclyMuseumAPI.NonHTTPResponse.self) {
+        try RedoclyMuseumAPI.Responses.evaluate(.getSpecialEvent(eventId: "e1"), (Data("x".utf8), plain))
+    }
+}

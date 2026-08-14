@@ -58,6 +58,14 @@ enum SwaggerPetstore {
         let response: HTTPURLResponse
     }
 
+    /// Thrown when the transport yields something other than HTTP —
+    /// same rule, nothing lost.
+    struct NonHTTPResponse: Error {
+        let operation: Operation
+        let data: Data
+        let response: URLResponse
+    }
+
     enum Responses {
         /// Statuses the spec declares below 400 for the operation.
         static func successStatuses(_ operation: Operation) -> Set<Int> {
@@ -74,13 +82,16 @@ enum SwaggerPetstore {
         /// success status fall back to the 2xx range.
         static func evaluate(
             _ operation: Operation,
-            _ output: (data: Data, response: HTTPURLResponse)
+            _ output: (data: Data, response: URLResponse)
         ) throws -> Data {
+            guard let http = output.response as? HTTPURLResponse else {
+                throw NonHTTPResponse(operation: operation, data: output.data, response: output.response)
+            }
             let declared = successStatuses(operation)
-            let status = output.response.statusCode
+            let status = http.statusCode
             let expected = declared.isEmpty ? (200 ..< 300).contains(status) : declared.contains(status)
             guard expected else {
-                throw ResponseError(operation: operation, status: status, data: output.data, response: output.response)
+                throw ResponseError(operation: operation, status: status, data: output.data, response: http)
             }
             return output.data
         }

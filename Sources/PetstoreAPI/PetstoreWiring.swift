@@ -19,6 +19,6 @@ struct PetstoreClient {
         transport: (URLRequest) async throws -> (Data, URLResponse) = { try await URLSession.shared.data(for: $0) }
     ) async throws -> Data {
         let (data, response) = try await transport(request(operation))
-        return try SwaggerPetstore.Responses.evaluate(operation, (data, response as! HTTPURLResponse))
+        return try SwaggerPetstore.Responses.evaluate(operation, (data, response))
     }
 }
