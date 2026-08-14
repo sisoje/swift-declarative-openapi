@@ -44,7 +44,7 @@ Two raw scheme names could PascalCase to the same property name (`user-auth` and
 
 ## Enum hard tail
 
-Handled: string-enum parameters (nested enums, `.rawValue`, sanitized names, conflict fallback) and named string-enum schemas. Not handled: inline property enums (`PostTokenBody.provider`/`.chain` in supabase stay `String`), enum values that aren't valid Swift identifiers after camelization (digit-leading values would emit broken cases — needs escaping or fallback), integer enums (stay unconstrained `Int`), and unknown-case decode tolerance if enums ever appear in response models.
+Handled: string-enum parameters (nested in the endpoint enum), named string-enum schemas, inline property enums (nested in their struct), digit-leading values (`_1080p`). Not handled: integer enums (stay unconstrained `Int`), arrays of enums (items stay `[String]`), and unknown-case decode tolerance if enums ever appear in response models.
 
 ## Model-generation hard tail
 

@@ -660,3 +660,30 @@ import Testing
     #expect(generated.contains("case getA(mode: Mode?)"))
     #expect(generated.contains("case getB(mode: String?)"))
 }
+
+@Test func inlinePropertyEnumsGenerateNestedEnums() throws {
+    let yaml = """
+    openapi: "3.0.0"
+    info:
+      title: Unit Fixture
+      version: 1.0.0
+    paths: {}
+    components:
+      schemas:
+        Video:
+          type: object
+          properties:
+            quality:
+              type: string
+              enum:
+                - 1080p
+                - 720p
+            codec:
+              type: string
+    """
+    let generated = try SwiftSpecGenerator().generate(yaml: yaml)
+    #expect(generated.contains("    enum Quality: String, Codable {"))
+    #expect(generated.contains("case _1080p = \"1080p\""))
+    #expect(generated.contains("var quality: Quality? = nil"))
+    #expect(generated.contains("var codec: String? = nil"))
+}

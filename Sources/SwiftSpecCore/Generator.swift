@@ -95,6 +95,9 @@ struct ModelProperty {
     var swiftName: String
     var type: String
     var isOptional: Bool
+    /// Allowed values when the property schema is a string enum; the struct
+    /// then carries a nested `enum <Type>: String` and the property uses it.
+    var enumCases: [String]?
 }
 
 struct Parameter {
@@ -176,11 +179,21 @@ extension SwiftSpecGenerator {
         absorb(schema)
 
         return properties.keys.sorted().map { rawName in
-            ModelProperty(
+            let propertySchema = properties[rawName]
+            var type = swiftType(for: propertySchema)
+            var enumCases: [String]?
+            if propertySchema?["type"] as? String == "string",
+               let values = anyArray(propertySchema?["enum"])?.compactMap({ $0 as? String }),
+               !values.isEmpty {
+                enumCases = values
+                type = modelTypeName(rawName)
+            }
+            return ModelProperty(
                 rawName: rawName,
                 swiftName: propertyName(rawName),
-                type: swiftType(for: properties[rawName]),
-                isOptional: !required.contains(rawName)
+                type: type,
+                isOptional: !required.contains(rawName),
+                enumCases: enumCases
             )
         }
     }
@@ -409,7 +422,11 @@ extension SwiftSpecGenerator {
     func renderStringEnum(_ name: String, cases: [String], indent: String) -> String {
         var output = "\(indent)enum \(name): String, Codable {\n"
         for value in cases {
-            let caseName = propertyName(value)
+            var caseName = propertyName(value)
+            if caseName.first?.isNumber == true {
+                // Swift identifiers can't start with a digit ("1080p").
+                caseName = "_" + caseName
+            }
             output += caseName == value
                 ? "\(indent)    case \(value)\n"
                 : "\(indent)    case \(caseName) = \"\(value)\"\n"
@@ -429,6 +446,11 @@ extension SwiftSpecGenerator {
         case let .structModel(properties):
             guard !properties.isEmpty else { return "struct \(model.name): Codable {}\n" }
             var output = "struct \(model.name): Codable {\n"
+            for property in properties {
+                guard let cases = property.enumCases else { continue }
+                output += renderStringEnum(property.type, cases: cases, indent: "    ")
+                output += "\n"
+            }
             for property in properties {
                 output += "    var \(property.swiftName): \(property.type)\(property.isOptional ? "? = nil" : "")\n"
             }
