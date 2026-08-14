@@ -40,6 +40,17 @@ enum RedoclyMuseumAPIEndpoint: RequestBuildable {
 
     static let defaultBaseURL = URL(string: "https://redocly.com/_mock/docs/openapi/museum-api")
 
+    /// Security scheme names the spec requires for this endpoint
+    /// (OR-alternatives flattened into one set).
+    var securitySchemes: Set<String> {
+        ["MuseumPlaceholderAuth"]
+    }
+
+    /// Whether the spec declares a security requirement for this endpoint.
+    var needsAuth: Bool {
+        !securitySchemes.isEmpty
+    }
+
     @RequestBuilder var body: some RequestBuildable {
         switch self {
         case let .getMuseumHours(startDate, page, limit):

@@ -107,6 +107,34 @@ enum SupabaseAuthRESTAPIEndpoint: RequestBuildable {
 
     /// Server URL is templated — supply a resolved base URL: `https://{project}.supabase.co/auth/v1`
 
+    /// Security scheme names the spec requires for this endpoint
+    /// (OR-alternatives flattened into one set).
+    var securitySchemes: Set<String> {
+        switch self {
+        case .getAdminAudit, .getAdminCustomProviders, .postAdminCustomProviders, .getAdminCustomProvidersIdentifier, .putAdminCustomProvidersIdentifier,
+            .deleteAdminCustomProvidersIdentifier, .postAdminGenerateLink, .getAdminOauthClients, .postAdminOauthClients, .getAdminOauthClientsClientId,
+            .putAdminOauthClientsClientId, .deleteAdminOauthClientsClientId, .postAdminOauthClientsClientIdRegenerateSecret, .getAdminSsoProviders, .postAdminSsoProviders,
+            .getAdminSsoProvidersSsoProviderId, .putAdminSsoProvidersSsoProviderId, .deleteAdminSsoProvidersSsoProviderId, .getAdminUsers, .getAdminUsersUserId,
+            .putAdminUsersUserId, .deleteAdminUsersUserId, .getAdminUsersUserIdFactors, .putAdminUsersUserIdFactorsFactorId, .deleteAdminUsersUserIdFactorsFactorId:
+            ["APIKeyAuth", "AdminAuth"]
+        case .getAuthorize, .getCallback, .getHealth, .postInvite, .postMagiclink,
+            .postOtp, .postRecover, .postResend, .getSamlMetadata, .getSettings,
+            .postSignup, .postSso, .postToken, .getVerify, .postVerify:
+            ["APIKeyAuth"]
+        case .postCallback, .getOauthAuthorize, .postOauthClientsRegister, .postOauthToken, .postSamlAcs:
+            []
+        case .postFactors, .deleteFactorsFactorId, .postFactorsFactorIdChallenge, .postFactorsFactorIdVerify, .postLogout,
+            .getOauthAuthorizationsAuthorizationId, .postOauthAuthorizationsAuthorizationIdConsent, .postReauthenticate, .getUser, .putUser,
+            .getUserIdentitiesAuthorize, .deleteUserIdentitiesIdentityId, .getUserOauthGrants, .deleteUserOauthGrants:
+            ["APIKeyAuth", "UserAuth"]
+        }
+    }
+
+    /// Whether the spec declares a security requirement for this endpoint.
+    var needsAuth: Bool {
+        !securitySchemes.isEmpty
+    }
+
     @RequestBuilder var body: some RequestBuildable {
         switch self {
         case let .getAdminAudit(page, perPage):

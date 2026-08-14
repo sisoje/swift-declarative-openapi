@@ -49,10 +49,12 @@ public struct SwiftSpecGenerator {
         }
 
         let componentParameters = anyDict(anyDict(document["components"])?["parameters"]) ?? [:]
+        let documentSecurity = anyArray(document["security"])
         var models = collectSchemaModels(from: document)
         let operations = collectOperations(
             from: document,
             componentParameters: componentParameters,
+            documentSecurity: documentSecurity,
             inlineBodyModels: &models
         )
 
@@ -92,6 +94,10 @@ struct Operation {
     var path: String
     var parameters: [Parameter]
     var bodyType: String?
+    /// Security scheme names the spec requires for this operation, sorted.
+    /// Operation-level `security` overrides the document default; the
+    /// requirement objects' OR-alternatives are flattened into one set.
+    var securitySchemes: [String]
 }
 
 // MARK: - Walking the document
@@ -122,6 +128,7 @@ extension SwiftSpecGenerator {
     func collectOperations(
         from document: [String: Any],
         componentParameters: [String: Any],
+        documentSecurity: [Any]?,
         inlineBodyModels: inout [Model]
     ) -> [Operation] {
         guard let paths = anyDict(document["paths"]) else { return [] }
@@ -139,6 +146,7 @@ extension SwiftSpecGenerator {
                     operation: operation,
                     pathItemParameters: pathItemParameters,
                     componentParameters: componentParameters,
+                    documentSecurity: documentSecurity,
                     inlineBodyModels: &inlineBodyModels
                 ))
             }
@@ -162,6 +170,7 @@ extension SwiftSpecGenerator {
         operation: [String: Any],
         pathItemParameters: [[String: Any]],
         componentParameters: [String: Any],
+        documentSecurity: [Any]?,
         inlineBodyModels: inout [Model]
     ) -> Operation {
         let caseName: String = if let operationId = operation["operationId"] as? String {
@@ -213,12 +222,18 @@ extension SwiftSpecGenerator {
             }
         }
 
+        // An operation-level `security:` (even an empty one, which marks the
+        // operation public) overrides the document default.
+        let effectiveSecurity = anyArray(operation["security"]) ?? documentSecurity ?? []
+        let schemes = Set(effectiveSecurity.compactMap(anyDict).flatMap(\.keys)).sorted()
+
         return Operation(
             caseName: caseName,
             method: method.uppercased(),
             path: path,
             parameters: parameters,
-            bodyType: bodyType
+            bodyType: bodyType,
+            securitySchemes: schemes
         )
     }
 }
@@ -261,6 +276,7 @@ extension SwiftSpecGenerator {
                 output += "    static let defaultBaseURL = URL(string: \"\(baseURL)\")\n\n"
             }
         }
+        output += renderSecurity(operations)
         if operations.isEmpty {
             // A result-builder-transformed `switch self {}` with zero cases
             // does not compile, so emit a placeholder body instead. The enum
@@ -279,6 +295,54 @@ extension SwiftSpecGenerator {
             output += "    }\n"
         }
         output += "}\n"
+        return output
+    }
+
+    /// Renders `securitySchemes` and the README-style `needsAuth` per case.
+    /// Omitted entirely when no operation declares a security requirement.
+    func renderSecurity(_ operations: [Operation]) -> String {
+        guard operations.contains(where: { !$0.securitySchemes.isEmpty }) else { return "" }
+
+        func setLiteral(_ schemes: [String]) -> String {
+            "[" + schemes.map { "\"\($0)\"" }.joined(separator: ", ") + "]"
+        }
+
+        var output = "    /// Security scheme names the spec requires for this endpoint\n"
+        output += "    /// (OR-alternatives flattened into one set).\n"
+        output += "    var securitySchemes: Set<String> {\n"
+
+        // Group cases sharing a scheme set, in first-occurrence order.
+        var groups: [(schemes: [String], caseNames: [String])] = []
+        for operation in operations {
+            if let index = groups.firstIndex(where: { $0.schemes == operation.securitySchemes }) {
+                groups[index].caseNames.append(operation.caseName)
+            } else {
+                groups.append((operation.securitySchemes, [operation.caseName]))
+            }
+        }
+
+        if groups.count == 1 {
+            output += "        \(setLiteral(groups[0].schemes))\n"
+        } else {
+            output += "        switch self {\n"
+            for group in groups {
+                let patterns = group.caseNames.map { ".\($0)" }
+                // Chunk long multi-pattern lines to keep them readable.
+                for (index, chunk) in patterns.chunks(of: 5).enumerated() {
+                    let prefix = index == 0 ? "        case " : "            "
+                    let isLast = (index + 1) * 5 >= patterns.count
+                    output += prefix + chunk.joined(separator: ", ") + (isLast ? ":\n" : ",\n")
+                }
+                output += "            \(setLiteral(group.schemes))\n"
+            }
+            output += "        }\n"
+        }
+        output += "    }\n\n"
+
+        output += "    /// Whether the spec declares a security requirement for this endpoint.\n"
+        output += "    var needsAuth: Bool {\n"
+        output += "        !securitySchemes.isEmpty\n"
+        output += "    }\n\n"
         return output
     }
 
@@ -467,4 +531,10 @@ func anyDict(_ any: Any?) -> [String: Any]? {
 
 func anyArray(_ any: Any?) -> [Any]? {
     any as? [Any]
+}
+
+extension Array {
+    func chunks(of size: Int) -> [[Element]] {
+        stride(from: 0, to: count, by: size).map { Array(self[$0 ..< Swift.min($0 + size, count)]) }
+    }
 }

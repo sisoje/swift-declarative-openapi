@@ -14,16 +14,27 @@ extension RequestBuildable {
         }
     }
 
-    /// User-scoped endpoints additionally send the access token as a bearer.
-    func authorized(accessToken: String) -> some RequestBuildable {
-        RequestBlock {
-            self
-            Authorization.bearer(accessToken)
-        }
-    }
 }
 
 extension SupabaseAuthRESTAPIEndpoint {
+    struct MissingAccessToken: Error {}
+
+    /// Applies the user bearer only where the spec requires `UserAuth`
+    /// (per the generated `securitySchemes`); a required-but-missing token
+    /// fails the build with the spec's own error — the README's Open Spec
+    /// rule that a half-authorized request can never reach the wire.
+    func authorized(accessToken: String?) -> some RequestBuildable {
+        RequestBlock {
+            self
+            if securitySchemes.contains("UserAuth") {
+                if let accessToken {
+                    Authorization.bearer(accessToken)
+                } else {
+                    RequestBlock { _ in throw MissingAccessToken() }
+                }
+            }
+        }
+    }
     /// `POST /token?grant_type=refresh_token` — rides the generated case for
     /// method, path, and query, and lays the real payload over the stub body:
     /// blocks apply in order, so the later `RequestBody.json` wins.

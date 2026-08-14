@@ -435,3 +435,52 @@ import Testing
     #expect(!generated.contains("defaultBaseURL"))
     #expect(generated.contains("/// Server URL is templated — supply a resolved base URL: `https://{tenant}.example.com/v1`"))
 }
+
+// MARK: - Security
+
+@Test func operationSecurityOverridesDocumentDefault() throws {
+    let yaml = """
+    openapi: "3.0.3"
+    info:
+      title: Unit Fixture
+      version: 1.0.0
+    security:
+      - DefaultAuth: []
+    paths:
+      /open:
+        get:
+          operationId: openThing
+          security: []
+      /locked:
+        get:
+          operationId: lockedThing
+          security:
+            - SpecialAuth: []
+              OtherAuth: []
+      /inherited:
+        get:
+          operationId: inheritedThing
+    """
+    let generated = try SwiftSpecGenerator().generate(yaml: yaml)
+    #expect(generated.contains("var securitySchemes: Set<String>"))
+    #expect(generated.contains("var needsAuth: Bool"))
+    #expect(generated.contains("case .openThing:\n            []"))
+    #expect(generated.contains("case .lockedThing:\n            [\"OtherAuth\", \"SpecialAuth\"]"))
+    #expect(generated.contains("case .inheritedThing:\n            [\"DefaultAuth\"]"))
+}
+
+@Test func noSecurityAnywhereOmitsSecurityProperties() throws {
+    let yaml = """
+    openapi: "3.0.0"
+    info:
+      title: Unit Fixture
+      version: 1.0.0
+    paths:
+      /things:
+        get:
+          operationId: listThings
+    """
+    let generated = try SwiftSpecGenerator().generate(yaml: yaml)
+    #expect(!generated.contains("securitySchemes"))
+    #expect(!generated.contains("needsAuth"))
+}

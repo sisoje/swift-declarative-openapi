@@ -25,8 +25,8 @@ private let projectBaseURL = URL(string: "https://myproject.supabase.co/auth/v1"
 @Test func userEndpointCarriesApikeyAndBearer() throws {
     let request = try SupabaseAuthRESTAPIEndpoint
         .getUser
-        .keyed(apikey: "anon-key")
         .authorized(accessToken: "jwt-access-token")
+        .keyed(apikey: "anon-key")
         .base(projectBaseURL)
         .request
 
@@ -34,6 +34,38 @@ private let projectBaseURL = URL(string: "https://myproject.supabase.co/auth/v1"
     #expect(request.httpMethod == "GET")
     #expect(request.value(forHTTPHeaderField: "apikey") == "anon-key")
     #expect(request.value(forHTTPHeaderField: "Authorization") == "Bearer jwt-access-token")
+}
+
+@Test func userEndpointWithoutTokenFailsAtRequest() {
+    #expect(throws: SupabaseAuthRESTAPIEndpoint.MissingAccessToken.self) {
+        try SupabaseAuthRESTAPIEndpoint
+            .getUser
+            .authorized(accessToken: nil)
+            .keyed(apikey: "anon-key")
+            .base(projectBaseURL)
+            .request
+    }
+}
+
+@Test func publicEndpointIgnoresMissingToken() throws {
+    let request = try SupabaseAuthRESTAPIEndpoint
+        .postSignup(body: PostSignupBody())
+        .authorized(accessToken: nil)
+        .keyed(apikey: "anon-key")
+        .base(projectBaseURL)
+        .request
+    #expect(request.value(forHTTPHeaderField: "Authorization") == nil)
+}
+
+@Test func generatedSecurityMatchesSpec() {
+    #expect(SupabaseAuthRESTAPIEndpoint.getUser.securitySchemes == ["APIKeyAuth", "UserAuth"])
+    #expect(SupabaseAuthRESTAPIEndpoint.getAdminUsers(page: nil, perPage: nil).securitySchemes
+        == ["APIKeyAuth", "AdminAuth"])
+    #expect(SupabaseAuthRESTAPIEndpoint.postToken(grantType: "password", body: PostTokenBody()).securitySchemes
+        == ["APIKeyAuth"])
+    #expect(SupabaseAuthRESTAPIEndpoint.postSamlAcs(relayState: nil, sAMLArt: nil, sAMLResponse: nil).needsAuth
+        == false)
+    #expect(SupabaseAuthRESTAPIEndpoint.getUser.needsAuth == true)
 }
 
 @Test func signupIsPlainKeyedJSONPost() throws {

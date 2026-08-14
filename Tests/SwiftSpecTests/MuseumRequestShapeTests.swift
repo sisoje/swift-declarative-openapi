@@ -48,3 +48,9 @@ private let museumBaseURL = URL(string: "https://redocly.com/_mock/docs/openapi/
         .request
     #expect(request.httpMethod == "DELETE")
 }
+
+@Test func documentLevelSecurityAppliesToEveryEndpoint() {
+    #expect(RedoclyMuseumAPIEndpoint.getMuseumHours(startDate: nil, page: nil, limit: nil).securitySchemes
+        == ["MuseumPlaceholderAuth"])
+    #expect(RedoclyMuseumAPIEndpoint.deleteSpecialEvent(eventId: "e1").needsAuth == true)
+}

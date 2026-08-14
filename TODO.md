@@ -22,10 +22,6 @@ If the DSL adopts omit-on-nil for nil-valued `Query` (see `../declarative-reques
 
 Supabase's `/saml/acs` posts `application/x-www-form-urlencoded`; the generator only maps `application/json`, so that case silently gets no body. Map form bodies to `RequestBody.urlEncoded(name, value)` per field (the DSL accumulates them across blocks).
 
-## Security schemes → auth metadata
-
-Supabase declares `security:` per operation (`APIKeyAuth`, bearer). The generator could emit a `needsAuth`-style computed property (the DSL README's Open Spec pattern) so hand-written wiring layers can gate tokens per case instead of maintaining the mapping by hand.
-
 ## Server-variable base URL helper
 
 For templated server URLs (`https://{project}.supabase.co/auth/v1`) the generator now emits a doc comment. It could additionally emit `static func baseURL(project: String) -> URL?` from the declared server variables.
