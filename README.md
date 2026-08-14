@@ -78,9 +78,8 @@ Every spec also gets a **Responses section** — the modular third layer. The ge
 ```swift
 struct ResponseError: Error {
     let operation: Operation
-    let status: Int
     let data: Data                  // decode APIError/ErrorSchema from this when you need it
-    let response: HTTPURLResponse
+    let response: HTTPURLResponse   // status, headers — everything, once
 }
 
 // request → execute → evaluate, each layer separable:

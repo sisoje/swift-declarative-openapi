@@ -165,7 +165,6 @@ enum RedoclyMuseumAPI {
     /// decode the spec's error model from `data` in the layer that needs it.
     struct ResponseError: Error {
         let operation: Operation
-        let status: Int
         let data: Data
         let response: HTTPURLResponse
     }
@@ -205,7 +204,7 @@ enum RedoclyMuseumAPI {
             let status = http.statusCode
             let expected = declared.isEmpty ? (200 ..< 300).contains(status) : declared.contains(status)
             guard expected else {
-                throw ResponseError(operation: operation, status: status, data: output.data, response: http)
+                throw ResponseError(operation: operation, data: output.data, response: http)
             }
             return output.data
         }
