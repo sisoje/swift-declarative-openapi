@@ -226,20 +226,18 @@ enum RedoclyMuseumAPI {
         }
     }
 
-    // MARK: - Request
+    // MARK: - Authorized
 
     struct MissingMuseumPlaceholderAuth: Error {}
 
-    /// Composes an operation with the environment and the spec-required
-    /// credentials; a required-but-nil credential fails the build.
-    static func request(
+    /// Operation + spec-required credentials as one block; apply the
+    /// environment last: `.base(url).request()`.
+    static func authorized(
         _ operation: Operation,
-        baseURL: URL,
         museumPlaceholderAuth: (username: String, password: String)?
-    ) throws -> URLRequest {
-        try RequestBlock {
+    ) -> some RequestBuildable {
+        RequestBlock {
             operation
-            BaseURL(baseURL)
             if Security.needsMuseumPlaceholderAuth(operation) {
                 if let museumPlaceholderAuth {
                     Security.museumPlaceholderAuth(username: museumPlaceholderAuth.username, password: museumPlaceholderAuth.password)
@@ -247,7 +245,7 @@ enum RedoclyMuseumAPI {
                     RequestFailure(MissingMuseumPlaceholderAuth())
                 }
             }
-        }.request()
+        }
     }
 
     // MARK: - Client

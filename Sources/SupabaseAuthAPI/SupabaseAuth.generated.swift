@@ -1146,22 +1146,20 @@ enum SupabaseAuthRESTAPI {
         }
     }
 
-    // MARK: - Request
+    // MARK: - Authorized
 
     struct MissingAPIKeyAuth: Error {}
     struct MissingUserAuth: Error {}
 
-    /// Composes an operation with the environment and the spec-required
-    /// credentials; a required-but-nil credential fails the build.
-    static func request(
+    /// Operation + spec-required credentials as one block; apply the
+    /// environment last: `.base(url).request()`.
+    static func authorized(
         _ operation: Operation,
-        baseURL: URL,
         apiKeyAuth: String?,
         userAuth: String?
-    ) throws -> URLRequest {
-        try RequestBlock {
+    ) -> some RequestBuildable {
+        RequestBlock {
             operation
-            BaseURL(baseURL)
             if Security.needsAPIKeyAuth(operation) {
                 if let apiKeyAuth {
                     Security.apiKeyAuth(apiKeyAuth)
@@ -1176,7 +1174,7 @@ enum SupabaseAuthRESTAPI {
                     RequestFailure(MissingUserAuth())
                 }
             }
-        }.request()
+        }
     }
 
     // MARK: - Client

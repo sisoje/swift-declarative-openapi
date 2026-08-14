@@ -664,10 +664,11 @@ extension SpecGenerator {
         }
     }
 
-    /// The `Request` section: composes an operation with the environment and
-    /// the spec-required credentials — one optional parameter per security
-    /// scheme; a required-but-nil credential fails the build with the
-    /// scheme's own error.
+    /// The `Authorized` section: composes an operation with the
+    /// spec-required credentials — one optional per security scheme; a
+    /// required-but-nil credential fails the build with the scheme's own
+    /// error. Environment (`BaseURL`) is applied by the caller, last, per
+    /// the DSL contract. Omitted when the spec declares no bindable scheme.
     func renderRequestBuilder(_ operations: [Operation], definitions: [String: Any]) -> String {
         guard !operations.isEmpty else { return "" }
         let schemes = Set(operations.flatMap(\.securitySchemes)).sorted()
@@ -675,25 +676,24 @@ extension SpecGenerator {
             guard let binding = schemeBinding(scheme, definition: anyDict(definitions[scheme])) else { return nil }
             return (scheme, factoryName(scheme), binding.paramType, "Missing" + pascalIdentifier(scheme), binding.call)
         }
+        guard !bindings.isEmpty else { return "" }
 
-        var output = "\n    // MARK: - Request\n\n"
+        var output = "\n    // MARK: - Authorized\n\n"
         for binding in bindings {
             output += "    struct \(binding.error): Error {}\n"
         }
-        if !bindings.isEmpty { output += "\n" }
-        output += "    /// Composes an operation with the environment and the spec-required\n"
-        output += "    /// credentials; a required-but-nil credential fails the build.\n"
-        output += "    static func request(\n"
+        output += "\n"
+        output += "    /// Operation + spec-required credentials as one block; apply the\n"
+        output += "    /// environment last: `.base(url).request()`.\n"
+        output += "    static func authorized(\n"
         output += "        _ operation: Operation,\n"
-        output += "        baseURL: URL" + (bindings.isEmpty ? "\n" : ",\n")
         for (index, binding) in bindings.enumerated() {
             let comma = index == bindings.count - 1 ? "" : ","
             output += "        \(binding.param): \(binding.type)?\(comma)\n"
         }
-        output += "    ) throws -> URLRequest {\n"
-        output += "        try RequestBlock {\n"
+        output += "    ) -> some RequestBuildable {\n"
+        output += "        RequestBlock {\n"
         output += "            operation\n"
-        output += "            BaseURL(baseURL)\n"
         for binding in bindings {
             output += "            if Security.needs\(pascalIdentifier(binding.scheme))(operation) {\n"
             output += "                if let \(binding.param) {\n"
@@ -703,7 +703,7 @@ extension SpecGenerator {
             output += "                }\n"
             output += "            }\n"
         }
-        output += "        }.request()\n"
+        output += "        }\n"
         output += "    }\n"
         return output
     }

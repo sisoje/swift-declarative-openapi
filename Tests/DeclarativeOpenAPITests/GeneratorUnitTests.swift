@@ -751,7 +751,7 @@ import Testing
     #expect(!generated.contains("func text<"))
 }
 
-@Test func requestBuilderBindsOneOptionalPerScheme() throws {
+@Test func authorizedBuilderBindsOneOptionalPerScheme() throws {
     let yaml = """
     openapi: "3.0.0"
     info:
@@ -772,12 +772,14 @@ import Testing
     """
     let generated = try SpecGenerator().generate(yaml: yaml)
     #expect(generated.contains("struct MissingKeyAuth: Error {}"))
+    #expect(generated.contains("static func authorized("))
     #expect(generated.contains("keyAuth: String?"))
+    #expect(!generated.contains("baseURL"))
     #expect(generated.contains("if Security.needsKeyAuth(operation) {"))
     #expect(generated.contains("RequestFailure(MissingKeyAuth())"))
 }
 
-@Test func requestBuilderWithoutSecurityTakesOnlyBaseURL() throws {
+@Test func noSecurityMeansNoAuthorizedBuilder() throws {
     let yaml = """
     openapi: "3.0.0"
     info:
@@ -789,6 +791,6 @@ import Testing
           operationId: getA
     """
     let generated = try SpecGenerator().generate(yaml: yaml)
-    #expect(generated.contains("baseURL: URL\n    ) throws -> URLRequest"))
+    #expect(!generated.contains("static func authorized("))
     #expect(!generated.contains("RequestFailure"))
 }

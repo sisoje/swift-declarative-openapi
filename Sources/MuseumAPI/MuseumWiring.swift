@@ -14,7 +14,9 @@ struct MuseumClient {
     var credentials: (username: String, password: String)? = nil
 
     func request(_ operation: RedoclyMuseumAPI.Operation) throws -> URLRequest {
-        try RedoclyMuseumAPI.request(operation, baseURL: baseURL, museumPlaceholderAuth: credentials)
+        try RedoclyMuseumAPI.authorized(operation, museumPlaceholderAuth: credentials)
+            .base(baseURL)
+            .request()
     }
 
     /// Fully typed surface over this wiring: RedoclyMuseumAPI.Client field per
