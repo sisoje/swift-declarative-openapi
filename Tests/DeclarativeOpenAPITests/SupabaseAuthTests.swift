@@ -1,17 +1,19 @@
 import DeclarativeRequests
 import Foundation
 @testable import SupabaseAuthAPI
+import SwiftUI
 import Testing
 
 private let projectBaseURL = URL(string: "https://myproject.supabase.co/auth/v1")!
 private let client = SupabaseAuthClient(
     baseURL: projectBaseURL,
-    apikey: "anon-key",
-    accessToken: "jwt-access-token"
+    apikey: .constant("anon-key"),
+    accessToken: .constant("jwt-access-token"),
+    refreshToken: .constant("4nYUCw0wZR_DNOTSDbSGMQ")
 )
 
 @Test func refreshSessionBuildsTokenRefreshRequest() throws {
-    let request = try client.refreshSessionRequest(refreshToken: "4nYUCw0wZR_DNOTSDbSGMQ")
+    let request = try client.refreshSessionRequest()
 
     #expect(request.url?.absoluteString
         == "https://myproject.supabase.co/auth/v1/token?grant_type=refresh_token")
@@ -24,8 +26,14 @@ private let client = SupabaseAuthClient(
 }
 
 @Test func refreshWithoutStoredTokenFails() {
+    let noSession = SupabaseAuthClient(
+        baseURL: projectBaseURL,
+        apikey: .constant("anon-key"),
+        accessToken: .constant(nil),
+        refreshToken: .constant(nil)
+    )
     #expect(throws: MissingRefreshToken.self) {
-        try client.refreshSessionRequest(refreshToken: nil)
+        try noSession.refreshSessionRequest()
     }
 }
 
@@ -38,7 +46,7 @@ private let client = SupabaseAuthClient(
 }
 
 @Test func userEndpointWithoutTokenFailsAtRequest() {
-    let loggedOut = SupabaseAuthClient(baseURL: projectBaseURL, apikey: "anon-key")
+    let loggedOut = SupabaseAuthClient(baseURL: projectBaseURL, apikey: .constant("anon-key"), accessToken: .constant(nil), refreshToken: .constant(nil))
     #expect(throws: MissingAccessToken.self) {
         try loggedOut.request(.getUser)
     }
@@ -47,13 +55,13 @@ private let client = SupabaseAuthClient(
 @Test func publicEndpointPassesWithNilTokenViaSecuritySection() throws {
     // One wire-once request(_:) serves every operation — the generated
     // Security gates decide which credentials are demanded.
-    let loggedOut = SupabaseAuthClient(baseURL: projectBaseURL, apikey: "anon-key")
+    let loggedOut = SupabaseAuthClient(baseURL: projectBaseURL, apikey: .constant("anon-key"), accessToken: .constant(nil), refreshToken: .constant(nil))
     let request = try loggedOut.request(.postSignup(body: .init()))
     #expect(request.value(forHTTPHeaderField: "Authorization") == nil)
 }
 
 @Test func nilApikeyFailsAtRequest() {
-    let unconfigured = SupabaseAuthClient(baseURL: projectBaseURL)
+    let unconfigured = SupabaseAuthClient(baseURL: projectBaseURL, apikey: .constant(nil), accessToken: .constant(nil), refreshToken: .constant(nil))
     #expect(throws: MissingAPIKey.self) {
         try unconfigured.request(.postSignup(body: .init()))
     }
@@ -100,4 +108,20 @@ private let client = SupabaseAuthClient(
     )
     #expect(!generated.contains("defaultBaseURL"))
     #expect(generated.contains("Server URL is templated"))
+}
+
+@Test func evaluatePassesDeclaredStatusAndFailsRateLimit() throws {
+    let url = projectBaseURL
+    let ok = HTTPURLResponse(url: url, statusCode: 200, httpVersion: nil, headerFields: nil)!
+    let tokens = Data(#"{"access_token":"t"}"#.utf8)
+    #expect(try SupabaseAuthRESTAPI.Responses.evaluate(.getUser, (tokens, ok)) == tokens)
+
+    let limited = HTTPURLResponse(url: url, statusCode: 429, httpVersion: nil, headerFields: nil)!
+    do {
+        _ = try SupabaseAuthRESTAPI.Responses.evaluate(.getUser, (Data(), limited))
+        Issue.record("expected ResponseError")
+    } catch let error as SupabaseAuthRESTAPI.ResponseError {
+        #expect(error.status == 429)
+        #expect(error.response.statusCode == 429)
+    }
 }

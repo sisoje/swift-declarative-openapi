@@ -28,4 +28,12 @@ struct MuseumClient {
             }
         }.request()
     }
+
+    /// request → execute → evaluate: each layer separable — build the
+    /// request yourself, or hand a transport result straight to
+    /// `RedoclyMuseumAPI.Responses.evaluate`.
+    func send(_ operation: RedoclyMuseumAPI.Operation, using session: URLSession = .shared) async throws -> Data {
+        let (data, response) = try await session.data(for: request(operation))
+        return try RedoclyMuseumAPI.Responses.evaluate(operation, (data, response as! HTTPURLResponse))
+    }
 }

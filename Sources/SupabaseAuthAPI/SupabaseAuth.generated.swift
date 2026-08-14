@@ -941,6 +941,56 @@ enum SupabaseAuthRESTAPI {
         }
     }
 
+    // MARK: - Responses (responses)
+
+    /// One error, nothing lost: status, payload, and the raw response —
+    /// decode the spec's error model from `data` in the layer that needs it.
+    struct ResponseError: Error {
+        let operation: Operation
+        let status: Int
+        let data: Data
+        let response: HTTPURLResponse
+    }
+
+    enum Responses {
+        /// Statuses the spec declares below 400 for the operation.
+        static func successStatuses(_ operation: Operation) -> Set<Int> {
+            switch operation {
+            case .getAuthorize, .getCallback, .postCallback, .getOauthAuthorize, .postSamlAcs,
+                .getUserIdentitiesAuthorize, .getVerify:
+                [302]
+            case .postFactors, .deleteFactorsFactorId, .postFactorsFactorIdChallenge, .postFactorsFactorIdVerify, .getHealth,
+                .postInvite, .postMagiclink, .getOauthAuthorizationsAuthorizationId, .postOauthAuthorizationsAuthorizationIdConsent, .postOauthToken,
+                .postOtp, .postReauthenticate, .postRecover, .postResend, .getSamlMetadata,
+                .getSettings, .postSignup, .postToken, .getUser, .putUser,
+                .deleteUserIdentitiesIdentityId, .getUserOauthGrants, .postVerify:
+                [200]
+            case .postLogout, .deleteUserOauthGrants:
+                [204]
+            case .postOauthClientsRegister:
+                [201]
+            case .postSso:
+                [200, 303]
+            }
+        }
+
+        /// Gates a transport result through the spec: payload on an expected
+        /// status, `ResponseError` otherwise. Operations with no declared
+        /// success status fall back to the 2xx range.
+        static func evaluate(
+            _ operation: Operation,
+            _ output: (data: Data, response: HTTPURLResponse)
+        ) throws -> Data {
+            let declared = successStatuses(operation)
+            let status = output.response.statusCode
+            let expected = declared.isEmpty ? (200 ..< 300).contains(status) : declared.contains(status)
+            guard expected else {
+                throw ResponseError(operation: operation, status: status, data: output.data, response: output.response)
+            }
+            return output.data
+        }
+    }
+
     // MARK: - Security (securitySchemes)
 
     enum Security {

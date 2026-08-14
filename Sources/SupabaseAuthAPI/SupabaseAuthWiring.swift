@@ -5,6 +5,7 @@
 
 import DeclarativeRequests
 import Foundation
+import SwiftUI
 
 struct MissingAPIKey: Error {}
 struct MissingAccessToken: Error {}
@@ -18,14 +19,17 @@ extension SupabaseAuthRESTAPI.Operation {
     }
 }
 
+// we want client to be reactive
+
 /// Session + environment in one place; gating on the generated Security
 /// section is its rule. Credentials are optional so the client is
 /// constructible before any session exists — a required-but-missing one
 /// fails the build at `request(_:)`.
 struct SupabaseAuthClient {
-    var baseURL: URL
-    var apikey: String?
-    var accessToken: String?
+    let baseURL: URL
+    @Binding var apikey: String?
+    @Binding var accessToken: String?
+    @Binding var refreshToken: String?
 
     func request(_ operation: SupabaseAuthRESTAPI.Operation) throws -> URLRequest {
         try RequestBlock {
@@ -51,8 +55,16 @@ struct SupabaseAuthClient {
     /// `POST /token?grant_type=refresh_token` — the refresh token is the
     /// operation's body parameter; optional because no stored token may
     /// exist on this device yet.
-    func refreshSessionRequest(refreshToken: String?) throws -> URLRequest {
+    func refreshSessionRequest() throws -> URLRequest {
         guard let refreshToken else { throw MissingRefreshToken() }
         return try request(.refreshSession(refreshToken: refreshToken))
+    }
+
+    /// request → execute → evaluate: each layer separable — build the
+    /// request yourself, or hand a transport result straight to
+    /// `SupabaseAuthRESTAPI.Responses.evaluate`.
+    func send(_ operation: SupabaseAuthRESTAPI.Operation, using session: URLSession = .shared) async throws -> Data {
+        let (data, response) = try await session.data(for: request(operation))
+        return try SupabaseAuthRESTAPI.Responses.evaluate(operation, (data, response as! HTTPURLResponse))
     }
 }

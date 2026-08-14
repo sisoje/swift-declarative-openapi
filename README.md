@@ -73,6 +73,22 @@ let request = try client.request(.showPetById(petId: "42"))
 
 Each operation is itself a `RequestBuildable` block, so the bare chain works too: `try SwaggerPetstore.Operation.showPetById(petId: "42").base(url).request()`.
 
+Every spec also gets a **Responses section** — the modular third layer. The generated `evaluate` gates a transport result on the operation's spec-declared statuses (`deleteSpecialEvent` expects 204, `createPets` 201, …) and throws one lossless error; the layer that cares decodes the spec's typed error model from `error.data`:
+
+```swift
+struct ResponseError: Error {
+    let operation: Operation
+    let status: Int
+    let data: Data                  // decode APIError/ErrorSchema from this when you need it
+    let response: HTTPURLResponse
+}
+
+// request → execute → evaluate, each layer separable:
+let request = try client.request(.getSpecialEvent(eventId: id))
+let (data, response) = try await session.data(for: request)
+let payload = try RedoclyMuseumAPI.Responses.evaluate(.getSpecialEvent(eventId: id), (data, response as! HTTPURLResponse))
+```
+
 Specs that declare `security:` also get a **Security section** — gates and attachment factories generated from the spec, so a client wires everything once:
 
 ```swift
@@ -121,7 +137,7 @@ Three reference specs are checked in, byte-exact canonical files from their upst
 - `Sources/DeclarativeOpenAPICLI` — the `swift-declarative-openapi` executable (plain `CommandLine.arguments`, no argument-parser dependency).
 - `Sources/PetstoreAPI`, `Sources/MuseumAPI`, and `Sources/SupabaseAuthAPI` — the **checked-in generated outputs** (plus the hand-written Supabase wiring), compiled against DeclarativeRequests on every `swift build`, so compilability of generated code is proven by the build itself.
 - `Specs/` — the canonical spec files.
-- `Tests/DeclarativeOpenAPITests` — 58 tests:
+- `Tests/DeclarativeOpenAPITests` — 62 tests:
   - **E2E generate-then-compile** (parameterized over all three specs): generates from the spec, writes a fresh temp SwiftPM package depending on DeclarativeRequests, runs a real `swift build` there, and asserts exit 0 (compiler output is surfaced on failure).
   - **Golden** (parameterized over all three specs): generator output must equal the checked-in `*.generated.swift` byte-for-byte.
   - **Request shape**: builds actual `URLRequest`s from the generated enums and asserts URLs, methods, query items, headers, and JSON bodies — including the Supabase refresh flow (`POST …/token?grant_type=refresh_token` with the real refresh-token payload and `apikey` header).

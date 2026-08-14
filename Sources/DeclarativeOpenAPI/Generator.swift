@@ -123,6 +123,10 @@ struct Operation {
     /// Operation-level `security` overrides the document default; the
     /// requirement objects' OR-alternatives are flattened into one set.
     var securitySchemes: [String]
+    /// Status codes the spec declares below 400 for this operation, sorted —
+    /// the operation's expected (non-error) responses. Empty when the spec
+    /// declares none (evaluation then falls back to the 2xx range).
+    var successStatuses: [Int]
 }
 
 // MARK: - Walking the document
@@ -346,13 +350,21 @@ extension SpecGenerator {
             }
         }
 
+        // Declared statuses below 400 are the operation's expected responses
+        // ("default" and error statuses are not success shapes).
+        let successStatuses = (anyDict(operation["responses"]) ?? [:]).keys
+            .compactMap { Int($0) }
+            .filter { $0 < 400 }
+            .sorted()
+
         return Operation(
             caseName: caseName,
             method: method.uppercased(),
             path: path,
             parameters: parameters,
             bodyType: bodyType,
-            securitySchemes: schemes
+            securitySchemes: schemes,
+            successStatuses: successStatuses
         )
     }
 }
@@ -389,6 +401,7 @@ extension SpecGenerator {
         output += "    // MARK: - Operations (paths)\n\n"
         output += indented(renderOperationEnum(operations: operations, parameterEnums: parameterEnums))
 
+        output += renderResponses(operations)
         output += renderSecurity(operations, definitions: securitySchemeDefinitions)
 
         if let baseURL {
@@ -498,6 +511,74 @@ extension SpecGenerator {
             output += "}\n"
             return output
         }
+    }
+
+    /// The `Responses` section: per-operation expected statuses from the
+    /// spec's `responses:`, an `evaluate` gate over a transport result, and
+    /// one lossless error — the next layer decodes the spec's error model
+    /// from `data` when it needs it.
+    func renderResponses(_ operations: [Operation]) -> String {
+        guard !operations.isEmpty else { return "" }
+
+        var output = "\n    // MARK: - Responses (responses)\n\n"
+        output += "    /// One error, nothing lost: status, payload, and the raw response —\n"
+        output += "    /// decode the spec's error model from `data` in the layer that needs it.\n"
+        output += "    struct ResponseError: Error {\n"
+        output += "        let operation: Operation\n"
+        output += "        let status: Int\n"
+        output += "        let data: Data\n"
+        output += "        let response: HTTPURLResponse\n"
+        output += "    }\n\n"
+        output += "    enum Responses {\n"
+        output += "        /// Statuses the spec declares below 400 for the operation.\n"
+        output += "        static func successStatuses(_ operation: Operation) -> Set<Int> {\n"
+
+        var groups: [(statuses: [Int], caseNames: [String])] = []
+        for operation in operations {
+            if let index = groups.firstIndex(where: { $0.statuses == operation.successStatuses }) {
+                groups[index].caseNames.append(operation.caseName)
+            } else {
+                groups.append((operation.successStatuses, [operation.caseName]))
+            }
+        }
+
+        func setLiteral(_ statuses: [Int]) -> String {
+            "[" + statuses.map(String.init).joined(separator: ", ") + "]"
+        }
+
+        if groups.count == 1 {
+            output += "            \(setLiteral(groups[0].statuses))\n"
+        } else {
+            output += "            switch operation {\n"
+            for group in groups {
+                let patterns = group.caseNames.map { ".\($0)" }
+                for (index, chunk) in patterns.chunks(of: 5).enumerated() {
+                    let prefix = index == 0 ? "            case " : "                "
+                    let isLast = (index + 1) * 5 >= patterns.count
+                    output += prefix + chunk.joined(separator: ", ") + (isLast ? ":\n" : ",\n")
+                }
+                output += "                \(setLiteral(group.statuses))\n"
+            }
+            output += "            }\n"
+        }
+        output += "        }\n\n"
+        output += "        /// Gates a transport result through the spec: payload on an expected\n"
+        output += "        /// status, `ResponseError` otherwise. Operations with no declared\n"
+        output += "        /// success status fall back to the 2xx range.\n"
+        output += "        static func evaluate(\n"
+        output += "            _ operation: Operation,\n"
+        output += "            _ output: (data: Data, response: HTTPURLResponse)\n"
+        output += "        ) throws -> Data {\n"
+        output += "            let declared = successStatuses(operation)\n"
+        output += "            let status = output.response.statusCode\n"
+        output += "            let expected = declared.isEmpty ? (200 ..< 300).contains(status) : declared.contains(status)\n"
+        output += "            guard expected else {\n"
+        output += "                throw ResponseError(operation: operation, status: status, data: output.data, response: output.response)\n"
+        output += "            }\n"
+        output += "            return output.data\n"
+        output += "        }\n"
+        output += "    }\n"
+        return output
     }
 
     /// The `Security` section: a `schemes(_:)` gate over the flattened
