@@ -540,7 +540,7 @@ import Testing
               items:
                 type: string
     """
-    let generated = try SwiftSpecGenerator(modelStyle: .full).generate(yaml: yaml)
+    let generated = try SwiftSpecGenerator().generate(yaml: yaml)
     #expect(generated.contains("struct Thing: Codable {"))
     #expect(generated.contains("var id: Int\n"))
     #expect(generated.contains("var displayName: String? = nil"))
@@ -575,26 +575,7 @@ import Testing
                 note:
                   type: string
     """
-    let generated = try SwiftSpecGenerator(modelStyle: .full).generate(yaml: yaml)
+    let generated = try SwiftSpecGenerator().generate(yaml: yaml)
     #expect(generated.contains("struct Extended: Codable {\n    var id: String\n    var note: String\n}"))
 }
 
-@Test func defaultModelStyleStaysStub() throws {
-    let yaml = """
-    openapi: "3.0.0"
-    info:
-      title: Unit Fixture
-      version: 1.0.0
-    paths: {}
-    components:
-      schemas:
-        Thing:
-          type: object
-          properties:
-            id:
-              type: integer
-    """
-    let generated = try SwiftSpecGenerator().generate(yaml: yaml)
-    #expect(generated.contains("struct Thing: Codable {}"))
-    #expect(!generated.contains("var id"))
-}

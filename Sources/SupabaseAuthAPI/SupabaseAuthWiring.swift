@@ -42,18 +42,18 @@ extension RequestBuildable {
 extension SupabaseAuthRESTAPIEndpoint {
     struct MissingRefreshToken: Error {}
 
-    /// `POST /token?grant_type=refresh_token` — rides the generated case for
-    /// method, path, and query, and lays the real payload over the stub body:
-    /// blocks apply in order, so the later `RequestBody.json` wins.
+    /// `POST /token?grant_type=refresh_token` with the generated body model.
     ///
     /// The refresh token is this endpoint's body parameter; it is optional
     /// only because the stored token may not exist on this device yet — the
     /// builder is always constructible, and nil fails the build at `.request`.
     static func refreshSession(refreshToken: String?) -> some RequestBuildable {
         RequestBlock {
-            SupabaseAuthRESTAPIEndpoint.postToken(grantType: "refresh_token", body: PostTokenBody())
             if let refreshToken {
-                RequestBody.json(["refresh_token": refreshToken])
+                SupabaseAuthRESTAPIEndpoint.postToken(
+                    grantType: "refresh_token",
+                    body: PostTokenBody(refreshToken: refreshToken)
+                )
             } else {
                 RequestBlock { _ in throw MissingRefreshToken() }
             }

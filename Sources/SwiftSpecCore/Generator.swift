@@ -25,18 +25,10 @@ public struct SwiftSpecGenerator {
     /// not generated — e.g. exclude a server-only admin scheme to keep the
     /// output client-only.
     public var excludedSchemes: Set<String>
-    /// `.stub` (default) emits empty model structs; `.full` emits real
-    /// Codable properties from `properties`/`required`, flattening `allOf`.
-    public var modelStyle: ModelStyle
 
-    public init(
-        enumNameOverride: String? = nil,
-        excludedSchemes: Set<String> = [],
-        modelStyle: ModelStyle = .stub
-    ) {
+    public init(enumNameOverride: String? = nil, excludedSchemes: Set<String> = []) {
         self.enumNameOverride = enumNameOverride
         self.excludedSchemes = excludedSchemes
-        self.modelStyle = modelStyle
     }
 
     public func generate(yaml: String) throws -> String {
@@ -82,16 +74,10 @@ public struct SwiftSpecGenerator {
     }
 }
 
-public enum ModelStyle: String, Sendable {
-    case stub
-    case full
-}
-
 // MARK: - Intermediate representation
 
 struct Model {
     enum Kind {
-        case structStub
         case structModel(properties: [ModelProperty])
         case arrayAlias(element: String)
         case scalarAlias(type: String)
@@ -148,19 +134,16 @@ extension SwiftSpecGenerator {
             case "string", "integer", "number", "boolean":
                 return Model(name: modelTypeName(name), kind: .scalarAlias(type: swiftType(for: schema)))
             default:
-                return Model(name: modelTypeName(name), kind: structKind(for: schema ?? [:], in: schemas))
+                return Model(
+                    name: modelTypeName(name),
+                    kind: .structModel(properties: collectProperties(of: schema ?? [:], in: schemas))
+                )
             }
         }
     }
 
-    /// `.structStub` by default; with `.full` models, real properties from
-    /// `properties`/`required`, with `allOf` branches ($refs resolved against
-    /// `components.schemas`) flattened in.
-    func structKind(for schema: [String: Any], in schemas: [String: Any]) -> Model.Kind {
-        guard modelStyle == .full else { return .structStub }
-        return .structModel(properties: collectProperties(of: schema, in: schemas))
-    }
-
+    /// Real properties from `properties`/`required`, with `allOf` branches
+    /// ($refs resolved against `components.schemas`) flattened in.
     func collectProperties(of schema: [String: Any], in schemas: [String: Any]) -> [ModelProperty] {
         var required = Set<String>()
         var properties: [String: [String: Any]] = [:]
@@ -295,9 +278,12 @@ extension SwiftSpecGenerator {
             if let ref = schema["$ref"] as? String {
                 bodyType = refTypeName(ref)
             } else {
-                let stubName = pascalIdentifier(caseName) + "Body"
-                inlineBodyModels.append(Model(name: stubName, kind: structKind(for: schema, in: componentSchemas)))
-                bodyType = stubName
+                let bodyName = pascalIdentifier(caseName) + "Body"
+                inlineBodyModels.append(Model(
+                    name: bodyName,
+                    kind: .structModel(properties: collectProperties(of: schema, in: componentSchemas))
+                ))
+                bodyType = bodyName
             }
         }
 
@@ -320,15 +306,11 @@ extension SwiftSpecGenerator {
         if !excludedSchemes.isEmpty {
             output += "// Client-only: operations requiring \(excludedSchemes.sorted().joined(separator: ", ")) are not generated.\n"
         }
-        if modelStyle == .full {
-            output += "// Models: full — properties from the spec's schemas, allOf flattened.\n"
-        }
         output += "\nimport DeclarativeRequests\nimport Foundation\n"
 
         if !models.isEmpty {
-            output += modelStyle == .full ? "\n// MARK: - Models\n" : "\n// MARK: - Model stubs\n"
-            let blocks = models.map(renderModel)
-            output += modelStyle == .full ? blocks.joined(separator: "\n") : blocks.joined()
+            output += "\n// MARK: - Models\n"
+            output += models.map(renderModel).joined(separator: "\n")
         }
 
         output += "\n// MARK: - Endpoints\n"
@@ -372,8 +354,6 @@ extension SwiftSpecGenerator {
 
     func renderModel(_ model: Model) -> String {
         switch model.kind {
-        case .structStub:
-            return "struct \(model.name): Codable {}\n"
         case let .arrayAlias(element):
             return "typealias \(model.name) = [\(element)]\n"
         case let .scalarAlias(type):

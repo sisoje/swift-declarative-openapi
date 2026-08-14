@@ -46,6 +46,6 @@ Two raw scheme names could PascalCase to the same property name (`user-auth` and
 
 3.1 allows `type: [string, "null"]` arrays. The tolerant walker currently falls back to `String`; mapping them to optionals would be more faithful. Neither checked-in spec uses this yet.
 
-## Full-model hard tail
+## Model-generation hard tail
 
-`--models full` covers the easy tier (properties/required, `allOf` flattening, CodingKeys). Deliberately skipped, in rough order of likely need: inline object properties (currently fall back to `String` via the tolerant type mapper — should at least emit a TODO comment), `format` refinements (`uuid` → `UUID`, `date-time` → `Date`), `additionalProperties` → dictionaries, `oneOf`/`anyOf` with discriminators, recursive schemas (need boxing), merge-patch three-state optionality.
+Model generation covers the easy tier (properties/required, `allOf` flattening, CodingKeys). Deliberately skipped, in rough order of likely need: inline object properties (currently fall back to `String` via the tolerant type mapper — should at least emit a TODO comment), `format` refinements (`uuid` → `UUID`, `date-time` → `Date`), `additionalProperties` → dictionaries, `oneOf`/`anyOf` with discriminators, recursive schemas (need boxing), merge-patch three-state optionality.

@@ -12,17 +12,12 @@ let petstoreSpecURL = packageRoot.appendingPathComponent("Specs/petstore.yaml")
 let museumSpecURL = packageRoot.appendingPathComponent("Specs/museum.yaml")
 
 @Test(arguments: [
-    ("Specs/petstore.yaml", "Sources/PetstoreAPI/Petstore.generated.swift", [], "full"),
-    ("Specs/museum.yaml", "Sources/MuseumAPI/Museum.generated.swift", [], "full"),
-    ("Specs/supabase-auth.yaml", "Sources/SupabaseAuthAPI/SupabaseAuth.generated.swift", ["AdminAuth"], "stub"),
-]) func generatorOutputMatchesCheckedInGoldenFile(
-    spec: String, golden: String, excluded: [String], models: String
-) throws {
+    ("Specs/petstore.yaml", "Sources/PetstoreAPI/Petstore.generated.swift", []),
+    ("Specs/museum.yaml", "Sources/MuseumAPI/Museum.generated.swift", []),
+    ("Specs/supabase-auth.yaml", "Sources/SupabaseAuthAPI/SupabaseAuth.generated.swift", ["AdminAuth"]),
+]) func generatorOutputMatchesCheckedInGoldenFile(spec: String, golden: String, excluded: [String]) throws {
     let yaml = try String(contentsOf: packageRoot.appendingPathComponent(spec), encoding: .utf8)
-    let generated = try SwiftSpecGenerator(
-        excludedSchemes: Set(excluded),
-        modelStyle: ModelStyle(rawValue: models)!
-    ).generate(yaml: yaml)
+    let generated = try SwiftSpecGenerator(excludedSchemes: Set(excluded)).generate(yaml: yaml)
 
     let goldenContents = try String(
         contentsOf: packageRoot.appendingPathComponent(golden),

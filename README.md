@@ -1,12 +1,12 @@
 # swift-spec
 
-An executable that takes an OpenAPI 3.0 YAML spec and generates a **compilable Swift enum** that models every endpoint using the [DeclarativeRequests](../declarative-requests-swift) result-builder DSL. By default models are **fake/minimal stubs** (empty `Codable` structs) — the point is the endpoint surface, not the schemas. Opt in with `--models full` to generate real `Codable` properties from `properties`/`required` (optionals with `= nil` defaults, `allOf` flattened via `$ref` resolution, `CodingKeys` emitted only when a raw name isn't a clean Swift name).
+An executable that takes an OpenAPI 3.0 YAML spec and generates a **compilable Swift enum** that models every endpoint using the [DeclarativeRequests](../declarative-requests-swift) result-builder DSL. Models are generated with real `Codable` properties from `properties`/`required`: optionals get `= nil` defaults (so memberwise inits need only the required fields), `allOf` is flattened via `$ref` resolution, and `CodingKeys` is emitted only when a raw name isn't a clean Swift name.
 
 Two reference specs are checked in, both byte-exact canonical files from their upstream repositories:
 
 - `Specs/petstore.yaml` — the classic [petstore](https://learn.openapis.org/examples/v3.0/petstore.html) example (OpenAPI 3.0).
 - `Specs/museum.yaml` — the [Redocly Museum API](https://github.com/Redocly/museum-openapi-example) example (OpenAPI 3.1), which exercises `$ref` parameters, scalar/enum component schemas, `allOf`, nested paths (`/tickets/{ticketId}/qr`), and a `webhooks` section (ignored — webhooks aren't client-callable endpoints).
-- `Specs/supabase-auth.yaml` — the [Supabase Auth REST API](https://github.com/supabase/auth) (OpenAPI 3.0.3, ~60 operations), which exercises the no-`operationId` fallback naming (`postToken`, `getUser`, …) and templated server URLs (`https://{project}.supabase.co/auth/v1` — emitted as a doc comment, not a `defaultBaseURL`, since a template isn't a resolvable URL). `Sources/SupabaseAuthAPI` additionally carries a **hand-written wiring layer** (`SupabaseAuthWiring.swift`) on top of the generated enum: `keyed(apikey:)` / `authorized(accessToken:)` modifiers, and a **token-refresh** builder — `refreshSession(refreshToken:)` rides the generated `postToken` case for method/path/query and lays the real `{"refresh_token": …}` payload over the stub body (blocks apply in order, so the later `RequestBody.json` wins).
+- `Specs/supabase-auth.yaml` — the [Supabase Auth REST API](https://github.com/supabase/auth) (OpenAPI 3.0.3, ~60 operations), which exercises the no-`operationId` fallback naming (`postToken`, `getUser`, …) and templated server URLs (`https://{project}.supabase.co/auth/v1` — emitted as a doc comment, not a `defaultBaseURL`, since a template isn't a resolvable URL). `Sources/SupabaseAuthAPI` additionally carries a **hand-written wiring layer** (`SupabaseAuthWiring.swift`) on top of the generated enum: `keyed(apikey:)` / `authorized(accessToken:)` modifiers, and a **token-refresh** builder — `refreshSession(refreshToken:)` invokes the generated `postToken` case with the generated `PostTokenBody(refreshToken:)` model.
 
 ## Usage
 
@@ -24,7 +24,7 @@ For the petstore spec the output is exactly `Sources/PetstoreAPI/Petstore.genera
 
 ```swift
 struct APIError: Codable {}
-struct Pet: Codable {          // with --models full; default is `struct Pet: Codable {}`
+struct Pet: Codable {
     var id: Int
     var name: String
     var tag: String? = nil
@@ -65,7 +65,7 @@ let request = try SwaggerPetstoreEndpoint.showPetById(petId: "42")
 - One enum case per operation, named from `operationId` (camelCase-sanitized); falls back to method + path (e.g. `getPetsPetId`) when `operationId` is missing.
 - Path params are interpolated into `Endpoint(...)`; leading `/` is stripped because `Endpoint` paths are joined onto the base URL by `.base(url)`. Path-item-level `parameters` are merged into each operation (operation-level entries win by `(name, in)`).
 - Query params: required → `Query("name", value)`; optional → wrapped in `if let`; non-`String` types stringified via `String(...)`; array-typed params emit a `for` loop of repeated `Query` blocks (the DSL's `buildArray`).
-- `requestBody` (application/json): `$ref` → associated value of that model type + `RequestBody.json(body)`; inline schemas get a generated `<OperationId>Body` stub.
+- `requestBody` (application/json): `$ref` → associated value of that model type + `RequestBody.json(body)`; inline schemas get a generated `<OperationId>Body` model with real properties.
 - Parameters written as `$ref: "#/components/parameters/X"` are resolved to their component definitions (unresolvable refs are dropped).
 - `security:` declarations generate the DSL README's Open Spec auth concept per case: `var securitySchemes: Set<String>` (operation-level overrides the document default; `security: []` marks an operation public; OR-alternatives are flattened) and one named flag per scheme the spec uses — `needsUserAuth`, `needsAPIKeyAuth`, … (no umbrella `needsAuth`: it's ambiguous about *which* credential, and derivable as `!securitySchemes.isEmpty`). Omitted entirely when the spec declares no security. Wiring layers gate on the named flags — see `SupabaseAuthWiring.swift`: the auth modifiers (`keyed(apikey:)`, `authorized(accessToken:)`) are plain `RequestBuildable` extensions: unconditional, optional-in, failing the build at `.request` on nil (`MissingAPIKey`, `MissingAccessToken`). The generated flags are the *caller's* gate — chain `.authorized` where `needsUserAuth`, skip `.keyed` on keyless endpoints; omission is spelled by not declaring the block. `refreshSession(refreshToken:)` is not a modifier but an endpoint builder — the token is that endpoint's body parameter, optional only because no stored token may exist yet (nil throws `MissingRefreshToken` at `.request`). The checked-in Supabase target is **client-only**: generated with `--exclude-scheme AdminAuth`, so server-side operations (user management, SSO provider management — those needing the service-role JWT) are not generated at all.
 - `components.schemas`: `object` (or `allOf`) → empty `struct X: Codable {}`, `array` → `typealias X = [Element]`, scalars → `typealias X = String/Int/Double/Bool` (`format: binary` → `Data`). Names are sanitized to valid Swift identifiers (`thing-request` → `ThingRequest`); names that would shadow stdlib types are prefixed (`Error` → `APIError`, `Date` → `APIDate`). The rename carries no semantics: `APIError` does **not** conform to `Swift.Error`, because OpenAPI has no way to mark a schema as an error model and we don't infer that from names — apps that want to throw it add `extension APIError: Swift.Error {}` in hand-written code.
@@ -87,7 +87,7 @@ let request = try SwaggerPetstoreEndpoint.showPetById(petId: "42")
 
 ## Notes & caveats
 
-- Models default to empty stubs by design; the checked-in **petstore and museum targets opt into `--models full`** (real properties, `allOf` flattened), while the supabase target keeps stubs. Full models cover the easy tier only — inline object properties, `oneOf`/`anyOf`, and recursion are out of scope (see TODO.md).
+- Model generation covers the easy tier only — inline object properties, `oneOf`/`anyOf`, and recursion are out of scope and fall back to `String` via the tolerant type mapper (see TODO.md for the hard tail).
 - Requires the sibling checkout `../declarative-requests-swift` (relative path dependency in `Package.swift`). The e2e test additionally references it by **absolute path** (`/Users/lazar/dev/declarative-requests-swift`), so the test suite is machine-local as-is.
 - Toolchain: swift-tools-version 6.3, macOS 14+ (matching the DSL package). First build fetches Yams from the network.
 - The initial implementation was hardened by an adversarial review pass that caught and fixed: ignored path-item-level `parameters` (literal `{petId}` left in URLs), unsanitized schema names, non-compiling `String([T])` for array params, empty-`switch` output for operation-less specs, and the `Error` schema shadowing `Swift.Error`.
