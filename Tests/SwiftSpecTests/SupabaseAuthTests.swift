@@ -47,7 +47,7 @@ private let projectBaseURL = URL(string: "https://myproject.supabase.co/auth/v1"
 }
 
 @Test func userEndpointWithoutTokenFailsAtRequest() {
-    #expect(throws: SupabaseAuthRESTAPIEndpoint.MissingAccessToken.self) {
+    #expect(throws: MissingAccessToken.self) {
         try SupabaseAuthRESTAPIEndpoint
             .getUser
             .authorized(accessToken: nil)
@@ -57,14 +57,11 @@ private let projectBaseURL = URL(string: "https://myproject.supabase.co/auth/v1"
     }
 }
 
-@Test func publicEndpointIgnoresMissingToken() throws {
-    let request = try SupabaseAuthRESTAPIEndpoint
-        .postSignup(body: PostSignupBody())
-        .authorized(accessToken: nil)
-        .keyed(apikey: "anon-key")
-        .base(projectBaseURL)
-        .request
-    #expect(request.value(forHTTPHeaderField: "Authorization") == nil)
+@Test func callerGatesAuthorizedOnGeneratedFlag() {
+    // Public endpoints don't chain .authorized — the generated flag is the
+    // caller's gate, same rule as .keyed for keyless endpoints.
+    #expect(SupabaseAuthRESTAPIEndpoint.postSignup(body: PostSignupBody()).needsUserAuth == false)
+    #expect(SupabaseAuthRESTAPIEndpoint.getUser.needsUserAuth == true)
 }
 
 @Test func nilApikeyFailsAtRequest() {

@@ -6,6 +6,7 @@ import DeclarativeRequests
 import Foundation
 
 struct MissingAPIKey: Error {}
+struct MissingAccessToken: Error {}
 
 extension RequestBuildable {
     /// Every Supabase Auth request carries the project `apikey` header, so a
@@ -22,37 +23,32 @@ extension RequestBuildable {
             }
         }
     }
-}
 
-extension SupabaseAuthRESTAPIEndpoint {
-    struct MissingAccessToken: Error {}
-    struct MissingRefreshToken: Error {}
-
-    /// Applies the user bearer only where the spec requires `UserAuth`
-    /// (per the generated flag); a required-but-missing token fails the
-    /// build with the spec's own error — the README's Open Spec rule that
-    /// a half-authorized request can never reach the wire.
+    /// Attaches the user bearer; a nil token fails the build at `.request`.
+    /// Chain it on endpoints whose generated `needsUserAuth` is true — for
+    /// public endpoints, don't chain it, same rule as `.keyed`.
     func authorized(accessToken: String?) -> some RequestBuildable {
         RequestBlock {
             self
-            if needsUserAuth {
-                if let accessToken {
-                    Authorization.bearer(accessToken)
-                } else {
-                    RequestBlock { _ in throw MissingAccessToken() }
-                }
+            if let accessToken {
+                Authorization.bearer(accessToken)
+            } else {
+                RequestBlock { _ in throw MissingAccessToken() }
             }
         }
     }
+}
+
+extension SupabaseAuthRESTAPIEndpoint {
+    struct MissingRefreshToken: Error {}
 
     /// `POST /token?grant_type=refresh_token` — rides the generated case for
     /// method, path, and query, and lays the real payload over the stub body:
     /// blocks apply in order, so the later `RequestBody.json` wins.
     ///
-    /// This is an endpoint builder, not an auth modifier: the refresh token
-    /// is this endpoint's body parameter. It's optional only because the
-    /// stored token may not exist on this device yet — the builder is always
-    /// constructible, and a nil payload fails the build at `.request`.
+    /// The refresh token is this endpoint's body parameter; it is optional
+    /// only because the stored token may not exist on this device yet — the
+    /// builder is always constructible, and nil fails the build at `.request`.
     static func refreshSession(refreshToken: String?) -> some RequestBuildable {
         RequestBlock {
             SupabaseAuthRESTAPIEndpoint.postToken(grantType: "refresh_token", body: PostTokenBody())
