@@ -7,6 +7,7 @@ import Foundation
 
 struct MissingAPIKey: Error {}
 struct MissingAccessToken: Error {}
+struct MissingRefreshToken: Error {}
 
 extension RequestBuildable {
     /// Every Supabase Auth request carries the project `apikey` header, so a
@@ -40,8 +41,6 @@ extension RequestBuildable {
 }
 
 extension SupabaseAuthRESTAPIEndpoint {
-    struct MissingRefreshToken: Error {}
-
     /// `POST /token?grant_type=refresh_token` with the generated body model.
     ///
     /// The refresh token is this endpoint's body parameter; it is optional

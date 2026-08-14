@@ -37,7 +37,7 @@ private let projectBaseURL = URL(string: "https://myproject.supabase.co/auth/v1"
 }
 
 @Test func refreshWithoutStoredTokenFailsAtRequest() {
-    #expect(throws: SupabaseAuthRESTAPIEndpoint.MissingRefreshToken.self) {
+    #expect(throws: MissingRefreshToken.self) {
         try SupabaseAuthRESTAPIEndpoint
             .refreshSession(refreshToken: nil)
             .keyed(apikey: "anon-key")
