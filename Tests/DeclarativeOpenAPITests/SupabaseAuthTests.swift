@@ -126,13 +126,14 @@ private let client = SupabaseAuthClient(
 }
 
 @Test func typedClientDecodesTokenRefreshResponse() async throws {
-    let api = SupabaseAuthRESTAPI.Client.live(
+    let api = SupabaseAuthRESTAPI.Client.real(
         request: client.request,
         transport: { request in
             #expect(request.url?.query == "grant_type=refresh_token")
             return (Data(#"{"access_token":"new-jwt","refresh_token":"new-r"}"#.utf8),
                     HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: nil)!)
-        }
+        },
+        decoder: { _ in JSONDecoder() }
     )
     let session = try await api.postToken(.refreshToken, .init(refreshToken: "old-r"))
     #expect(session.accessToken == "new-jwt")

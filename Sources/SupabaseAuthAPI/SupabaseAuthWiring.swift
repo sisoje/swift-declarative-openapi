@@ -73,6 +73,10 @@ struct SupabaseAuthClient {
     /// Fully typed surface over this wiring: SupabaseAuthRESTAPI.Client field per
     /// operation, defaults to the real transport.
     var api: SupabaseAuthRESTAPI.Client {
-        .live(request: request)
+        .real(
+            request: request,
+            transport: { try await URLSession.shared.data(for: $0) },
+            decoder: { _ in JSONDecoder() }
+        )
     }
 }

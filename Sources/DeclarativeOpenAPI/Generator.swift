@@ -660,13 +660,14 @@ extension SpecGenerator {
             output += "        var \(operation.caseName): \(signature) async throws -> \(operation.successType)\n"
         }
         output += "\n"
-        output += "        /// request → transport → evaluate → decode, wired per operation.\n"
-        output += "        /// The mechanics live once in three pack-generic helpers; the table\n"
-        output += "        /// below is pure facts — case constructor, response type.\n"
-        output += "        static func live(\n"
+        output += "        /// The real networking: request → transport → evaluate → decode,\n"
+        output += "        /// wired per operation. No defaults — the caller states its transport\n"
+        output += "        /// and decoder. The mechanics live once in the pack-generic helpers;\n"
+        output += "        /// the table below is pure facts — case constructor, response type.\n"
+        output += "        static func real(\n"
         output += "            request: @escaping (Operation) throws -> URLRequest,\n"
-        output += "            transport: @escaping (URLRequest) async throws -> (Data, URLResponse) = { try await URLSession.shared.data(for: $0) },\n"
-        output += "            decoder: @escaping (Operation) -> JSONDecoder = { _ in JSONDecoder() }\n"
+        output += "            transport: @escaping (URLRequest) async throws -> (Data, URLResponse),\n"
+        output += "            decoder: @escaping (Operation) -> JSONDecoder\n"
         output += "        ) -> Client {\n"
         // Emit only the helpers this backend's operations actually use.
         let usesText = operations.contains(where: \.successIsText)

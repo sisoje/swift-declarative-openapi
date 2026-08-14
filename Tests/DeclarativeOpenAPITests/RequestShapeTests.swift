@@ -52,12 +52,13 @@ private let baseURL = URL(string: "http://petstore.swagger.io/v1")!
 }
 
 @Test func typedClientDecodesThroughStubTransport() async throws {
-    let api = SwaggerPetstore.Client.live(
+    let api = SwaggerPetstore.Client.real(
         request: PetstoreClient(baseURL: baseURL).request,
         transport: { request in
             (Data(#"{"id":7,"name":"Rex"}"#.utf8),
              HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: nil)!)
-        }
+        },
+        decoder: { _ in JSONDecoder() }
     )
     let pet = try await api.showPetById("7")
     #expect(pet.id == 7)
@@ -65,7 +66,11 @@ private let baseURL = URL(string: "http://petstore.swagger.io/v1")!
 }
 
 @Test func typedClientFieldsAreStubbable() async throws {
-    var api = SwaggerPetstore.Client.live(request: PetstoreClient(baseURL: baseURL).request)
+    var api = SwaggerPetstore.Client.real(
+        request: PetstoreClient(baseURL: baseURL).request,
+        transport: { try await URLSession.shared.data(for: $0) },
+        decoder: { _ in JSONDecoder() }
+    )
     api.showPetById = { _ in SwaggerPetstore.Pet(id: 1, name: "Stub") }
     let pet = try await api.showPetById("anything")
     #expect(pet.name == "Stub")

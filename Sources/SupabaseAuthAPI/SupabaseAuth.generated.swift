@@ -1185,13 +1185,14 @@ enum SupabaseAuthRESTAPI {
         var getVerify: (_ token: String, _ type: Operation.APIType, _ redirectTo: String?) async throws -> Void
         var postVerify: (_ body: PostVerifyBody) async throws -> AccessTokenResponseSchema
 
-        /// request → transport → evaluate → decode, wired per operation.
-        /// The mechanics live once in three pack-generic helpers; the table
-        /// below is pure facts — case constructor, response type.
-        static func live(
+        /// The real networking: request → transport → evaluate → decode,
+        /// wired per operation. No defaults — the caller states its transport
+        /// and decoder. The mechanics live once in the pack-generic helpers;
+        /// the table below is pure facts — case constructor, response type.
+        static func real(
             request: @escaping (Operation) throws -> URLRequest,
-            transport: @escaping (URLRequest) async throws -> (Data, URLResponse) = { try await URLSession.shared.data(for: $0) },
-            decoder: @escaping (Operation) -> JSONDecoder = { _ in JSONDecoder() }
+            transport: @escaping (URLRequest) async throws -> (Data, URLResponse),
+            decoder: @escaping (Operation) -> JSONDecoder
         ) -> Client {
             func endpoint<each Input, Output: Decodable>(
                 _ makeCase: @escaping (repeat each Input) -> Operation,
