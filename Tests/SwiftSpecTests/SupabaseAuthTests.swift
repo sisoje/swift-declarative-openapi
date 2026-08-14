@@ -57,39 +57,6 @@ private let projectBaseURL = URL(string: "https://myproject.supabase.co/auth/v1"
     #expect(request.value(forHTTPHeaderField: "Authorization") == nil)
 }
 
-@Test func adminEndpointCarriesServiceRoleBearer() throws {
-    let request = try SupabaseAuthRESTAPIEndpoint
-        .getAdminSsoProviders
-        .admin(serviceRoleToken: "service-role-jwt")
-        .keyed(apikey: "anon-key")
-        .base(projectBaseURL)
-        .request
-    #expect(request.url?.absoluteString == "https://myproject.supabase.co/auth/v1/admin/sso/providers")
-    #expect(request.value(forHTTPHeaderField: "Authorization") == "Bearer service-role-jwt")
-    #expect(request.value(forHTTPHeaderField: "apikey") == "anon-key")
-}
-
-@Test func adminEndpointWithoutServiceRoleTokenFailsAtRequest() {
-    #expect(throws: SupabaseAuthRESTAPIEndpoint.MissingServiceRoleToken.self) {
-        try SupabaseAuthRESTAPIEndpoint
-            .getAdminSsoProviders
-            .admin(serviceRoleToken: nil)
-            .keyed(apikey: "anon-key")
-            .base(projectBaseURL)
-            .request
-    }
-}
-
-@Test func userEndpointIgnoresMissingServiceRoleToken() throws {
-    let request = try SupabaseAuthRESTAPIEndpoint
-        .postSignup(body: PostSignupBody())
-        .admin(serviceRoleToken: nil)
-        .keyed(apikey: "anon-key")
-        .base(projectBaseURL)
-        .request
-    #expect(request.value(forHTTPHeaderField: "Authorization") == nil)
-}
-
 @Test func nilApikeyOmitsHeader() throws {
     let request = try SupabaseAuthRESTAPIEndpoint
         .postSignup(body: PostSignupBody())
@@ -101,17 +68,23 @@ private let projectBaseURL = URL(string: "https://myproject.supabase.co/auth/v1"
 
 @Test func generatedPerSchemeFlagsMatchSpec() {
     #expect(SupabaseAuthRESTAPIEndpoint.getUser.needsUserAuth == true)
-    #expect(SupabaseAuthRESTAPIEndpoint.getUser.needsAdminAuth == false)
-    #expect(SupabaseAuthRESTAPIEndpoint.getAdminSsoProviders.needsAdminAuth == true)
-    #expect(SupabaseAuthRESTAPIEndpoint.getAdminSsoProviders.needsAPIKeyAuth == true)
+    #expect(SupabaseAuthRESTAPIEndpoint.getUser.needsAPIKeyAuth == true)
     #expect(SupabaseAuthRESTAPIEndpoint.postSamlAcs(relayState: nil, sAMLArt: nil, sAMLResponse: nil)
         .needsAPIKeyAuth == false)
 }
 
+@Test func adminOperationsAreNotGenerated() throws {
+    let generated = try String(
+        contentsOf: packageRoot.appendingPathComponent("Sources/SupabaseAuthAPI/SupabaseAuth.generated.swift"),
+        encoding: .utf8
+    )
+    #expect(!generated.contains("case getAdminUsers"))
+    #expect(!generated.contains("AdminAuth\""))
+    #expect(generated.contains("// Client-only: operations requiring AdminAuth are not generated."))
+}
+
 @Test func generatedSecurityMatchesSpec() {
     #expect(SupabaseAuthRESTAPIEndpoint.getUser.securitySchemes == ["APIKeyAuth", "UserAuth"])
-    #expect(SupabaseAuthRESTAPIEndpoint.getAdminUsers(page: nil, perPage: nil).securitySchemes
-        == ["APIKeyAuth", "AdminAuth"])
     #expect(SupabaseAuthRESTAPIEndpoint.postToken(grantType: "password", body: PostTokenBody()).securitySchemes
         == ["APIKeyAuth"])
     #expect(SupabaseAuthRESTAPIEndpoint.postSamlAcs(relayState: nil, sAMLArt: nil, sAMLResponse: nil).needsAuth

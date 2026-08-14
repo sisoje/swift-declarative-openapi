@@ -21,7 +21,6 @@ extension RequestBuildable {
 
 extension SupabaseAuthRESTAPIEndpoint {
     struct MissingAccessToken: Error {}
-    struct MissingServiceRoleToken: Error {}
 
     /// Applies the user bearer only where the spec requires `UserAuth`
     /// (per the generated flag); a required-but-missing token fails the
@@ -40,21 +39,6 @@ extension SupabaseAuthRESTAPIEndpoint {
         }
     }
 
-    /// Server-side counterpart: applies the admin bearer where the spec
-    /// requires `AdminAuth` (user management, SSO provider management, …).
-    /// The service-role JWT must never ship in a client app.
-    func admin(serviceRoleToken: String?) -> some RequestBuildable {
-        RequestBlock {
-            self
-            if needsAdminAuth {
-                if let serviceRoleToken {
-                    Authorization.bearer(serviceRoleToken)
-                } else {
-                    RequestBlock { _ in throw MissingServiceRoleToken() }
-                }
-            }
-        }
-    }
     /// `POST /token?grant_type=refresh_token` — rides the generated case for
     /// method, path, and query, and lays the real payload over the stub body:
     /// blocks apply in order, so the later `RequestBody.json` wins.

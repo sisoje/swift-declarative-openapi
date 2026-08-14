@@ -30,6 +30,18 @@ For templated server URLs (`https://{project}.supabase.co/auth/v1`) the generato
 
 `grant_type` is an enum of five values in the spec but generates as `String`. A generated nested `enum GrantType: String` per enum parameter would make invalid values unrepresentable.
 
+## Security scheme attachment metadata
+
+`components.securitySchemes` declares *how* each scheme attaches (`http bearer` vs `apiKey in: header, name: apikey`). Generating that (e.g. a nested type with the header name) would let wiring layers derive the attachment mechanics instead of hand-writing `Header.custom("apikey")`.
+
+## Security AND/OR structure
+
+`securitySchemes` flattens OR-alternatives (`[{A,B},{C}]` = "(A and B) or C") into one set. Fine for the checked-in specs; a `securityAlternatives: [[String]]` would preserve the structure if a spec ever needs it.
+
+## `needs<Scheme>` name collisions
+
+Two raw scheme names could PascalCase to the same property name (`user-auth` and `UserAuth`). Dedupe or disambiguate if it ever occurs.
+
 ## OpenAPI 3.1 nullable types
 
 3.1 allows `type: [string, "null"]` arrays. The tolerant walker currently falls back to `String`; mapping them to optionals would be more faithful. Neither checked-in spec uses this yet.

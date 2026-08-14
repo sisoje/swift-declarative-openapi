@@ -1,7 +1,7 @@
 import Foundation
 import SwiftSpecCore
 
-let usage = "usage: swift-spec <input.yaml> [-o <output.swift>] [--enum-name <Name>]"
+let usage = "usage: swift-spec <input.yaml> [-o <output.swift>] [--enum-name <Name>] [--exclude-scheme <Scheme> ...]"
 
 func fail(_ message: String) -> Never {
     FileHandle.standardError.write(Data("swift-spec: error: \(message)\n".utf8))
@@ -12,6 +12,7 @@ var arguments = Array(CommandLine.arguments.dropFirst())
 var inputPath: String?
 var outputPath: String?
 var enumName: String?
+var excludedSchemes: Set<String> = []
 
 while !arguments.isEmpty {
     let argument = arguments.removeFirst()
@@ -22,6 +23,9 @@ while !arguments.isEmpty {
     case "--enum-name":
         guard !arguments.isEmpty else { fail("missing value for --enum-name\n\(usage)") }
         enumName = arguments.removeFirst()
+    case "--exclude-scheme":
+        guard !arguments.isEmpty else { fail("missing value for --exclude-scheme\n\(usage)") }
+        excludedSchemes.insert(arguments.removeFirst())
     case "-h", "--help":
         print(usage)
         exit(0)
@@ -43,7 +47,7 @@ do {
 
 let generated: String
 do {
-    generated = try SwiftSpecGenerator(enumNameOverride: enumName).generate(yaml: yaml)
+    generated = try SwiftSpecGenerator(enumNameOverride: enumName, excludedSchemes: excludedSchemes).generate(yaml: yaml)
 } catch {
     fail(String(describing: error))
 }

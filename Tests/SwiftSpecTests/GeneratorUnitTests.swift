@@ -484,3 +484,31 @@ import Testing
     #expect(!generated.contains("securitySchemes"))
     #expect(!generated.contains("needsAuth"))
 }
+
+@Test func excludedSchemeDropsOperationsRequiringIt() throws {
+    let yaml = """
+    openapi: "3.0.3"
+    info:
+      title: Unit Fixture
+      version: 1.0.0
+    paths:
+      /public:
+        get:
+          operationId: publicThing
+      /admin:
+        get:
+          operationId: adminThing
+          security:
+            - AdminAuth: []
+          requestBody:
+            content:
+              application/json:
+                schema:
+                  type: object
+    """
+    let generated = try SwiftSpecGenerator(excludedSchemes: ["AdminAuth"]).generate(yaml: yaml)
+    #expect(generated.contains("case publicThing"))
+    #expect(!generated.contains("adminThing"))
+    #expect(!generated.contains("AdminThingBody"))
+    #expect(generated.contains("// Client-only: operations requiring AdminAuth are not generated."))
+}
