@@ -3,166 +3,180 @@
 import DeclarativeRequests
 import Foundation
 
-// MARK: - Models
-typealias APIDate = String
+// The whole backend in one closed type — sections mirror the OpenAPI document.
+enum RedoclyMuseumAPI {
+    // MARK: - Schemas (components.schemas)
 
-struct APIError: Codable {
-    var title: String? = nil
-    var type: String? = nil
-}
+    typealias APIDate = String
 
-struct BuyMuseumTickets: Codable {
-    var email: Email? = nil
-    var eventId: EventId? = nil
-    var ticketDate: APIDate
-    var ticketId: TicketId? = nil
-    var ticketType: TicketType
-}
-
-typealias Email = String
-
-typealias EventDates = [APIDate]
-
-typealias EventDescription = String
-
-typealias EventId = String
-
-typealias EventLocation = String
-
-typealias EventName = String
-
-typealias EventPrice = Double
-
-struct MuseumDailyHours: Codable {
-    var date: APIDate
-    var timeClose: String
-    var timeOpen: String
-}
-
-typealias MuseumHours = [MuseumDailyHours]
-
-struct MuseumTicketsConfirmation: Codable {
-    var confirmationCode: TicketConfirmation
-    var eventId: EventId? = nil
-    var message: TicketMessage
-    var ticketDate: APIDate
-    var ticketId: TicketId? = nil
-    var ticketType: TicketType
-}
-
-struct SpecialEvent: Codable {
-    var dates: EventDates
-    var eventDescription: EventDescription
-    var eventId: EventId? = nil
-    var location: EventLocation
-    var name: EventName
-    var price: EventPrice
-}
-
-typealias SpecialEventCollection = [SpecialEvent]
-
-struct SpecialEventFields: Codable {
-    var dates: EventDates? = nil
-    var eventDescription: EventDescription? = nil
-    var location: EventLocation? = nil
-    var name: EventName? = nil
-    var price: EventPrice? = nil
-}
-
-struct Ticket: Codable {
-    var eventId: EventId? = nil
-    var ticketDate: APIDate
-    var ticketId: TicketId? = nil
-    var ticketType: TicketType
-}
-
-typealias TicketCodeImage = Data
-
-typealias TicketConfirmation = String
-
-typealias TicketId = String
-
-typealias TicketMessage = String
-
-enum TicketType: String, Codable {
-    case event
-    case general
-}
-
-// MARK: - Endpoints
-enum RedoclyMuseumAPIEndpoint: RequestBuildable {
-    case getMuseumHours(startDate: String?, page: Int?, limit: Int?)
-    case listSpecialEvents(startDate: String?, endDate: String?, page: Int?, limit: Int?)
-    case createSpecialEvent(body: SpecialEvent)
-    case getSpecialEvent(eventId: String)
-    case updateSpecialEvent(eventId: String, body: SpecialEventFields)
-    case deleteSpecialEvent(eventId: String)
-    case buyMuseumTickets(body: BuyMuseumTickets)
-    case getTicketCode(ticketId: String)
-
-    static let defaultBaseURL = URL(string: "https://redocly.com/_mock/docs/openapi/museum-api")
-
-    /// Security scheme names the spec requires for this endpoint
-    /// (OR-alternatives flattened into one set).
-    var securitySchemes: Set<String> {
-        ["MuseumPlaceholderAuth"]
+    struct APIError: Codable {
+        var title: String? = nil
+        var type: String? = nil
     }
 
-    /// Whether the spec requires the `MuseumPlaceholderAuth` scheme for this endpoint.
-    var needsMuseumPlaceholderAuth: Bool {
-        securitySchemes.contains("MuseumPlaceholderAuth")
+    struct BuyMuseumTickets: Codable {
+        var email: Email? = nil
+        var eventId: EventId? = nil
+        var ticketDate: APIDate
+        var ticketId: TicketId? = nil
+        var ticketType: TicketType
     }
 
-    var body: some RequestBuildable {
-        switch self {
-        case let .getMuseumHours(startDate, page, limit):
-            Method.GET
-            Endpoint("museum-hours")
-            if let startDate {
-                Query("startDate", startDate)
+    typealias Email = String
+
+    typealias EventDates = [APIDate]
+
+    typealias EventDescription = String
+
+    typealias EventId = String
+
+    typealias EventLocation = String
+
+    typealias EventName = String
+
+    typealias EventPrice = Double
+
+    struct MuseumDailyHours: Codable {
+        var date: APIDate
+        var timeClose: String
+        var timeOpen: String
+    }
+
+    typealias MuseumHours = [MuseumDailyHours]
+
+    struct MuseumTicketsConfirmation: Codable {
+        var confirmationCode: TicketConfirmation
+        var eventId: EventId? = nil
+        var message: TicketMessage
+        var ticketDate: APIDate
+        var ticketId: TicketId? = nil
+        var ticketType: TicketType
+    }
+
+    struct SpecialEvent: Codable {
+        var dates: EventDates
+        var eventDescription: EventDescription
+        var eventId: EventId? = nil
+        var location: EventLocation
+        var name: EventName
+        var price: EventPrice
+    }
+
+    typealias SpecialEventCollection = [SpecialEvent]
+
+    struct SpecialEventFields: Codable {
+        var dates: EventDates? = nil
+        var eventDescription: EventDescription? = nil
+        var location: EventLocation? = nil
+        var name: EventName? = nil
+        var price: EventPrice? = nil
+    }
+
+    struct Ticket: Codable {
+        var eventId: EventId? = nil
+        var ticketDate: APIDate
+        var ticketId: TicketId? = nil
+        var ticketType: TicketType
+    }
+
+    typealias TicketCodeImage = Data
+
+    typealias TicketConfirmation = String
+
+    typealias TicketId = String
+
+    typealias TicketMessage = String
+
+    enum TicketType: String, Codable {
+        case event
+        case general
+    }
+
+    // MARK: - Operations (paths)
+
+    // each operation IS a block
+    enum Operation: RequestBuildable {
+        case getMuseumHours(startDate: String?, page: Int?, limit: Int?)
+        case listSpecialEvents(startDate: String?, endDate: String?, page: Int?, limit: Int?)
+        case createSpecialEvent(body: SpecialEvent)
+        case getSpecialEvent(eventId: String)
+        case updateSpecialEvent(eventId: String, body: SpecialEventFields)
+        case deleteSpecialEvent(eventId: String)
+        case buyMuseumTickets(body: BuyMuseumTickets)
+        case getTicketCode(ticketId: String)
+
+        var body: some RequestBuildable {
+            switch self {
+            case let .getMuseumHours(startDate, page, limit):
+                Method.GET
+                Endpoint("museum-hours")
+                if let startDate {
+                    Query("startDate", startDate)
+                }
+                if let page {
+                    Query("page", String(page))
+                }
+                if let limit {
+                    Query("limit", String(limit))
+                }
+            case let .listSpecialEvents(startDate, endDate, page, limit):
+                Method.GET
+                Endpoint("special-events")
+                if let startDate {
+                    Query("startDate", startDate)
+                }
+                if let endDate {
+                    Query("endDate", endDate)
+                }
+                if let page {
+                    Query("page", String(page))
+                }
+                if let limit {
+                    Query("limit", String(limit))
+                }
+            case let .createSpecialEvent(body):
+                Method.POST
+                Endpoint("special-events")
+                RequestBody.json(body)
+            case let .getSpecialEvent(eventId):
+                Method.GET
+                Endpoint("special-events/\(eventId)")
+            case let .updateSpecialEvent(eventId, body):
+                Method.PATCH
+                Endpoint("special-events/\(eventId)")
+                RequestBody.json(body)
+            case let .deleteSpecialEvent(eventId):
+                Method.DELETE
+                Endpoint("special-events/\(eventId)")
+            case let .buyMuseumTickets(body):
+                Method.POST
+                Endpoint("tickets")
+                RequestBody.json(body)
+            case let .getTicketCode(ticketId):
+                Method.GET
+                Endpoint("tickets/\(ticketId)/qr")
             }
-            if let page {
-                Query("page", String(page))
-            }
-            if let limit {
-                Query("limit", String(limit))
-            }
-        case let .listSpecialEvents(startDate, endDate, page, limit):
-            Method.GET
-            Endpoint("special-events")
-            if let startDate {
-                Query("startDate", startDate)
-            }
-            if let endDate {
-                Query("endDate", endDate)
-            }
-            if let page {
-                Query("page", String(page))
-            }
-            if let limit {
-                Query("limit", String(limit))
-            }
-        case let .createSpecialEvent(body):
-            Method.POST
-            Endpoint("special-events")
-            RequestBody.json(body)
-        case let .getSpecialEvent(eventId):
-            Method.GET
-            Endpoint("special-events/\(eventId)")
-        case let .updateSpecialEvent(eventId, body):
-            Method.PATCH
-            Endpoint("special-events/\(eventId)")
-            RequestBody.json(body)
-        case let .deleteSpecialEvent(eventId):
-            Method.DELETE
-            Endpoint("special-events/\(eventId)")
-        case let .buyMuseumTickets(body):
-            Method.POST
-            Endpoint("tickets")
-            RequestBody.json(body)
-        case let .getTicketCode(ticketId):
-            Method.GET
-            Endpoint("tickets/\(ticketId)/qr")
         }
     }
+
+    // MARK: - Security (securitySchemes)
+
+    enum Security {
+        /// Scheme names the spec requires for an operation
+        /// (OR-alternatives flattened into one set).
+        static func schemes(_ operation: Operation) -> Set<String> {
+            ["MuseumPlaceholderAuth"]
+        }
+
+        /// Whether the spec requires `MuseumPlaceholderAuth` for the operation.
+        static func needsMuseumPlaceholderAuth(_ operation: Operation) -> Bool {
+            schemes(operation).contains("MuseumPlaceholderAuth")
+        }
+
+        static func museumPlaceholderAuth(username: String, password: String) -> some RequestBuildable {
+            Authorization.basic(username: username, password: password)
+        }
+    }
+
+    static let defaultBaseURL = URL(string: "https://redocly.com/_mock/docs/openapi/museum-api")
 }

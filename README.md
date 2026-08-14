@@ -16,7 +16,7 @@ swift run swift-spec Specs/petstore.yaml -o Petstore.swift
 swift run swift-spec Specs/petstore.yaml --enum-name MyAPI
 ```
 
-Flags: `-o`/`--output <file>`, `--enum-name <Name>` (overrides the name derived from `info.title`), `--exclude-scheme <Scheme>` (repeatable — drops every operation whose security requires that scheme, e.g. a server-only admin scheme, and records it in the header comment), `-h`/`--help`. Missing/unreadable input or invalid YAML produces a clear error on stderr and exit code 1.
+Flags: `-o`/`--output <file>`, `--enum-name <Name>` (overrides the namespace name derived from `info.title`), `--exclude-scheme <Scheme>` (repeatable — drops every operation whose security requires that scheme, e.g. a server-only admin scheme, and records it in the header comment), `-h`/`--help`. Missing/unreadable input or invalid YAML produces a clear error on stderr and exit code 1.
 
 ## What it generates
 
@@ -57,20 +57,20 @@ enum SwaggerPetstoreEndpoint: RequestBuildable {
 Consuming it is plain DeclarativeRequests:
 
 ```swift
-let request = try SwaggerPetstoreEndpoint.showPetById(petId: "42")
-    .base(SwaggerPetstoreEndpoint.defaultBaseURL!)
+let request = try SwaggerPetstore.Operation.showPetById(petId: "42")
+    .base(SwaggerPetstore.defaultBaseURL!)
     .request()
 // http://petstore.swagger.io/v1/pets/42, GET
 ```
 
 ### Generation rules
 
-- One enum case per operation, named from `operationId` (camelCase-sanitized); falls back to method + path (e.g. `getPetsPetId`) when `operationId` is missing.
+- The output is one namespace enum (from `info.title`) whose sections mirror the OpenAPI document: schemas, `Operation` (a `RequestBuildable` enum — each operation IS a block), `Security`, and the server URL. One `Operation` case per operation, named from `operationId` (camelCase-sanitized); falls back to method + path (e.g. `getPetsPetId`) when `operationId` is missing.
 - Path params are interpolated into `Endpoint(...)`; leading `/` is stripped because `Endpoint` paths are joined onto the base URL by `.base(url)`. Path-item-level `parameters` are merged into each operation (operation-level entries win by `(name, in)`).
 - Query params: required → `Query("name", value)`; optional → wrapped in `if let`; non-`String` types stringified via `String(...)`; array-typed params emit a `for` loop of repeated `Query` blocks (the DSL's `buildArray`).
 - `requestBody` (application/json): `$ref` → associated value of that model type + `RequestBody.json(body)`; inline schemas get a generated `<OperationId>Body` model with real properties.
 - Parameters written as `$ref: "#/components/parameters/X"` are resolved to their component definitions (unresolvable refs are dropped).
-- `security:` declarations generate the DSL README's Open Spec auth concept per case: `var securitySchemes: Set<String>` (operation-level overrides the document default; `security: []` marks an operation public; OR-alternatives are flattened) and one named flag per scheme the spec uses — `needsUserAuth`, `needsAPIKeyAuth`, … (no umbrella `needsAuth`: it's ambiguous about *which* credential, and derivable as `!securitySchemes.isEmpty`). Omitted entirely when the spec declares no security. Wiring layers gate on the named flags — see `SupabaseAuthWiring.swift`: the auth modifiers (`keyed(apikey:)`, `authorized(accessToken:needsAuth:)`) are plain `RequestBuildable` extensions: optional-in, failing the build at `.request()` when a required credential is nil (`MissingAPIKey`, `MissingAccessToken`). The generated flags are the *caller's* gate — `authorized(accessToken:needsAuth:)` takes the generated `needsUserAuth` per the DSL's wire-once pattern; skip `.keyed` on keyless endpoints (omission is spelled by not declaring the block). `refreshSession(refreshToken:)` is not a modifier but an endpoint builder — the token is that endpoint's body parameter, optional only because no stored token may exist yet (nil throws `MissingRefreshToken` at `.request()`). The checked-in Supabase target is **client-only**: generated with `--exclude-scheme AdminAuth`, so server-side operations (user management, SSO provider management — those needing the service-role JWT) are not generated at all.
+- `security:` declarations generate the `Security` section (operation-level overrides the document default; `security: []` marks an operation public; OR-alternatives are flattened): `Security.schemes(_ operation:) -> Set<String>`, one `Security.needs<Scheme>(_ operation:)` gate per scheme, and one **attachment factory** per scheme derived from `components.securitySchemes` — `http bearer` → `Security.userAuth(token:)` wrapping `Authorization.bearer`, `apiKey in: header` → `Security.apiKeyAuth(_:)` wrapping `Header.custom(name)`, `http basic` → `Authorization.basic`. Omitted entirely when the spec declares no security. The wiring is a client composing one flat block — see `SupabaseAuthWiring.swift`: `SupabaseAuthClient(baseURL:apikey:accessToken:)` wires session + environment once; `request(_ operation:)` lays the operation, `BaseURL`, and each Security-gated credential into a single `RequestBlock`, throwing the client's own errors (`MissingAPIKey`, `MissingAccessToken`) via `RequestFailure` when a required credential is nil. `refreshSessionRequest(refreshToken:)` covers the refresh flow (the token is that operation's body parameter, optional because no stored token may exist yet). The checked-in Supabase target is **client-only**: generated with `--exclude-scheme AdminAuth`, so server-side operations (user management, SSO provider management — those needing the service-role JWT) are not generated at all.
 - `components.schemas`: `object` (or `allOf`, flattened) → `struct X: Codable` with real properties, `array` → `typealias X = [Element]`, scalars → `typealias X = String/Int/Double/Bool` (`format: binary` → `Data`), string enums → `enum X: String, Codable`. Names are sanitized to valid Swift identifiers (`thing-request` → `ThingRequest`); names that would shadow stdlib types are prefixed (`Error` → `APIError`, `Date` → `APIDate`). The rename carries no semantics: `APIError` does **not** conform to `Swift.Error`, because OpenAPI has no way to mark a schema as an error model and we don't infer that from names — apps that want to throw it add `extension APIError: Swift.Error {}` in hand-written code.
 - Type mapping: `string`→`String`, `integer`→`Int`, `number`→`Double`, `boolean`→`Bool`, `array`→`[Element]`, `$ref`→model type. String schemas/parameters/properties with `enum:` values generate `enum X: String, Codable` (schemas at top level, parameters nested in the endpoint enum — `grant_type` → `GrantType`, used via `.rawValue` — and object properties nested in their struct, e.g. `PostTokenBody.Provider`); digit-leading values get a `_` prefix (`_1080p`); a parameter name reused with a different value set falls back to `String`.
 - `servers[0].url` becomes `static let defaultBaseURL`. Header/cookie params are not generated (a `// TODO:` comment is emitted in the case instead). Specs with zero operations still produce compiling output (placeholder body instead of an illegal empty `switch`).
@@ -82,7 +82,7 @@ let request = try SwaggerPetstoreEndpoint.showPetById(petId: "42")
 - `Sources/SwiftSpecCLI` — the `swift-spec` executable (plain `CommandLine.arguments`, no argument-parser dependency).
 - `Sources/PetstoreAPI`, `Sources/MuseumAPI`, and `Sources/SupabaseAuthAPI` — the **checked-in generated outputs** (plus the hand-written Supabase wiring), compiled against DeclarativeRequests on every `swift build`, so compilability of generated code is proven by the build itself.
 - `Specs/` — the canonical spec files.
-- `Tests/SwiftSpecTests` — 56 tests:
+- `Tests/SwiftSpecTests` — 55 tests:
   - **E2E generate-then-compile** (parameterized over all three specs): generates from the spec, writes a fresh temp SwiftPM package depending on DeclarativeRequests, runs a real `swift build` there, and asserts exit 0 (compiler output is surfaced on failure).
   - **Golden** (parameterized over all three specs): generator output must equal the checked-in `*.generated.swift` byte-for-byte.
   - **Request shape**: builds actual `URLRequest`s from the generated enums and asserts URLs, methods, query items, headers, and JSON bodies — including the Supabase refresh flow (`POST …/token?grant_type=refresh_token` with the real refresh-token payload and `apikey` header).

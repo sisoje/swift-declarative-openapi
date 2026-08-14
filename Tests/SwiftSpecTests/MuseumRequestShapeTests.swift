@@ -6,7 +6,7 @@ import Testing
 private let museumBaseURL = URL(string: "https://redocly.com/_mock/docs/openapi/museum-api")!
 
 @Test func getSpecialEventInterpolatesEventId() throws {
-    let request = try RedoclyMuseumAPIEndpoint
+    let request = try RedoclyMuseumAPI.Operation
         .getSpecialEvent(eventId: "3be6453c-03eb-4357-ae5a-984a0e574a54")
         .base(museumBaseURL)
         .request()
@@ -16,7 +16,7 @@ private let museumBaseURL = URL(string: "https://redocly.com/_mock/docs/openapi/
 }
 
 @Test func listSpecialEventsCarriesOnlyProvidedQueryItems() throws {
-    let request = try RedoclyMuseumAPIEndpoint
+    let request = try RedoclyMuseumAPI.Operation
         .listSpecialEvents(startDate: "2023-02-23", endDate: nil, page: 2, limit: nil)
         .base(museumBaseURL)
         .request()
@@ -24,7 +24,7 @@ private let museumBaseURL = URL(string: "https://redocly.com/_mock/docs/openapi/
 }
 
 @Test func getTicketCodeBuildsNestedPath() throws {
-    let request = try RedoclyMuseumAPIEndpoint
+    let request = try RedoclyMuseumAPI.Operation
         .getTicketCode(ticketId: "a54a57ca-36f8-421b-a6b4-2e8f26858a4c")
         .base(museumBaseURL)
         .request()
@@ -32,8 +32,8 @@ private let museumBaseURL = URL(string: "https://redocly.com/_mock/docs/openapi/
 }
 
 @Test func buyMuseumTicketsIsJSONPost() throws {
-    let request = try RedoclyMuseumAPIEndpoint
-        .buyMuseumTickets(body: BuyMuseumTickets(ticketDate: "2023-09-07", ticketType: .general))
+    let request = try RedoclyMuseumAPI.Operation
+        .buyMuseumTickets(body: .init(ticketDate: "2023-09-07", ticketType: .general))
         .base(museumBaseURL)
         .request()
     #expect(request.httpMethod == "POST")
@@ -42,7 +42,7 @@ private let museumBaseURL = URL(string: "https://redocly.com/_mock/docs/openapi/
 }
 
 @Test func deleteSpecialEventUsesDeleteMethod() throws {
-    let request = try RedoclyMuseumAPIEndpoint
+    let request = try RedoclyMuseumAPI.Operation
         .deleteSpecialEvent(eventId: "e1")
         .base(museumBaseURL)
         .request()
@@ -50,7 +50,7 @@ private let museumBaseURL = URL(string: "https://redocly.com/_mock/docs/openapi/
 }
 
 @Test func documentLevelSecurityAppliesToEveryEndpoint() {
-    #expect(RedoclyMuseumAPIEndpoint.getMuseumHours(startDate: nil, page: nil, limit: nil).securitySchemes
+    #expect(RedoclyMuseumAPI.Security.schemes(.getMuseumHours(startDate: nil, page: nil, limit: nil))
         == ["MuseumPlaceholderAuth"])
-    #expect(RedoclyMuseumAPIEndpoint.deleteSpecialEvent(eventId: "e1").needsMuseumPlaceholderAuth == true)
+    #expect(RedoclyMuseumAPI.Security.needsMuseumPlaceholderAuth(.deleteSpecialEvent(eventId: "e1")) == true)
 }

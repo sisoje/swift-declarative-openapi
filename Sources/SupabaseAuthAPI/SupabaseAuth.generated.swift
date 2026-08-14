@@ -4,963 +4,981 @@
 import DeclarativeRequests
 import Foundation
 
-// MARK: - Models
-struct AccessTokenResponseSchema: Codable {
-    var accessToken: String? = nil
-    var expiresAt: Int? = nil
-    var expiresIn: Int? = nil
-    var refreshToken: String? = nil
-    var tokenType: String? = nil
-    var user: UserSchema? = nil
-    var weakPassword: String? = nil
+// The whole backend in one closed type — sections mirror the OpenAPI document.
+enum SupabaseAuthRESTAPI {
+    // MARK: - Schemas (components.schemas)
 
-    enum CodingKeys: String, CodingKey {
-        case accessToken = "access_token"
-        case expiresAt = "expires_at"
-        case expiresIn = "expires_in"
-        case refreshToken = "refresh_token"
-        case tokenType = "token_type"
-        case user
-        case weakPassword = "weak_password"
-    }
-}
+    struct AccessTokenResponseSchema: Codable {
+        var accessToken: String? = nil
+        var expiresAt: Int? = nil
+        var expiresIn: Int? = nil
+        var refreshToken: String? = nil
+        var tokenType: String? = nil
+        var user: UserSchema? = nil
+        var weakPassword: String? = nil
 
-struct CredentialCreationOptions: Codable {
-    enum Attestation: String, Codable {
-        case none
-        case indirect
-        case direct
-        case enterprise
+        enum CodingKeys: String, CodingKey {
+            case accessToken = "access_token"
+            case expiresAt = "expires_at"
+            case expiresIn = "expires_in"
+            case refreshToken = "refresh_token"
+            case tokenType = "token_type"
+            case user
+            case weakPassword = "weak_password"
+        }
     }
 
-    var attestation: Attestation? = nil
-    var attestationFormats: [String]? = nil
-    var authenticatorSelection: String? = nil
-    var challenge: String
-    var excludeCredentials: [PublicKeyCredentialDescriptor]? = nil
-    var extensions: String? = nil
-    var hints: [String]? = nil
-    var pubKeyCredParams: [String]
-    var rp: String
-    var timeout: Int? = nil
-    var user: String
-}
+    struct CredentialCreationOptions: Codable {
+        enum Attestation: String, Codable {
+            case none
+            case indirect
+            case direct
+            case enterprise
+        }
 
-struct CredentialRequestOptions: Codable {
-    enum UserVerification: String, Codable {
-        case required
-        case preferred
-        case discouraged
+        var attestation: Attestation? = nil
+        var attestationFormats: [String]? = nil
+        var authenticatorSelection: String? = nil
+        var challenge: String
+        var excludeCredentials: [PublicKeyCredentialDescriptor]? = nil
+        var extensions: String? = nil
+        var hints: [String]? = nil
+        var pubKeyCredParams: [String]
+        var rp: String
+        var timeout: Int? = nil
+        var user: String
     }
 
-    var allowCredentials: [PublicKeyCredentialDescriptor]? = nil
-    var challenge: String
-    var extensions: String? = nil
-    var hints: [String]? = nil
-    var rpId: String? = nil
-    var timeout: Int? = nil
-    var userVerification: UserVerification? = nil
-}
+    struct CredentialRequestOptions: Codable {
+        enum UserVerification: String, Codable {
+            case required
+            case preferred
+            case discouraged
+        }
 
-struct CustomOAuthProviderSchema: Codable {
-    enum ProviderType: String, Codable {
-        case oauth2
-        case oidc
+        var allowCredentials: [PublicKeyCredentialDescriptor]? = nil
+        var challenge: String
+        var extensions: String? = nil
+        var hints: [String]? = nil
+        var rpId: String? = nil
+        var timeout: Int? = nil
+        var userVerification: UserVerification? = nil
     }
 
-    var acceptableClientIds: [String]? = nil
-    var attributeMapping: String? = nil
-    var authorizationParams: String? = nil
-    var authorizationUrl: String? = nil
-    var clientId: String
-    var createdAt: String? = nil
-    var customClaimsAllowlist: [String]? = nil
-    var discoveryUrl: String? = nil
-    var emailOptional: Bool? = nil
-    var enabled: Bool? = nil
-    var id: String
-    var identifier: String
-    var issuer: String? = nil
-    var jwksUri: String? = nil
-    var name: String
-    var pkceEnabled: Bool? = nil
-    var providerType: ProviderType
-    var scopes: [String]? = nil
-    var skipNonceCheck: Bool? = nil
-    var tokenUrl: String? = nil
-    var updatedAt: String? = nil
-    var userinfoUrl: String? = nil
+    struct CustomOAuthProviderSchema: Codable {
+        enum ProviderType: String, Codable {
+            case oauth2
+            case oidc
+        }
 
-    enum CodingKeys: String, CodingKey {
-        case acceptableClientIds = "acceptable_client_ids"
-        case attributeMapping = "attribute_mapping"
-        case authorizationParams = "authorization_params"
-        case authorizationUrl = "authorization_url"
-        case clientId = "client_id"
-        case createdAt = "created_at"
-        case customClaimsAllowlist = "custom_claims_allowlist"
-        case discoveryUrl = "discovery_url"
-        case emailOptional = "email_optional"
-        case enabled
-        case id
-        case identifier
-        case issuer
-        case jwksUri = "jwks_uri"
-        case name
-        case pkceEnabled = "pkce_enabled"
-        case providerType = "provider_type"
-        case scopes
-        case skipNonceCheck = "skip_nonce_check"
-        case tokenUrl = "token_url"
-        case updatedAt = "updated_at"
-        case userinfoUrl = "userinfo_url"
-    }
-}
+        var acceptableClientIds: [String]? = nil
+        var attributeMapping: String? = nil
+        var authorizationParams: String? = nil
+        var authorizationUrl: String? = nil
+        var clientId: String
+        var createdAt: String? = nil
+        var customClaimsAllowlist: [String]? = nil
+        var discoveryUrl: String? = nil
+        var emailOptional: Bool? = nil
+        var enabled: Bool? = nil
+        var id: String
+        var identifier: String
+        var issuer: String? = nil
+        var jwksUri: String? = nil
+        var name: String
+        var pkceEnabled: Bool? = nil
+        var providerType: ProviderType
+        var scopes: [String]? = nil
+        var skipNonceCheck: Bool? = nil
+        var tokenUrl: String? = nil
+        var updatedAt: String? = nil
+        var userinfoUrl: String? = nil
 
-struct ErrorSchema: Codable {
-    var code: Int? = nil
-    var error: String? = nil
-    var errorCode: String? = nil
-    var errorDescription: String? = nil
-    var msg: String? = nil
-    var weakPassword: String? = nil
-
-    enum CodingKeys: String, CodingKey {
-        case code
-        case error
-        case errorCode = "error_code"
-        case errorDescription = "error_description"
-        case msg
-        case weakPassword = "weak_password"
-    }
-}
-
-struct GoTrueSecurity: Codable {
-    var captchaToken: String? = nil
-
-    enum CodingKeys: String, CodingKey {
-        case captchaToken = "captcha_token"
-    }
-}
-
-struct IdentitySchema: Codable {
-    var createdAt: String? = nil
-    var email: String? = nil
-    var id: String? = nil
-    var identityData: String? = nil
-    var identityId: String? = nil
-    var lastSignInAt: String? = nil
-    var provider: String? = nil
-    var updatedAt: String? = nil
-    var userId: String? = nil
-
-    enum CodingKeys: String, CodingKey {
-        case createdAt = "created_at"
-        case email
-        case id
-        case identityData = "identity_data"
-        case identityId = "identity_id"
-        case lastSignInAt = "last_sign_in_at"
-        case provider
-        case updatedAt = "updated_at"
-        case userId = "user_id"
-    }
-}
-
-struct MFAFactorSchema: Codable {
-    var createdAt: String? = nil
-    var factorType: String? = nil
-    var friendlyName: String? = nil
-    var id: String? = nil
-    var lastChallengedAt: String? = nil
-    var phone: String? = nil
-    var status: String? = nil
-    var updatedAt: String? = nil
-    var webauthnCredential: String? = nil
-
-    enum CodingKeys: String, CodingKey {
-        case createdAt = "created_at"
-        case factorType = "factor_type"
-        case friendlyName = "friendly_name"
-        case id
-        case lastChallengedAt = "last_challenged_at"
-        case phone
-        case status
-        case updatedAt = "updated_at"
-        case webauthnCredential = "webauthn_credential"
-    }
-}
-
-struct OAuthClientSchema: Codable {
-    enum ClientType: String, Codable {
-        case `public` = "public"
-        case confidential
+        enum CodingKeys: String, CodingKey {
+            case acceptableClientIds = "acceptable_client_ids"
+            case attributeMapping = "attribute_mapping"
+            case authorizationParams = "authorization_params"
+            case authorizationUrl = "authorization_url"
+            case clientId = "client_id"
+            case createdAt = "created_at"
+            case customClaimsAllowlist = "custom_claims_allowlist"
+            case discoveryUrl = "discovery_url"
+            case emailOptional = "email_optional"
+            case enabled
+            case id
+            case identifier
+            case issuer
+            case jwksUri = "jwks_uri"
+            case name
+            case pkceEnabled = "pkce_enabled"
+            case providerType = "provider_type"
+            case scopes
+            case skipNonceCheck = "skip_nonce_check"
+            case tokenUrl = "token_url"
+            case updatedAt = "updated_at"
+            case userinfoUrl = "userinfo_url"
+        }
     }
 
-    enum RegistrationType: String, Codable {
-        case dynamic
-        case manual
+    struct ErrorSchema: Codable {
+        var code: Int? = nil
+        var error: String? = nil
+        var errorCode: String? = nil
+        var errorDescription: String? = nil
+        var msg: String? = nil
+        var weakPassword: String? = nil
+
+        enum CodingKeys: String, CodingKey {
+            case code
+            case error
+            case errorCode = "error_code"
+            case errorDescription = "error_description"
+            case msg
+            case weakPassword = "weak_password"
+        }
     }
 
-    enum TokenEndpointAuthMethod: String, Codable {
-        case none
-        case clientSecretBasic = "client_secret_basic"
-        case clientSecretPost = "client_secret_post"
+    struct GoTrueSecurity: Codable {
+        var captchaToken: String? = nil
+
+        enum CodingKeys: String, CodingKey {
+            case captchaToken = "captcha_token"
+        }
     }
 
-    var clientId: String? = nil
-    var clientName: String? = nil
-    var clientSecret: String? = nil
-    var clientType: ClientType? = nil
-    var clientUri: String? = nil
-    var createdAt: String? = nil
-    var grantTypes: [String]? = nil
-    var logoUri: String? = nil
-    var redirectUris: [String]? = nil
-    var registrationType: RegistrationType? = nil
-    var responseTypes: [String]? = nil
-    var scope: String? = nil
-    var tokenEndpointAuthMethod: TokenEndpointAuthMethod? = nil
-    var updatedAt: String? = nil
+    struct IdentitySchema: Codable {
+        var createdAt: String? = nil
+        var email: String? = nil
+        var id: String? = nil
+        var identityData: String? = nil
+        var identityId: String? = nil
+        var lastSignInAt: String? = nil
+        var provider: String? = nil
+        var updatedAt: String? = nil
+        var userId: String? = nil
 
-    enum CodingKeys: String, CodingKey {
-        case clientId = "client_id"
-        case clientName = "client_name"
-        case clientSecret = "client_secret"
-        case clientType = "client_type"
-        case clientUri = "client_uri"
-        case createdAt = "created_at"
-        case grantTypes = "grant_types"
-        case logoUri = "logo_uri"
-        case redirectUris = "redirect_uris"
-        case registrationType = "registration_type"
-        case responseTypes = "response_types"
-        case scope
-        case tokenEndpointAuthMethod = "token_endpoint_auth_method"
-        case updatedAt = "updated_at"
-    }
-}
-
-struct PostFactorsBody: Codable {
-    enum FactorType: String, Codable {
-        case totp
-        case phone
-        case webauthn
+        enum CodingKeys: String, CodingKey {
+            case createdAt = "created_at"
+            case email
+            case id
+            case identityData = "identity_data"
+            case identityId = "identity_id"
+            case lastSignInAt = "last_sign_in_at"
+            case provider
+            case updatedAt = "updated_at"
+            case userId = "user_id"
+        }
     }
 
-    var factorType: FactorType
-    var friendlyName: String? = nil
-    var issuer: String? = nil
-    var phone: String? = nil
+    struct MFAFactorSchema: Codable {
+        var createdAt: String? = nil
+        var factorType: String? = nil
+        var friendlyName: String? = nil
+        var id: String? = nil
+        var lastChallengedAt: String? = nil
+        var phone: String? = nil
+        var status: String? = nil
+        var updatedAt: String? = nil
+        var webauthnCredential: String? = nil
 
-    enum CodingKeys: String, CodingKey {
-        case factorType = "factor_type"
-        case friendlyName = "friendly_name"
-        case issuer
-        case phone
-    }
-}
-
-struct PostFactorsFactorIdChallengeBody: Codable {
-    enum Channel: String, Codable {
-        case sms
-        case whatsapp
-    }
-
-    var channel: Channel? = nil
-}
-
-struct PostFactorsFactorIdVerifyBody: Codable {
-    var challengeId: String
-    var code: String? = nil
-    var webauthn: String? = nil
-
-    enum CodingKeys: String, CodingKey {
-        case challengeId = "challenge_id"
-        case code
-        case webauthn
-    }
-}
-
-struct PostInviteBody: Codable {
-    var data: String? = nil
-    var email: String
-}
-
-struct PostMagiclinkBody: Codable {
-    var data: String? = nil
-    var email: String
-    var gotrueMetaSecurity: GoTrueSecurity? = nil
-
-    enum CodingKeys: String, CodingKey {
-        case data
-        case email
-        case gotrueMetaSecurity = "gotrue_meta_security"
-    }
-}
-
-struct PostOauthAuthorizationsAuthorizationIdConsentBody: Codable {
-    enum Action: String, Codable {
-        case approve
-        case deny
+        enum CodingKeys: String, CodingKey {
+            case createdAt = "created_at"
+            case factorType = "factor_type"
+            case friendlyName = "friendly_name"
+            case id
+            case lastChallengedAt = "last_challenged_at"
+            case phone
+            case status
+            case updatedAt = "updated_at"
+            case webauthnCredential = "webauthn_credential"
+        }
     }
 
-    var action: Action
-}
+    struct OAuthClientSchema: Codable {
+        enum ClientType: String, Codable {
+            case `public` = "public"
+            case confidential
+        }
 
-struct PostOauthClientsRegisterBody: Codable {
-    enum ClientType: String, Codable {
-        case `public` = "public"
-        case confidential
+        enum RegistrationType: String, Codable {
+            case dynamic
+            case manual
+        }
+
+        enum TokenEndpointAuthMethod: String, Codable {
+            case none
+            case clientSecretBasic = "client_secret_basic"
+            case clientSecretPost = "client_secret_post"
+        }
+
+        var clientId: String? = nil
+        var clientName: String? = nil
+        var clientSecret: String? = nil
+        var clientType: ClientType? = nil
+        var clientUri: String? = nil
+        var createdAt: String? = nil
+        var grantTypes: [String]? = nil
+        var logoUri: String? = nil
+        var redirectUris: [String]? = nil
+        var registrationType: RegistrationType? = nil
+        var responseTypes: [String]? = nil
+        var scope: String? = nil
+        var tokenEndpointAuthMethod: TokenEndpointAuthMethod? = nil
+        var updatedAt: String? = nil
+
+        enum CodingKeys: String, CodingKey {
+            case clientId = "client_id"
+            case clientName = "client_name"
+            case clientSecret = "client_secret"
+            case clientType = "client_type"
+            case clientUri = "client_uri"
+            case createdAt = "created_at"
+            case grantTypes = "grant_types"
+            case logoUri = "logo_uri"
+            case redirectUris = "redirect_uris"
+            case registrationType = "registration_type"
+            case responseTypes = "response_types"
+            case scope
+            case tokenEndpointAuthMethod = "token_endpoint_auth_method"
+            case updatedAt = "updated_at"
+        }
     }
 
-    enum TokenEndpointAuthMethod: String, Codable {
-        case none
-        case clientSecretBasic = "client_secret_basic"
-        case clientSecretPost = "client_secret_post"
+    struct PostFactorsBody: Codable {
+        enum FactorType: String, Codable {
+            case totp
+            case phone
+            case webauthn
+        }
+
+        var factorType: FactorType
+        var friendlyName: String? = nil
+        var issuer: String? = nil
+        var phone: String? = nil
+
+        enum CodingKeys: String, CodingKey {
+            case factorType = "factor_type"
+            case friendlyName = "friendly_name"
+            case issuer
+            case phone
+        }
     }
 
-    var clientName: String
-    var clientType: ClientType? = nil
-    var clientUri: String? = nil
-    var grantTypes: [String]? = nil
-    var logoUri: String? = nil
-    var redirectUris: [String]
-    var responseTypes: [String]? = nil
-    var scope: String? = nil
-    var tokenEndpointAuthMethod: TokenEndpointAuthMethod? = nil
+    struct PostFactorsFactorIdChallengeBody: Codable {
+        enum Channel: String, Codable {
+            case sms
+            case whatsapp
+        }
 
-    enum CodingKeys: String, CodingKey {
-        case clientName = "client_name"
-        case clientType = "client_type"
-        case clientUri = "client_uri"
-        case grantTypes = "grant_types"
-        case logoUri = "logo_uri"
-        case redirectUris = "redirect_uris"
-        case responseTypes = "response_types"
-        case scope
-        case tokenEndpointAuthMethod = "token_endpoint_auth_method"
-    }
-}
-
-struct PostOtpBody: Codable {
-    enum Channel: String, Codable {
-        case sms
-        case whatsapp
+        var channel: Channel? = nil
     }
 
-    enum CodeChallengeMethod: String, Codable {
-        case s256
-        case plain
+    struct PostFactorsFactorIdVerifyBody: Codable {
+        var challengeId: String
+        var code: String? = nil
+        var webauthn: String? = nil
+
+        enum CodingKeys: String, CodingKey {
+            case challengeId = "challenge_id"
+            case code
+            case webauthn
+        }
     }
 
-    var channel: Channel? = nil
-    var codeChallenge: String? = nil
-    var codeChallengeMethod: CodeChallengeMethod? = nil
-    var createUser: Bool? = nil
-    var data: String? = nil
-    var email: String? = nil
-    var gotrueMetaSecurity: GoTrueSecurity? = nil
-    var phone: String? = nil
-
-    enum CodingKeys: String, CodingKey {
-        case channel
-        case codeChallenge = "code_challenge"
-        case codeChallengeMethod = "code_challenge_method"
-        case createUser = "create_user"
-        case data
-        case email
-        case gotrueMetaSecurity = "gotrue_meta_security"
-        case phone
-    }
-}
-
-struct PostRecoverBody: Codable {
-    enum CodeChallengeMethod: String, Codable {
-        case plain
-        case s256
+    struct PostInviteBody: Codable {
+        var data: String? = nil
+        var email: String
     }
 
-    var codeChallenge: String? = nil
-    var codeChallengeMethod: CodeChallengeMethod? = nil
-    var email: String
-    var gotrueMetaSecurity: GoTrueSecurity? = nil
+    struct PostMagiclinkBody: Codable {
+        var data: String? = nil
+        var email: String
+        var gotrueMetaSecurity: GoTrueSecurity? = nil
 
-    enum CodingKeys: String, CodingKey {
-        case codeChallenge = "code_challenge"
-        case codeChallengeMethod = "code_challenge_method"
-        case email
-        case gotrueMetaSecurity = "gotrue_meta_security"
-    }
-}
-
-struct PostResendBody: Codable {
-    enum APIType: String, Codable {
-        case signup
-        case emailChange = "email_change"
-        case sms
-        case phoneChange = "phone_change"
+        enum CodingKeys: String, CodingKey {
+            case data
+            case email
+            case gotrueMetaSecurity = "gotrue_meta_security"
+        }
     }
 
-    var email: String? = nil
-    var gotrueMetaSecurity: GoTrueSecurity? = nil
-    var phone: String? = nil
-    var type: APIType? = nil
+    struct PostOauthAuthorizationsAuthorizationIdConsentBody: Codable {
+        enum Action: String, Codable {
+            case approve
+            case deny
+        }
 
-    enum CodingKeys: String, CodingKey {
-        case email
-        case gotrueMetaSecurity = "gotrue_meta_security"
-        case phone
-        case type
-    }
-}
-
-struct PostSignupBody: Codable {
-    enum Channel: String, Codable {
-        case sms
-        case whatsapp
+        var action: Action
     }
 
-    enum CodeChallengeMethod: String, Codable {
-        case plain
-        case s256
+    struct PostOauthClientsRegisterBody: Codable {
+        enum ClientType: String, Codable {
+            case `public` = "public"
+            case confidential
+        }
+
+        enum TokenEndpointAuthMethod: String, Codable {
+            case none
+            case clientSecretBasic = "client_secret_basic"
+            case clientSecretPost = "client_secret_post"
+        }
+
+        var clientName: String
+        var clientType: ClientType? = nil
+        var clientUri: String? = nil
+        var grantTypes: [String]? = nil
+        var logoUri: String? = nil
+        var redirectUris: [String]
+        var responseTypes: [String]? = nil
+        var scope: String? = nil
+        var tokenEndpointAuthMethod: TokenEndpointAuthMethod? = nil
+
+        enum CodingKeys: String, CodingKey {
+            case clientName = "client_name"
+            case clientType = "client_type"
+            case clientUri = "client_uri"
+            case grantTypes = "grant_types"
+            case logoUri = "logo_uri"
+            case redirectUris = "redirect_uris"
+            case responseTypes = "response_types"
+            case scope
+            case tokenEndpointAuthMethod = "token_endpoint_auth_method"
+        }
     }
 
-    var channel: Channel? = nil
-    var codeChallenge: String? = nil
-    var codeChallengeMethod: CodeChallengeMethod? = nil
-    var data: String? = nil
-    var email: String? = nil
-    var gotrueMetaSecurity: GoTrueSecurity? = nil
-    var password: String? = nil
-    var phone: String? = nil
+    struct PostOtpBody: Codable {
+        enum Channel: String, Codable {
+            case sms
+            case whatsapp
+        }
 
-    enum CodingKeys: String, CodingKey {
-        case channel
-        case codeChallenge = "code_challenge"
-        case codeChallengeMethod = "code_challenge_method"
-        case data
-        case email
-        case gotrueMetaSecurity = "gotrue_meta_security"
-        case password
-        case phone
-    }
-}
+        enum CodeChallengeMethod: String, Codable {
+            case s256
+            case plain
+        }
 
-struct PostSsoBody: Codable {
-    enum CodeChallengeMethod: String, Codable {
-        case plain
-        case s256
-    }
+        var channel: Channel? = nil
+        var codeChallenge: String? = nil
+        var codeChallengeMethod: CodeChallengeMethod? = nil
+        var createUser: Bool? = nil
+        var data: String? = nil
+        var email: String? = nil
+        var gotrueMetaSecurity: GoTrueSecurity? = nil
+        var phone: String? = nil
 
-    var codeChallenge: String? = nil
-    var codeChallengeMethod: CodeChallengeMethod? = nil
-    var domain: String? = nil
-    var gotrueMetaSecurity: GoTrueSecurity? = nil
-    var providerId: String? = nil
-    var redirectTo: String? = nil
-    var skipHttpRedirect: Bool? = nil
-
-    enum CodingKeys: String, CodingKey {
-        case codeChallenge = "code_challenge"
-        case codeChallengeMethod = "code_challenge_method"
-        case domain
-        case gotrueMetaSecurity = "gotrue_meta_security"
-        case providerId = "provider_id"
-        case redirectTo = "redirect_to"
-        case skipHttpRedirect = "skip_http_redirect"
-    }
-}
-
-struct PostTokenBody: Codable {
-    enum Chain: String, Codable {
-        case solana
-        case ethereum
+        enum CodingKeys: String, CodingKey {
+            case channel
+            case codeChallenge = "code_challenge"
+            case codeChallengeMethod = "code_challenge_method"
+            case createUser = "create_user"
+            case data
+            case email
+            case gotrueMetaSecurity = "gotrue_meta_security"
+            case phone
+        }
     }
 
-    enum Provider: String, Codable {
-        case google
-        case apple
-        case azure
-        case facebook
-        case keycloak
+    struct PostRecoverBody: Codable {
+        enum CodeChallengeMethod: String, Codable {
+            case plain
+            case s256
+        }
+
+        var codeChallenge: String? = nil
+        var codeChallengeMethod: CodeChallengeMethod? = nil
+        var email: String
+        var gotrueMetaSecurity: GoTrueSecurity? = nil
+
+        enum CodingKeys: String, CodingKey {
+            case codeChallenge = "code_challenge"
+            case codeChallengeMethod = "code_challenge_method"
+            case email
+            case gotrueMetaSecurity = "gotrue_meta_security"
+        }
     }
 
-    var accessToken: String? = nil
-    var authCode: String? = nil
-    var chain: Chain? = nil
-    var clientId: String? = nil
-    var codeVerifier: String? = nil
-    var email: String? = nil
-    var gotrueMetaSecurity: GoTrueSecurity? = nil
-    var idToken: String? = nil
-    var issuer: String? = nil
-    var message: String? = nil
-    var nonce: String? = nil
-    var password: String? = nil
-    var phone: String? = nil
-    var provider: Provider? = nil
-    var refreshToken: String? = nil
-    var signature: String? = nil
+    struct PostResendBody: Codable {
+        enum APIType: String, Codable {
+            case signup
+            case emailChange = "email_change"
+            case sms
+            case phoneChange = "phone_change"
+        }
 
-    enum CodingKeys: String, CodingKey {
-        case accessToken = "access_token"
-        case authCode = "auth_code"
-        case chain
-        case clientId = "client_id"
-        case codeVerifier = "code_verifier"
-        case email
-        case gotrueMetaSecurity = "gotrue_meta_security"
-        case idToken = "id_token"
-        case issuer
-        case message
-        case nonce
-        case password
-        case phone
-        case provider
-        case refreshToken = "refresh_token"
-        case signature
-    }
-}
+        var email: String? = nil
+        var gotrueMetaSecurity: GoTrueSecurity? = nil
+        var phone: String? = nil
+        var type: APIType? = nil
 
-struct PostVerifyBody: Codable {
-    enum APIType: String, Codable {
-        case signup
-        case recovery
-        case invite
-        case magiclink
-        case emailChange = "email_change"
-        case sms
-        case phoneChange = "phone_change"
+        enum CodingKeys: String, CodingKey {
+            case email
+            case gotrueMetaSecurity = "gotrue_meta_security"
+            case phone
+            case type
+        }
     }
 
-    var email: String? = nil
-    var phone: String? = nil
-    var redirectTo: String? = nil
-    var token: String? = nil
-    var tokenHash: String? = nil
-    var type: APIType? = nil
+    struct PostSignupBody: Codable {
+        enum Channel: String, Codable {
+            case sms
+            case whatsapp
+        }
 
-    enum CodingKeys: String, CodingKey {
-        case email
-        case phone
-        case redirectTo = "redirect_to"
-        case token
-        case tokenHash = "token_hash"
-        case type
-    }
-}
+        enum CodeChallengeMethod: String, Codable {
+            case plain
+            case s256
+        }
 
-struct PublicKeyCredentialDescriptor: Codable {
-    enum APIType: String, Codable {
-        case publicKey = "public-key"
-    }
+        var channel: Channel? = nil
+        var codeChallenge: String? = nil
+        var codeChallengeMethod: CodeChallengeMethod? = nil
+        var data: String? = nil
+        var email: String? = nil
+        var gotrueMetaSecurity: GoTrueSecurity? = nil
+        var password: String? = nil
+        var phone: String? = nil
 
-    var id: String
-    var transports: [String]? = nil
-    var type: APIType
-}
-
-struct PutUserBody: Codable {
-    enum Channel: String, Codable {
-        case sms
-        case whatsapp
-    }
-
-    var appMetadata: String? = nil
-    var channel: Channel? = nil
-    var data: String? = nil
-    var email: String? = nil
-    var nonce: String? = nil
-    var password: String? = nil
-    var phone: String? = nil
-
-    enum CodingKeys: String, CodingKey {
-        case appMetadata = "app_metadata"
-        case channel
-        case data
-        case email
-        case nonce
-        case password
-        case phone
-    }
-}
-
-struct SAMLAttributeMappingSchema: Codable {
-    var keys: String? = nil
-}
-
-struct SSOProviderSchema: Codable {
-    var id: String? = nil
-    var saml: String? = nil
-    var ssoDomains: [String]? = nil
-
-    enum CodingKeys: String, CodingKey {
-        case id
-        case saml
-        case ssoDomains = "sso_domains"
-    }
-}
-
-struct TOTPPhoneChallengeResponse: Codable {
-    enum APIType: String, Codable {
-        case totp
-        case phone
+        enum CodingKeys: String, CodingKey {
+            case channel
+            case codeChallenge = "code_challenge"
+            case codeChallengeMethod = "code_challenge_method"
+            case data
+            case email
+            case gotrueMetaSecurity = "gotrue_meta_security"
+            case password
+            case phone
+        }
     }
 
-    var expiresAt: Int
-    var id: String
-    var type: APIType
+    struct PostSsoBody: Codable {
+        enum CodeChallengeMethod: String, Codable {
+            case plain
+            case s256
+        }
 
-    enum CodingKeys: String, CodingKey {
-        case expiresAt = "expires_at"
-        case id
-        case type
-    }
-}
+        var codeChallenge: String? = nil
+        var codeChallengeMethod: CodeChallengeMethod? = nil
+        var domain: String? = nil
+        var gotrueMetaSecurity: GoTrueSecurity? = nil
+        var providerId: String? = nil
+        var redirectTo: String? = nil
+        var skipHttpRedirect: Bool? = nil
 
-struct UserSchema: Codable {
-    var appMetadata: String? = nil
-    var aud: String? = nil
-    var bannedUntil: String? = nil
-    var confirmationSentAt: String? = nil
-    var confirmedAt: String? = nil
-    var createdAt: String? = nil
-    var deletedAt: String? = nil
-    var email: String? = nil
-    var emailChangeSentAt: String? = nil
-    var emailConfirmedAt: String? = nil
-    var factors: [MFAFactorSchema]? = nil
-    var id: String? = nil
-    var identities: [IdentitySchema]? = nil
-    var isAnonymous: Bool? = nil
-    var lastSignInAt: String? = nil
-    var newEmail: String? = nil
-    var newPhone: String? = nil
-    var phone: String? = nil
-    var phoneChangeSentAt: String? = nil
-    var phoneConfirmedAt: String? = nil
-    var reauthenticationSentAt: String? = nil
-    var recoverySentAt: String? = nil
-    var role: String? = nil
-    var updatedAt: String? = nil
-    var userMetadata: String? = nil
-
-    enum CodingKeys: String, CodingKey {
-        case appMetadata = "app_metadata"
-        case aud
-        case bannedUntil = "banned_until"
-        case confirmationSentAt = "confirmation_sent_at"
-        case confirmedAt = "confirmed_at"
-        case createdAt = "created_at"
-        case deletedAt = "deleted_at"
-        case email
-        case emailChangeSentAt = "email_change_sent_at"
-        case emailConfirmedAt = "email_confirmed_at"
-        case factors
-        case id
-        case identities
-        case isAnonymous = "is_anonymous"
-        case lastSignInAt = "last_sign_in_at"
-        case newEmail = "new_email"
-        case newPhone = "new_phone"
-        case phone
-        case phoneChangeSentAt = "phone_change_sent_at"
-        case phoneConfirmedAt = "phone_confirmed_at"
-        case reauthenticationSentAt = "reauthentication_sent_at"
-        case recoverySentAt = "recovery_sent_at"
-        case role
-        case updatedAt = "updated_at"
-        case userMetadata = "user_metadata"
-    }
-}
-
-struct WebAuthnChallengeResponse: Codable {
-    enum APIType: String, Codable {
-        case webauthn
+        enum CodingKeys: String, CodingKey {
+            case codeChallenge = "code_challenge"
+            case codeChallengeMethod = "code_challenge_method"
+            case domain
+            case gotrueMetaSecurity = "gotrue_meta_security"
+            case providerId = "provider_id"
+            case redirectTo = "redirect_to"
+            case skipHttpRedirect = "skip_http_redirect"
+        }
     }
 
-    var expiresAt: Int? = nil
-    var id: String
-    var type: APIType
-    var webauthn: String
+    struct PostTokenBody: Codable {
+        enum Chain: String, Codable {
+            case solana
+            case ethereum
+        }
 
-    enum CodingKeys: String, CodingKey {
-        case expiresAt = "expires_at"
-        case id
-        case type
-        case webauthn
+        enum Provider: String, Codable {
+            case google
+            case apple
+            case azure
+            case facebook
+            case keycloak
+        }
+
+        var accessToken: String? = nil
+        var authCode: String? = nil
+        var chain: Chain? = nil
+        var clientId: String? = nil
+        var codeVerifier: String? = nil
+        var email: String? = nil
+        var gotrueMetaSecurity: GoTrueSecurity? = nil
+        var idToken: String? = nil
+        var issuer: String? = nil
+        var message: String? = nil
+        var nonce: String? = nil
+        var password: String? = nil
+        var phone: String? = nil
+        var provider: Provider? = nil
+        var refreshToken: String? = nil
+        var signature: String? = nil
+
+        enum CodingKeys: String, CodingKey {
+            case accessToken = "access_token"
+            case authCode = "auth_code"
+            case chain
+            case clientId = "client_id"
+            case codeVerifier = "code_verifier"
+            case email
+            case gotrueMetaSecurity = "gotrue_meta_security"
+            case idToken = "id_token"
+            case issuer
+            case message
+            case nonce
+            case password
+            case phone
+            case provider
+            case refreshToken = "refresh_token"
+            case signature
+        }
     }
-}
 
-// MARK: - Endpoints
-enum SupabaseAuthRESTAPIEndpoint: RequestBuildable {
-    enum CodeChallengeMethod: String, Codable {
-        case plain
-        case s256
+    struct PostVerifyBody: Codable {
+        enum APIType: String, Codable {
+            case signup
+            case recovery
+            case invite
+            case magiclink
+            case emailChange = "email_change"
+            case sms
+            case phoneChange = "phone_change"
+        }
+
+        var email: String? = nil
+        var phone: String? = nil
+        var redirectTo: String? = nil
+        var token: String? = nil
+        var tokenHash: String? = nil
+        var type: APIType? = nil
+
+        enum CodingKeys: String, CodingKey {
+            case email
+            case phone
+            case redirectTo = "redirect_to"
+            case token
+            case tokenHash = "token_hash"
+            case type
+        }
     }
 
-    enum Scope: String, Codable {
-        case global
-        case local
-        case others
+    struct PublicKeyCredentialDescriptor: Codable {
+        enum APIType: String, Codable {
+            case publicKey = "public-key"
+        }
+
+        var id: String
+        var transports: [String]? = nil
+        var type: APIType
     }
 
-    enum ResponseType: String, Codable {
-        case code
+    struct PutUserBody: Codable {
+        enum Channel: String, Codable {
+            case sms
+            case whatsapp
+        }
+
+        var appMetadata: String? = nil
+        var channel: Channel? = nil
+        var data: String? = nil
+        var email: String? = nil
+        var nonce: String? = nil
+        var password: String? = nil
+        var phone: String? = nil
+
+        enum CodingKeys: String, CodingKey {
+            case appMetadata = "app_metadata"
+            case channel
+            case data
+            case email
+            case nonce
+            case password
+            case phone
+        }
     }
 
-    enum GrantType: String, Codable {
-        case password
-        case refreshToken = "refresh_token"
-        case idToken = "id_token"
-        case pkce
-        case web3
+    struct SAMLAttributeMappingSchema: Codable {
+        var keys: String? = nil
     }
 
-    enum APIType: String, Codable {
-        case signup
-        case invite
-        case recovery
-        case magiclink
-        case emailChange = "email_change"
+    struct SSOProviderSchema: Codable {
+        var id: String? = nil
+        var saml: String? = nil
+        var ssoDomains: [String]? = nil
+
+        enum CodingKeys: String, CodingKey {
+            case id
+            case saml
+            case ssoDomains = "sso_domains"
+        }
     }
 
-    case getAuthorize(provider: String, scopes: String, inviteToken: String?, redirectTo: String?, codeChallengeMethod: CodeChallengeMethod?)
-    case getCallback
-    case postCallback
-    case postFactors(body: PostFactorsBody)
-    case deleteFactorsFactorId(factorId: String)
-    case postFactorsFactorIdChallenge(factorId: String, body: PostFactorsFactorIdChallengeBody)
-    case postFactorsFactorIdVerify(factorId: String, body: PostFactorsFactorIdVerifyBody)
-    case getHealth
-    case postInvite(body: PostInviteBody)
-    case postLogout(scope: Scope?)
-    case postMagiclink(body: PostMagiclinkBody)
-    case getOauthAuthorizationsAuthorizationId(authorizationId: String)
-    case postOauthAuthorizationsAuthorizationIdConsent(authorizationId: String, body: PostOauthAuthorizationsAuthorizationIdConsentBody)
-    case getOauthAuthorize(responseType: ResponseType, clientId: String, redirectUri: String, scope: String?, state: String?, codeChallenge: String, codeChallengeMethod: String)
-    case postOauthClientsRegister(body: PostOauthClientsRegisterBody)
-    case postOauthToken
-    case postOtp(body: PostOtpBody)
-    case postReauthenticate
-    case postRecover(body: PostRecoverBody)
-    case postResend(body: PostResendBody)
-    case postSamlAcs(relayState: String?, sAMLArt: String?, sAMLResponse: String?)
-    case getSamlMetadata(download: Bool?)
-    case getSettings
-    case postSignup(body: PostSignupBody)
-    case postSso(body: PostSsoBody)
-    case postToken(grantType: GrantType, body: PostTokenBody)
-    case getUser
-    case putUser(body: PutUserBody)
-    case getUserIdentitiesAuthorize(provider: String, scopes: String, redirectTo: String?, codeChallengeMethod: CodeChallengeMethod?)
-    case deleteUserIdentitiesIdentityId(identityId: String)
-    case getUserOauthGrants
-    case deleteUserOauthGrants(clientId: String)
-    case getVerify(token: String, type: APIType, redirectTo: String?)
-    case postVerify(body: PostVerifyBody)
+    struct TOTPPhoneChallengeResponse: Codable {
+        enum APIType: String, Codable {
+            case totp
+            case phone
+        }
+
+        var expiresAt: Int
+        var id: String
+        var type: APIType
+
+        enum CodingKeys: String, CodingKey {
+            case expiresAt = "expires_at"
+            case id
+            case type
+        }
+    }
+
+    struct UserSchema: Codable {
+        var appMetadata: String? = nil
+        var aud: String? = nil
+        var bannedUntil: String? = nil
+        var confirmationSentAt: String? = nil
+        var confirmedAt: String? = nil
+        var createdAt: String? = nil
+        var deletedAt: String? = nil
+        var email: String? = nil
+        var emailChangeSentAt: String? = nil
+        var emailConfirmedAt: String? = nil
+        var factors: [MFAFactorSchema]? = nil
+        var id: String? = nil
+        var identities: [IdentitySchema]? = nil
+        var isAnonymous: Bool? = nil
+        var lastSignInAt: String? = nil
+        var newEmail: String? = nil
+        var newPhone: String? = nil
+        var phone: String? = nil
+        var phoneChangeSentAt: String? = nil
+        var phoneConfirmedAt: String? = nil
+        var reauthenticationSentAt: String? = nil
+        var recoverySentAt: String? = nil
+        var role: String? = nil
+        var updatedAt: String? = nil
+        var userMetadata: String? = nil
+
+        enum CodingKeys: String, CodingKey {
+            case appMetadata = "app_metadata"
+            case aud
+            case bannedUntil = "banned_until"
+            case confirmationSentAt = "confirmation_sent_at"
+            case confirmedAt = "confirmed_at"
+            case createdAt = "created_at"
+            case deletedAt = "deleted_at"
+            case email
+            case emailChangeSentAt = "email_change_sent_at"
+            case emailConfirmedAt = "email_confirmed_at"
+            case factors
+            case id
+            case identities
+            case isAnonymous = "is_anonymous"
+            case lastSignInAt = "last_sign_in_at"
+            case newEmail = "new_email"
+            case newPhone = "new_phone"
+            case phone
+            case phoneChangeSentAt = "phone_change_sent_at"
+            case phoneConfirmedAt = "phone_confirmed_at"
+            case reauthenticationSentAt = "reauthentication_sent_at"
+            case recoverySentAt = "recovery_sent_at"
+            case role
+            case updatedAt = "updated_at"
+            case userMetadata = "user_metadata"
+        }
+    }
+
+    struct WebAuthnChallengeResponse: Codable {
+        enum APIType: String, Codable {
+            case webauthn
+        }
+
+        var expiresAt: Int? = nil
+        var id: String
+        var type: APIType
+        var webauthn: String
+
+        enum CodingKeys: String, CodingKey {
+            case expiresAt = "expires_at"
+            case id
+            case type
+            case webauthn
+        }
+    }
+
+    // MARK: - Operations (paths)
+
+    // each operation IS a block
+    enum Operation: RequestBuildable {
+        enum CodeChallengeMethod: String, Codable {
+            case plain
+            case s256
+        }
+
+        enum Scope: String, Codable {
+            case global
+            case local
+            case others
+        }
+
+        enum ResponseType: String, Codable {
+            case code
+        }
+
+        enum GrantType: String, Codable {
+            case password
+            case refreshToken = "refresh_token"
+            case idToken = "id_token"
+            case pkce
+            case web3
+        }
+
+        enum APIType: String, Codable {
+            case signup
+            case invite
+            case recovery
+            case magiclink
+            case emailChange = "email_change"
+        }
+
+        case getAuthorize(provider: String, scopes: String, inviteToken: String?, redirectTo: String?, codeChallengeMethod: CodeChallengeMethod?)
+        case getCallback
+        case postCallback
+        case postFactors(body: PostFactorsBody)
+        case deleteFactorsFactorId(factorId: String)
+        case postFactorsFactorIdChallenge(factorId: String, body: PostFactorsFactorIdChallengeBody)
+        case postFactorsFactorIdVerify(factorId: String, body: PostFactorsFactorIdVerifyBody)
+        case getHealth
+        case postInvite(body: PostInviteBody)
+        case postLogout(scope: Scope?)
+        case postMagiclink(body: PostMagiclinkBody)
+        case getOauthAuthorizationsAuthorizationId(authorizationId: String)
+        case postOauthAuthorizationsAuthorizationIdConsent(authorizationId: String, body: PostOauthAuthorizationsAuthorizationIdConsentBody)
+        case getOauthAuthorize(responseType: ResponseType, clientId: String, redirectUri: String, scope: String?, state: String?, codeChallenge: String, codeChallengeMethod: String)
+        case postOauthClientsRegister(body: PostOauthClientsRegisterBody)
+        case postOauthToken
+        case postOtp(body: PostOtpBody)
+        case postReauthenticate
+        case postRecover(body: PostRecoverBody)
+        case postResend(body: PostResendBody)
+        case postSamlAcs(relayState: String?, sAMLArt: String?, sAMLResponse: String?)
+        case getSamlMetadata(download: Bool?)
+        case getSettings
+        case postSignup(body: PostSignupBody)
+        case postSso(body: PostSsoBody)
+        case postToken(grantType: GrantType, body: PostTokenBody)
+        case getUser
+        case putUser(body: PutUserBody)
+        case getUserIdentitiesAuthorize(provider: String, scopes: String, redirectTo: String?, codeChallengeMethod: CodeChallengeMethod?)
+        case deleteUserIdentitiesIdentityId(identityId: String)
+        case getUserOauthGrants
+        case deleteUserOauthGrants(clientId: String)
+        case getVerify(token: String, type: APIType, redirectTo: String?)
+        case postVerify(body: PostVerifyBody)
+
+        var body: some RequestBuildable {
+            switch self {
+            case let .getAuthorize(provider, scopes, inviteToken, redirectTo, codeChallengeMethod):
+                Method.GET
+                Endpoint("authorize")
+                Query("provider", provider)
+                Query("scopes", scopes)
+                if let inviteToken {
+                    Query("invite_token", inviteToken)
+                }
+                if let redirectTo {
+                    Query("redirect_to", redirectTo)
+                }
+                if let codeChallengeMethod {
+                    Query("code_challenge_method", codeChallengeMethod.rawValue)
+                }
+            case .getCallback:
+                Method.GET
+                Endpoint("callback")
+            case .postCallback:
+                Method.POST
+                Endpoint("callback")
+            case let .postFactors(body):
+                Method.POST
+                Endpoint("factors")
+                RequestBody.json(body)
+            case let .deleteFactorsFactorId(factorId):
+                Method.DELETE
+                Endpoint("factors/\(factorId)")
+            case let .postFactorsFactorIdChallenge(factorId, body):
+                Method.POST
+                Endpoint("factors/\(factorId)/challenge")
+                RequestBody.json(body)
+            case let .postFactorsFactorIdVerify(factorId, body):
+                Method.POST
+                Endpoint("factors/\(factorId)/verify")
+                RequestBody.json(body)
+            case .getHealth:
+                Method.GET
+                Endpoint("health")
+            case let .postInvite(body):
+                Method.POST
+                Endpoint("invite")
+                RequestBody.json(body)
+            case let .postLogout(scope):
+                Method.POST
+                Endpoint("logout")
+                if let scope {
+                    Query("scope", scope.rawValue)
+                }
+            case let .postMagiclink(body):
+                Method.POST
+                Endpoint("magiclink")
+                RequestBody.json(body)
+            case let .getOauthAuthorizationsAuthorizationId(authorizationId):
+                Method.GET
+                Endpoint("oauth/authorizations/\(authorizationId)")
+            case let .postOauthAuthorizationsAuthorizationIdConsent(authorizationId, body):
+                Method.POST
+                Endpoint("oauth/authorizations/\(authorizationId)/consent")
+                RequestBody.json(body)
+            case let .getOauthAuthorize(responseType, clientId, redirectUri, scope, state, codeChallenge, codeChallengeMethod):
+                Method.GET
+                Endpoint("oauth/authorize")
+                Query("response_type", responseType.rawValue)
+                Query("client_id", clientId)
+                Query("redirect_uri", redirectUri)
+                if let scope {
+                    Query("scope", scope)
+                }
+                if let state {
+                    Query("state", state)
+                }
+                Query("code_challenge", codeChallenge)
+                Query("code_challenge_method", codeChallengeMethod)
+            case let .postOauthClientsRegister(body):
+                Method.POST
+                Endpoint("oauth/clients/register")
+                RequestBody.json(body)
+            case .postOauthToken:
+                Method.POST
+                Endpoint("oauth/token")
+            case let .postOtp(body):
+                Method.POST
+                Endpoint("otp")
+                RequestBody.json(body)
+            case .postReauthenticate:
+                Method.POST
+                Endpoint("reauthenticate")
+            case let .postRecover(body):
+                Method.POST
+                Endpoint("recover")
+                RequestBody.json(body)
+            case let .postResend(body):
+                Method.POST
+                Endpoint("resend")
+                RequestBody.json(body)
+            case let .postSamlAcs(relayState, sAMLArt, sAMLResponse):
+                Method.POST
+                Endpoint("saml/acs")
+                if let relayState {
+                    Query("RelayState", relayState)
+                }
+                if let sAMLArt {
+                    Query("SAMLArt", sAMLArt)
+                }
+                if let sAMLResponse {
+                    Query("SAMLResponse", sAMLResponse)
+                }
+            case let .getSamlMetadata(download):
+                Method.GET
+                Endpoint("saml/metadata")
+                if let download {
+                    Query("download", String(download))
+                }
+            case .getSettings:
+                Method.GET
+                Endpoint("settings")
+            case let .postSignup(body):
+                Method.POST
+                Endpoint("signup")
+                RequestBody.json(body)
+            case let .postSso(body):
+                Method.POST
+                Endpoint("sso")
+                RequestBody.json(body)
+            case let .postToken(grantType, body):
+                Method.POST
+                Endpoint("token")
+                Query("grant_type", grantType.rawValue)
+                RequestBody.json(body)
+            case .getUser:
+                Method.GET
+                Endpoint("user")
+            case let .putUser(body):
+                Method.PUT
+                Endpoint("user")
+                RequestBody.json(body)
+            case let .getUserIdentitiesAuthorize(provider, scopes, redirectTo, codeChallengeMethod):
+                Method.GET
+                Endpoint("user/identities/authorize")
+                Query("provider", provider)
+                Query("scopes", scopes)
+                if let redirectTo {
+                    Query("redirect_to", redirectTo)
+                }
+                if let codeChallengeMethod {
+                    Query("code_challenge_method", codeChallengeMethod.rawValue)
+                }
+            case let .deleteUserIdentitiesIdentityId(identityId):
+                Method.DELETE
+                Endpoint("user/identities/\(identityId)")
+            case .getUserOauthGrants:
+                Method.GET
+                Endpoint("user/oauth/grants")
+            case let .deleteUserOauthGrants(clientId):
+                Method.DELETE
+                Endpoint("user/oauth/grants")
+                Query("client_id", clientId)
+            case let .getVerify(token, type, redirectTo):
+                Method.GET
+                Endpoint("verify")
+                Query("token", token)
+                Query("type", type.rawValue)
+                if let redirectTo {
+                    Query("redirect_to", redirectTo)
+                }
+            case let .postVerify(body):
+                Method.POST
+                Endpoint("verify")
+                RequestBody.json(body)
+            }
+        }
+    }
+
+    // MARK: - Security (securitySchemes)
+
+    enum Security {
+        /// Scheme names the spec requires for an operation
+        /// (OR-alternatives flattened into one set).
+        static func schemes(_ operation: Operation) -> Set<String> {
+            switch operation {
+            case .getAuthorize, .getCallback, .getHealth, .postInvite, .postMagiclink,
+                .postOtp, .postRecover, .postResend, .getSamlMetadata, .getSettings,
+                .postSignup, .postSso, .postToken, .getVerify, .postVerify:
+                ["APIKeyAuth"]
+            case .postCallback, .getOauthAuthorize, .postOauthClientsRegister, .postOauthToken, .postSamlAcs:
+                []
+            case .postFactors, .deleteFactorsFactorId, .postFactorsFactorIdChallenge, .postFactorsFactorIdVerify, .postLogout,
+                .getOauthAuthorizationsAuthorizationId, .postOauthAuthorizationsAuthorizationIdConsent, .postReauthenticate, .getUser, .putUser,
+                .getUserIdentitiesAuthorize, .deleteUserIdentitiesIdentityId, .getUserOauthGrants, .deleteUserOauthGrants:
+                ["APIKeyAuth", "UserAuth"]
+            }
+        }
+
+        /// Whether the spec requires `APIKeyAuth` for the operation.
+        static func needsAPIKeyAuth(_ operation: Operation) -> Bool {
+            schemes(operation).contains("APIKeyAuth")
+        }
+
+        /// Whether the spec requires `UserAuth` for the operation.
+        static func needsUserAuth(_ operation: Operation) -> Bool {
+            schemes(operation).contains("UserAuth")
+        }
+
+        static func apiKeyAuth(_ value: String) -> some RequestBuildable {
+            Header.custom("apikey").setValue(value)
+        }
+
+        static func userAuth(token: String) -> some RequestBuildable {
+            Authorization.bearer(token)
+        }
+    }
 
     /// Server URL is templated — supply a resolved base URL: `https://{project}.supabase.co/auth/v1`
-
-    /// Security scheme names the spec requires for this endpoint
-    /// (OR-alternatives flattened into one set).
-    var securitySchemes: Set<String> {
-        switch self {
-        case .getAuthorize, .getCallback, .getHealth, .postInvite, .postMagiclink,
-            .postOtp, .postRecover, .postResend, .getSamlMetadata, .getSettings,
-            .postSignup, .postSso, .postToken, .getVerify, .postVerify:
-            ["APIKeyAuth"]
-        case .postCallback, .getOauthAuthorize, .postOauthClientsRegister, .postOauthToken, .postSamlAcs:
-            []
-        case .postFactors, .deleteFactorsFactorId, .postFactorsFactorIdChallenge, .postFactorsFactorIdVerify, .postLogout,
-            .getOauthAuthorizationsAuthorizationId, .postOauthAuthorizationsAuthorizationIdConsent, .postReauthenticate, .getUser, .putUser,
-            .getUserIdentitiesAuthorize, .deleteUserIdentitiesIdentityId, .getUserOauthGrants, .deleteUserOauthGrants:
-            ["APIKeyAuth", "UserAuth"]
-        }
-    }
-
-    /// Whether the spec requires the `APIKeyAuth` scheme for this endpoint.
-    var needsAPIKeyAuth: Bool {
-        securitySchemes.contains("APIKeyAuth")
-    }
-
-    /// Whether the spec requires the `UserAuth` scheme for this endpoint.
-    var needsUserAuth: Bool {
-        securitySchemes.contains("UserAuth")
-    }
-
-    var body: some RequestBuildable {
-        switch self {
-        case let .getAuthorize(provider, scopes, inviteToken, redirectTo, codeChallengeMethod):
-            Method.GET
-            Endpoint("authorize")
-            Query("provider", provider)
-            Query("scopes", scopes)
-            if let inviteToken {
-                Query("invite_token", inviteToken)
-            }
-            if let redirectTo {
-                Query("redirect_to", redirectTo)
-            }
-            if let codeChallengeMethod {
-                Query("code_challenge_method", codeChallengeMethod.rawValue)
-            }
-        case .getCallback:
-            Method.GET
-            Endpoint("callback")
-        case .postCallback:
-            Method.POST
-            Endpoint("callback")
-        case let .postFactors(body):
-            Method.POST
-            Endpoint("factors")
-            RequestBody.json(body)
-        case let .deleteFactorsFactorId(factorId):
-            Method.DELETE
-            Endpoint("factors/\(factorId)")
-        case let .postFactorsFactorIdChallenge(factorId, body):
-            Method.POST
-            Endpoint("factors/\(factorId)/challenge")
-            RequestBody.json(body)
-        case let .postFactorsFactorIdVerify(factorId, body):
-            Method.POST
-            Endpoint("factors/\(factorId)/verify")
-            RequestBody.json(body)
-        case .getHealth:
-            Method.GET
-            Endpoint("health")
-        case let .postInvite(body):
-            Method.POST
-            Endpoint("invite")
-            RequestBody.json(body)
-        case let .postLogout(scope):
-            Method.POST
-            Endpoint("logout")
-            if let scope {
-                Query("scope", scope.rawValue)
-            }
-        case let .postMagiclink(body):
-            Method.POST
-            Endpoint("magiclink")
-            RequestBody.json(body)
-        case let .getOauthAuthorizationsAuthorizationId(authorizationId):
-            Method.GET
-            Endpoint("oauth/authorizations/\(authorizationId)")
-        case let .postOauthAuthorizationsAuthorizationIdConsent(authorizationId, body):
-            Method.POST
-            Endpoint("oauth/authorizations/\(authorizationId)/consent")
-            RequestBody.json(body)
-        case let .getOauthAuthorize(responseType, clientId, redirectUri, scope, state, codeChallenge, codeChallengeMethod):
-            Method.GET
-            Endpoint("oauth/authorize")
-            Query("response_type", responseType.rawValue)
-            Query("client_id", clientId)
-            Query("redirect_uri", redirectUri)
-            if let scope {
-                Query("scope", scope)
-            }
-            if let state {
-                Query("state", state)
-            }
-            Query("code_challenge", codeChallenge)
-            Query("code_challenge_method", codeChallengeMethod)
-        case let .postOauthClientsRegister(body):
-            Method.POST
-            Endpoint("oauth/clients/register")
-            RequestBody.json(body)
-        case .postOauthToken:
-            Method.POST
-            Endpoint("oauth/token")
-        case let .postOtp(body):
-            Method.POST
-            Endpoint("otp")
-            RequestBody.json(body)
-        case .postReauthenticate:
-            Method.POST
-            Endpoint("reauthenticate")
-        case let .postRecover(body):
-            Method.POST
-            Endpoint("recover")
-            RequestBody.json(body)
-        case let .postResend(body):
-            Method.POST
-            Endpoint("resend")
-            RequestBody.json(body)
-        case let .postSamlAcs(relayState, sAMLArt, sAMLResponse):
-            Method.POST
-            Endpoint("saml/acs")
-            if let relayState {
-                Query("RelayState", relayState)
-            }
-            if let sAMLArt {
-                Query("SAMLArt", sAMLArt)
-            }
-            if let sAMLResponse {
-                Query("SAMLResponse", sAMLResponse)
-            }
-        case let .getSamlMetadata(download):
-            Method.GET
-            Endpoint("saml/metadata")
-            if let download {
-                Query("download", String(download))
-            }
-        case .getSettings:
-            Method.GET
-            Endpoint("settings")
-        case let .postSignup(body):
-            Method.POST
-            Endpoint("signup")
-            RequestBody.json(body)
-        case let .postSso(body):
-            Method.POST
-            Endpoint("sso")
-            RequestBody.json(body)
-        case let .postToken(grantType, body):
-            Method.POST
-            Endpoint("token")
-            Query("grant_type", grantType.rawValue)
-            RequestBody.json(body)
-        case .getUser:
-            Method.GET
-            Endpoint("user")
-        case let .putUser(body):
-            Method.PUT
-            Endpoint("user")
-            RequestBody.json(body)
-        case let .getUserIdentitiesAuthorize(provider, scopes, redirectTo, codeChallengeMethod):
-            Method.GET
-            Endpoint("user/identities/authorize")
-            Query("provider", provider)
-            Query("scopes", scopes)
-            if let redirectTo {
-                Query("redirect_to", redirectTo)
-            }
-            if let codeChallengeMethod {
-                Query("code_challenge_method", codeChallengeMethod.rawValue)
-            }
-        case let .deleteUserIdentitiesIdentityId(identityId):
-            Method.DELETE
-            Endpoint("user/identities/\(identityId)")
-        case .getUserOauthGrants:
-            Method.GET
-            Endpoint("user/oauth/grants")
-        case let .deleteUserOauthGrants(clientId):
-            Method.DELETE
-            Endpoint("user/oauth/grants")
-            Query("client_id", clientId)
-        case let .getVerify(token, type, redirectTo):
-            Method.GET
-            Endpoint("verify")
-            Query("token", token)
-            Query("type", type.rawValue)
-            if let redirectTo {
-                Query("redirect_to", redirectTo)
-            }
-        case let .postVerify(body):
-            Method.POST
-            Endpoint("verify")
-            RequestBody.json(body)
-        }
-    }
 }

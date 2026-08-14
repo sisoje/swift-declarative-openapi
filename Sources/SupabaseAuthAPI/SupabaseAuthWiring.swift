@@ -1,6 +1,7 @@
-// Hand-written layer over SupabaseAuth.generated.swift — the generated enum
-// carries the endpoint shapes; this file wires Supabase auth headers and the
-// token-refresh flow on top.
+// Hand-written layer over SupabaseAuth.generated.swift — the generated
+// namespace carries the spec sections (Operation, Security); this client
+// wires session + environment in one place, per the DSL's BackendSpec
+// layering.
 
 import DeclarativeRequests
 import Foundation
@@ -9,55 +10,44 @@ struct MissingAPIKey: Error {}
 struct MissingAccessToken: Error {}
 struct MissingRefreshToken: Error {}
 
-extension RequestBuildable {
-    /// Every Supabase Auth request carries the project `apikey` header, so a
-    /// missing key is a configuration error: it fails the build at `.request()`.
-    /// For the spec's few keyless endpoints, don't chain `.keyed` — omission
-    /// is spelled by not declaring the block.
-    func keyed(apikey: String?) -> some RequestBuildable {
-        RequestBlock {
-            self
-            if let apikey {
-                Header.custom("apikey").setValue(apikey)
-            } else {
-                RequestFailure(MissingAPIKey())
-            }
-        }
-    }
+/// Session + environment in one place; gating on the generated Security
+/// section is its rule. Credentials are optional so the client is
+/// constructible before any session exists — a required-but-missing one
+/// fails the build at `request(_:)`.
+struct SupabaseAuthClient {
+    var baseURL: URL
+    var apikey: String?
+    var accessToken: String?
 
-    /// Attaches the user bearer where `needsAuth` says the spec requires it
-    /// (pass the generated `needsUserAuth`); a required-but-nil token fails
-    /// the build at `.request()`.
-    func authorized(accessToken: String?, needsAuth: Bool) -> some RequestBuildable {
-        RequestBlock {
-            self
-            if needsAuth {
+    func request(_ operation: SupabaseAuthRESTAPI.Operation) throws -> URLRequest {
+        try RequestBlock {
+            operation
+            BaseURL(baseURL)
+            if SupabaseAuthRESTAPI.Security.needsAPIKeyAuth(operation) {
+                if let apikey {
+                    SupabaseAuthRESTAPI.Security.apiKeyAuth(apikey)
+                } else {
+                    RequestFailure(MissingAPIKey())
+                }
+            }
+            if SupabaseAuthRESTAPI.Security.needsUserAuth(operation) {
                 if let accessToken {
-                    Authorization.bearer(accessToken)
+                    SupabaseAuthRESTAPI.Security.userAuth(token: accessToken)
                 } else {
                     RequestFailure(MissingAccessToken())
                 }
             }
-        }
+        }.request()
     }
-}
 
-extension SupabaseAuthRESTAPIEndpoint {
-    /// `POST /token?grant_type=refresh_token` with the generated body model.
-    ///
-    /// The refresh token is this endpoint's body parameter; it is optional
-    /// only because the stored token may not exist on this device yet — the
-    /// builder is always constructible, and nil fails the build at `.request()`.
-    static func refreshSession(refreshToken: String?) -> some RequestBuildable {
-        RequestBlock {
-            if let refreshToken {
-                SupabaseAuthRESTAPIEndpoint.postToken(
-                    grantType: .refreshToken,
-                    body: PostTokenBody(refreshToken: refreshToken)
-                )
-            } else {
-                RequestFailure(MissingRefreshToken())
-            }
-        }
+    /// `POST /token?grant_type=refresh_token` — the refresh token is the
+    /// operation's body parameter; optional because no stored token may
+    /// exist on this device yet.
+    func refreshSessionRequest(refreshToken: String?) throws -> URLRequest {
+        guard let refreshToken else { throw MissingRefreshToken() }
+        return try request(.postToken(
+            grantType: .refreshToken,
+            body: .init(refreshToken: refreshToken)
+        ))
     }
 }

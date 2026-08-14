@@ -3,43 +3,49 @@
 import DeclarativeRequests
 import Foundation
 
-// MARK: - Models
-struct APIError: Codable {
-    var code: Int
-    var message: String
-}
+// The whole backend in one closed type — sections mirror the OpenAPI document.
+enum SwaggerPetstore {
+    // MARK: - Schemas (components.schemas)
 
-struct Pet: Codable {
-    var id: Int
-    var name: String
-    var tag: String? = nil
-}
+    struct APIError: Codable {
+        var code: Int
+        var message: String
+    }
 
-typealias Pets = [Pet]
+    struct Pet: Codable {
+        var id: Int
+        var name: String
+        var tag: String? = nil
+    }
 
-// MARK: - Endpoints
-enum SwaggerPetstoreEndpoint: RequestBuildable {
-    case listPets(limit: Int?)
-    case createPets(body: Pet)
-    case showPetById(petId: String)
+    typealias Pets = [Pet]
 
-    static let defaultBaseURL = URL(string: "http://petstore.swagger.io/v1")
+    // MARK: - Operations (paths)
 
-    var body: some RequestBuildable {
-        switch self {
-        case let .listPets(limit):
-            Method.GET
-            Endpoint("pets")
-            if let limit {
-                Query("limit", String(limit))
+    // each operation IS a block
+    enum Operation: RequestBuildable {
+        case listPets(limit: Int?)
+        case createPets(body: Pet)
+        case showPetById(petId: String)
+
+        var body: some RequestBuildable {
+            switch self {
+            case let .listPets(limit):
+                Method.GET
+                Endpoint("pets")
+                if let limit {
+                    Query("limit", String(limit))
+                }
+            case let .createPets(body):
+                Method.POST
+                Endpoint("pets")
+                RequestBody.json(body)
+            case let .showPetById(petId):
+                Method.GET
+                Endpoint("pets/\(petId)")
             }
-        case let .createPets(body):
-            Method.POST
-            Endpoint("pets")
-            RequestBody.json(body)
-        case let .showPetById(petId):
-            Method.GET
-            Endpoint("pets/\(petId)")
         }
     }
+
+    static let defaultBaseURL = URL(string: "http://petstore.swagger.io/v1")
 }

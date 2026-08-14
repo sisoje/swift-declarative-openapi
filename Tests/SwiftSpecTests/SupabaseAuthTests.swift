@@ -4,13 +4,14 @@ import Foundation
 import Testing
 
 private let projectBaseURL = URL(string: "https://myproject.supabase.co/auth/v1")!
+private let client = SupabaseAuthClient(
+    baseURL: projectBaseURL,
+    apikey: "anon-key",
+    accessToken: "jwt-access-token"
+)
 
 @Test func refreshSessionBuildsTokenRefreshRequest() throws {
-    let request = try SupabaseAuthRESTAPIEndpoint
-        .refreshSession(refreshToken: "4nYUCw0wZR_DNOTSDbSGMQ")
-        .keyed(apikey: "anon-key")
-        .base(projectBaseURL)
-        .request()
+    let request = try client.refreshSessionRequest(refreshToken: "4nYUCw0wZR_DNOTSDbSGMQ")
 
     #expect(request.url?.absoluteString
         == "https://myproject.supabase.co/auth/v1/token?grant_type=refresh_token")
@@ -22,76 +23,64 @@ private let projectBaseURL = URL(string: "https://myproject.supabase.co/auth/v1"
     #expect(body == ["refresh_token": "4nYUCw0wZR_DNOTSDbSGMQ"])
 }
 
-@Test func userEndpointCarriesApikeyAndBearer() throws {
-    let endpoint = SupabaseAuthRESTAPIEndpoint.getUser
-    let request = try endpoint
-        .authorized(accessToken: "jwt-access-token", needsAuth: endpoint.needsUserAuth)
-        .keyed(apikey: "anon-key")
-        .base(projectBaseURL)
-        .request()
+@Test func refreshWithoutStoredTokenFails() {
+    #expect(throws: MissingRefreshToken.self) {
+        try client.refreshSessionRequest(refreshToken: nil)
+    }
+}
 
+@Test func userEndpointCarriesApikeyAndBearer() throws {
+    let request = try client.request(.getUser)
     #expect(request.url?.absoluteString == "https://myproject.supabase.co/auth/v1/user")
     #expect(request.httpMethod == "GET")
     #expect(request.value(forHTTPHeaderField: "apikey") == "anon-key")
     #expect(request.value(forHTTPHeaderField: "Authorization") == "Bearer jwt-access-token")
 }
 
-@Test func refreshWithoutStoredTokenFailsAtRequest() {
-    #expect(throws: MissingRefreshToken.self) {
-        try SupabaseAuthRESTAPIEndpoint
-            .refreshSession(refreshToken: nil)
-            .keyed(apikey: "anon-key")
-            .base(projectBaseURL)
-            .request()
-    }
-}
-
 @Test func userEndpointWithoutTokenFailsAtRequest() {
-    let endpoint = SupabaseAuthRESTAPIEndpoint.getUser
+    let loggedOut = SupabaseAuthClient(baseURL: projectBaseURL, apikey: "anon-key")
     #expect(throws: MissingAccessToken.self) {
-        try endpoint
-            .authorized(accessToken: nil, needsAuth: endpoint.needsUserAuth)
-            .keyed(apikey: "anon-key")
-            .base(projectBaseURL)
-            .request()
+        try loggedOut.request(.getUser)
     }
 }
 
-@Test func publicEndpointPassesWithNilTokenViaGeneratedFlag() throws {
-    // Wire-once pattern: the same chain serves every endpoint — the
-    // generated needsUserAuth flag decides whether the bearer is demanded.
-    let endpoint = SupabaseAuthRESTAPIEndpoint.postSignup(body: PostSignupBody())
-    let request = try endpoint
-        .authorized(accessToken: nil, needsAuth: endpoint.needsUserAuth)
-        .keyed(apikey: "anon-key")
-        .base(projectBaseURL)
-        .request()
+@Test func publicEndpointPassesWithNilTokenViaSecuritySection() throws {
+    // One wire-once request(_:) serves every operation — the generated
+    // Security gates decide which credentials are demanded.
+    let loggedOut = SupabaseAuthClient(baseURL: projectBaseURL, apikey: "anon-key")
+    let request = try loggedOut.request(.postSignup(body: .init()))
     #expect(request.value(forHTTPHeaderField: "Authorization") == nil)
 }
 
 @Test func nilApikeyFailsAtRequest() {
+    let unconfigured = SupabaseAuthClient(baseURL: projectBaseURL)
     #expect(throws: MissingAPIKey.self) {
-        try SupabaseAuthRESTAPIEndpoint
-            .postSignup(body: PostSignupBody())
-            .keyed(apikey: nil)
-            .base(projectBaseURL)
-            .request()
+        try unconfigured.request(.postSignup(body: .init()))
     }
 }
 
-@Test func keylessEndpointSkipsKeyedEntirely() throws {
-    let request = try SupabaseAuthRESTAPIEndpoint
-        .postSamlAcs(relayState: nil, sAMLArt: nil, sAMLResponse: nil)
-        .base(projectBaseURL)
-        .request()
+@Test func keylessOperationCarriesNoApikeyEvenWhenConfigured() throws {
+    let request = try client.request(.postSamlAcs(relayState: nil, sAMLArt: nil, sAMLResponse: nil))
     #expect(request.value(forHTTPHeaderField: "apikey") == nil)
+    #expect(request.value(forHTTPHeaderField: "Authorization") == nil)
 }
 
-@Test func generatedPerSchemeFlagsMatchSpec() {
-    #expect(SupabaseAuthRESTAPIEndpoint.getUser.needsUserAuth == true)
-    #expect(SupabaseAuthRESTAPIEndpoint.getUser.needsAPIKeyAuth == true)
-    #expect(SupabaseAuthRESTAPIEndpoint.postSamlAcs(relayState: nil, sAMLArt: nil, sAMLResponse: nil)
-        .needsAPIKeyAuth == false)
+@Test func securitySectionMatchesSpec() {
+    #expect(SupabaseAuthRESTAPI.Security.schemes(.getUser) == ["APIKeyAuth", "UserAuth"])
+    #expect(SupabaseAuthRESTAPI.Security.schemes(.postToken(grantType: .password, body: .init()))
+        == ["APIKeyAuth"])
+    #expect(SupabaseAuthRESTAPI.Security.needsUserAuth(.getUser) == true)
+    #expect(SupabaseAuthRESTAPI.Security.needsUserAuth(.postSignup(body: .init())) == false)
+    #expect(SupabaseAuthRESTAPI.Security.needsAPIKeyAuth(
+        .postSamlAcs(relayState: nil, sAMLArt: nil, sAMLResponse: nil)) == false)
+}
+
+@Test func signupIsPlainKeyedJSONPost() throws {
+    let request = try client.request(.postSignup(body: .init()))
+    #expect(request.url?.absoluteString == "https://myproject.supabase.co/auth/v1/signup")
+    #expect(request.httpMethod == "POST")
+    #expect(request.value(forHTTPHeaderField: "Authorization") == nil)
+    #expect(request.value(forHTTPHeaderField: "Content-Type") == "application/json")
 }
 
 @Test func adminOperationsAreNotGenerated() throws {
@@ -102,27 +91,6 @@ private let projectBaseURL = URL(string: "https://myproject.supabase.co/auth/v1"
     #expect(!generated.contains("case getAdminUsers"))
     #expect(!generated.contains("AdminAuth\""))
     #expect(generated.contains("// Client-only: operations requiring AdminAuth are not generated."))
-}
-
-@Test func generatedSecurityMatchesSpec() {
-    #expect(SupabaseAuthRESTAPIEndpoint.getUser.securitySchemes == ["APIKeyAuth", "UserAuth"])
-    #expect(SupabaseAuthRESTAPIEndpoint.postToken(grantType: .password, body: PostTokenBody()).securitySchemes
-        == ["APIKeyAuth"])
-    #expect(SupabaseAuthRESTAPIEndpoint.postSamlAcs(relayState: nil, sAMLArt: nil, sAMLResponse: nil)
-        .securitySchemes.isEmpty)
-}
-
-@Test func signupIsPlainKeyedJSONPost() throws {
-    let request = try SupabaseAuthRESTAPIEndpoint
-        .postSignup(body: PostSignupBody())
-        .keyed(apikey: "anon-key")
-        .base(projectBaseURL)
-        .request()
-
-    #expect(request.url?.absoluteString == "https://myproject.supabase.co/auth/v1/signup")
-    #expect(request.httpMethod == "POST")
-    #expect(request.value(forHTTPHeaderField: "Authorization") == nil)
-    #expect(request.value(forHTTPHeaderField: "Content-Type") == "application/json")
 }
 
 @Test func templatedServerURLProducesNoDefaultBaseURL() throws {

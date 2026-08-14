@@ -26,10 +26,6 @@ Supabase's `/saml/acs` posts `application/x-www-form-urlencoded`; the generator 
 
 For templated server URLs (`https://{project}.supabase.co/auth/v1`) the generator now emits a doc comment. It could additionally emit `static func baseURL(project: String) -> URL?` from the declared server variables.
 
-## Security scheme attachment metadata
-
-`components.securitySchemes` declares *how* each scheme attaches (`http bearer` vs `apiKey in: header, name: apikey`). Generating that (e.g. a nested type with the header name) would let wiring layers derive the attachment mechanics instead of hand-writing `Header.custom("apikey")`.
-
 ## Security AND/OR structure
 
 `securitySchemes` flattens OR-alternatives (`[{A,B},{C}]` = "(A and B) or C") into one set. Fine for the checked-in specs; a `securityAlternatives: [[String]]` would preserve the structure if a spec ever needs it.

@@ -119,10 +119,11 @@ import Testing
     paths: {}
     """
     let generated = try SwiftSpecGenerator().generate(yaml: yaml)
-    #expect(generated.contains("enum UnitFixtureEndpoint: RequestBuildable"))
+    #expect(generated.contains("enum UnitFixture {"))
+    #expect(generated.contains("enum Operation: RequestBuildable"))
 
     let overridden = try SwiftSpecGenerator(enumNameOverride: "CustomAPI").generate(yaml: yaml)
-    #expect(overridden.contains("enum CustomAPI: RequestBuildable"))
+    #expect(overridden.contains("enum CustomAPI {"))
 }
 
 @Test func headerParamsEmitTodoComment() throws {
@@ -462,13 +463,13 @@ import Testing
           operationId: inheritedThing
     """
     let generated = try SwiftSpecGenerator().generate(yaml: yaml)
-    #expect(generated.contains("var securitySchemes: Set<String>"))
-    #expect(generated.contains("var needsDefaultAuth: Bool"))
-    #expect(generated.contains("var needsSpecialAuth: Bool"))
-    #expect(!generated.contains("var needsAuth: Bool"))
-    #expect(generated.contains("case .openThing:\n            []"))
-    #expect(generated.contains("case .lockedThing:\n            [\"OtherAuth\", \"SpecialAuth\"]"))
-    #expect(generated.contains("case .inheritedThing:\n            [\"DefaultAuth\"]"))
+    #expect(generated.contains("static func schemes(_ operation: Operation) -> Set<String>"))
+    #expect(generated.contains("static func needsDefaultAuth(_ operation: Operation) -> Bool"))
+    #expect(generated.contains("static func needsSpecialAuth(_ operation: Operation) -> Bool"))
+    #expect(!generated.contains("var needsAuth"))
+    #expect(generated.contains("case .openThing:\n                []"))
+    #expect(generated.contains("case .lockedThing:\n                [\"OtherAuth\", \"SpecialAuth\"]"))
+    #expect(generated.contains("case .inheritedThing:\n                [\"DefaultAuth\"]"))
 }
 
 @Test func noSecurityAnywhereOmitsSecurityProperties() throws {
@@ -576,7 +577,7 @@ import Testing
                   type: string
     """
     let generated = try SwiftSpecGenerator().generate(yaml: yaml)
-    #expect(generated.contains("struct Extended: Codable {\n    var id: String\n    var note: String\n}"))
+    #expect(generated.contains("struct Extended: Codable {\n        var id: String\n        var note: String\n    }"))
 }
 
 
