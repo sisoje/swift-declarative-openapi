@@ -128,9 +128,13 @@ struct Operation {
     /// declares none (evaluation then falls back to the 2xx range).
     var successStatuses: [Int]
     /// Swift type of the lowest declared success response: a model name for
-    /// application/json, "Data" for other content (or undeclared success),
-    /// "Void" for no content.
+    /// application/json, "String" for text/*, "Data" for other content (or
+    /// undeclared success), "Void" for no content.
     var successType: String
+    /// True when the success content is `text/*` — raw UTF-8, decoded with
+    /// `String(decoding:)`, never `JSONDecoder` (which needs a quoted JSON
+    /// string even though the Swift type is also `String`).
+    var successIsText: Bool
 }
 
 // MARK: - Walking the document
@@ -363,6 +367,7 @@ extension SpecGenerator {
             .sorted()
 
         var successType = "Void"
+        var successIsText = false
         if let first = successStatuses.first, let response = anyDict(responses[String(first)]) {
             if let content = anyDict(response["content"]) {
                 if let json = anyDict(content["application/json"]), let schema = anyDict(json["schema"]) {
@@ -378,6 +383,9 @@ extension SpecGenerator {
                     } else {
                         successType = swiftType(for: schema)
                     }
+                } else if content.keys.contains(where: { $0.hasPrefix("text/") }) {
+                    successType = "String"
+                    successIsText = true
                 } else if !content.isEmpty {
                     successType = "Data"
                 }
@@ -395,7 +403,8 @@ extension SpecGenerator {
             bodyType: bodyType,
             securitySchemes: schemes,
             successStatuses: successStatuses,
-            successType: successType
+            successType: successType,
+            successIsText: successIsText
         )
     }
 }
@@ -677,6 +686,14 @@ extension SpecGenerator {
         output += "                    return try decoder(operation).decode(Output.self, from: data)\n"
         output += "                }\n"
         output += "            }\n"
+        output += "            func text<each Input>(\n"
+        output += "                _ makeCase: @escaping (repeat each Input) -> Operation\n"
+        output += "            ) -> (repeat each Input) async throws -> String {\n"
+        output += "                { (input: repeat each Input) in\n"
+        output += "                    let operation = makeCase(repeat each input)\n"
+        output += "                    return try String(decoding: Responses.evaluate(operation, try await transport(request(operation))), as: UTF8.self)\n"
+        output += "                }\n"
+        output += "            }\n"
         output += "            func fire<each Input>(\n"
         output += "                _ makeCase: @escaping (repeat each Input) -> Operation\n"
         output += "            ) -> (repeat each Input) async throws -> Void {\n"
@@ -692,10 +709,14 @@ extension SpecGenerator {
             let constructor = parameters.isEmpty
                 ? "{ Operation.\(operation.caseName) }"
                 : "Operation.\(operation.caseName)"
-            let entry = switch operation.successType {
-            case "Void": "fire(\(constructor))"
-            case "Data": "raw(\(constructor))"
-            default: "endpoint(\(constructor), \(operation.successType).self)"
+            let entry = if operation.successIsText {
+                "text(\(constructor))"
+            } else {
+                switch operation.successType {
+                case "Void": "fire(\(constructor))"
+                case "Data": "raw(\(constructor))"
+                default: "endpoint(\(constructor), \(operation.successType).self)"
+                }
             }
             let comma = index == operations.count - 1 ? "" : ","
             output += "                \(operation.caseName): \(entry)\(comma)\n"

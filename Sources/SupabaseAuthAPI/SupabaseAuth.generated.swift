@@ -1211,6 +1211,14 @@ enum SupabaseAuthRESTAPI {
                     return try decoder(operation).decode(Output.self, from: data)
                 }
             }
+            func text<each Input>(
+                _ makeCase: @escaping (repeat each Input) -> Operation
+            ) -> (repeat each Input) async throws -> String {
+                { (input: repeat each Input) in
+                    let operation = makeCase(repeat each input)
+                    return try String(decoding: Responses.evaluate(operation, try await transport(request(operation))), as: UTF8.self)
+                }
+            }
             func fire<each Input>(
                 _ makeCase: @escaping (repeat each Input) -> Operation
             ) -> (repeat each Input) async throws -> Void {

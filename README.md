@@ -73,7 +73,7 @@ let request = try client.request(.showPetById(petId: "42"))
 
 Each operation is itself a `RequestBuildable` block, so the bare chain works too: `try SwaggerPetstore.Operation.showPetById(petId: "42").base(url).request()`.
 
-The top of the ladder is the generated **Client** — the backend as one struct of typed closures, output types read from `responses:` (`204` → `Void`, `image/png` → `Data`, json `$ref` → the model). Field names carry the operation; wrong pairings are unrepresentable; any field swaps for a stub:
+The top of the ladder is the generated **Client** — the backend as one struct of typed closures, output types read from `responses:` (`204` → `Void`, `image/png` → `Data`, `text/*` → UTF-8 `String`, json `$ref` → the model). Field names carry the operation; wrong pairings are unrepresentable; any field swaps for a stub:
 
 ```swift
 let api = SwaggerPetstore.Client.live(request: PetstoreClient(baseURL: url).request)

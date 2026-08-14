@@ -688,3 +688,44 @@ import Testing
     #expect(generated.contains("var quality: Quality? = nil"))
     #expect(generated.contains("var codec: String? = nil"))
 }
+
+@Test func clientOutputKindsFollowResponseContent() throws {
+    let yaml = """
+    openapi: "3.0.0"
+    info:
+      title: Unit Fixture
+      version: 1.0.0
+    paths:
+      /report:
+        get:
+          operationId: getReport
+          responses:
+            "200":
+              description: plain text
+              content:
+                text/plain:
+                  schema:
+                    type: string
+      /name:
+        get:
+          operationId: getName
+          responses:
+            "200":
+              description: a JSON string
+              content:
+                application/json:
+                  schema:
+                    type: string
+      /ping:
+        post:
+          operationId: ping
+          responses:
+            "204":
+              description: no content
+    """
+    let generated = try SpecGenerator().generate(yaml: yaml)
+    #expect(generated.contains("var getReport: () async throws -> String"))
+    #expect(generated.contains("getReport: text({ Operation.getReport })"))
+    #expect(generated.contains("getName: endpoint({ Operation.getName }, String.self)"))
+    #expect(generated.contains("ping: fire({ Operation.ping })"))
+}
