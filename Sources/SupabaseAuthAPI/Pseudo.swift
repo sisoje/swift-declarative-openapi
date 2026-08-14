@@ -13,11 +13,11 @@ struct Pseudo<Operation> {
     @Binding var accessToken: String?
 
     let executeOnce: (Operation) async throws -> Data
-    let refresh: @Sendable () async -> Void // it will update access token
+    let refresh: () -> Task<Void, Never> // it will update access token
     let isError401: (Error) -> Bool
     let needsAuth: (Operation) -> Bool
 
-    func runRefreshed(_ operation: Operation) async throws -> Data {
+    func executeRefreshed(_ operation: Operation) async throws -> Data {
         let oldToken = accessToken
         var alreadyRefreshing = false
         if let refreshTask {
@@ -34,9 +34,7 @@ struct Pseudo<Operation> {
             if let refreshTask {
                 await refreshTask.value
             } else if oldToken == accessToken {
-                let task = Task { [refresh] in
-                    await refresh()
-                }
+                let task = refresh()
                 refreshTask = task
                 await task.value
                 refreshTask = nil
