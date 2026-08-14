@@ -43,3 +43,10 @@ private let baseURL = URL(string: "http://petstore.swagger.io/v1")!
 @Test func defaultBaseURLComesFromSpecServers() {
     #expect(SwaggerPetstore.defaultBaseURL == baseURL)
 }
+
+@Test func clientCarriesOnlyEnvironment() throws {
+    let client = PetstoreClient(baseURL: baseURL)
+    let request = try client.request(.showPetById(petId: "42"))
+    #expect(request.url?.absoluteString == "http://petstore.swagger.io/v1/pets/42")
+    #expect(request.allHTTPHeaderFields?.isEmpty ?? true)
+}

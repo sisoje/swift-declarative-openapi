@@ -54,3 +54,18 @@ private let museumBaseURL = URL(string: "https://redocly.com/_mock/docs/openapi/
         == ["MuseumPlaceholderAuth"])
     #expect(RedoclyMuseumAPI.Security.needsMuseumPlaceholderAuth(.deleteSpecialEvent(eventId: "e1")) == true)
 }
+
+@Test func clientAttachesBasicAuthEverywhere() throws {
+    let client = MuseumClient(baseURL: museumBaseURL, username: "curator", password: "secret")
+    let request = try client.request(.getMuseumHours(startDate: nil, page: nil, limit: nil))
+    let expected = "Basic " + Data("curator:secret".utf8).base64EncodedString()
+    #expect(request.value(forHTTPHeaderField: "Authorization") == expected)
+    #expect(request.url?.absoluteString == "https://redocly.com/_mock/docs/openapi/museum-api/museum-hours")
+}
+
+@Test func clientWithoutCredentialsFailsAtRequest() {
+    let client = MuseumClient(baseURL: museumBaseURL)
+    #expect(throws: MissingCredentials.self) {
+        try client.request(.getMuseumHours(startDate: nil, page: nil, limit: nil))
+    }
+}

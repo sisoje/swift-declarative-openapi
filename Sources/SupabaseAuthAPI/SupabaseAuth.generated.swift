@@ -4,7 +4,7 @@
 import DeclarativeRequests
 import Foundation
 
-// The whole backend in one closed type — sections mirror the OpenAPI document.
+// The client-facing slice of the backend in one closed type — sections mirror the OpenAPI document.
 enum SupabaseAuthRESTAPI {
     // MARK: - Schemas (components.schemas)
 

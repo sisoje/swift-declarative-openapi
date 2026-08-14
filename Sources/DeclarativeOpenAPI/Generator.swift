@@ -374,7 +374,10 @@ extension SpecGenerator {
         }
         output += "\nimport DeclarativeRequests\nimport Foundation\n\n"
 
-        output += "// The whole backend in one closed type — sections mirror the OpenAPI document.\n"
+        // "Whole" would be a lie when operations are excluded — say which slice this is.
+        output += excludedSchemes.isEmpty
+            ? "// The whole backend in one closed type — sections mirror the OpenAPI document.\n"
+            : "// The client-facing slice of the backend in one closed type — sections mirror the OpenAPI document.\n"
         output += "enum \(enumName) {\n"
 
         if !models.isEmpty {
