@@ -18,6 +18,22 @@ Currently skipped with a `// TODO:` comment in the generated case. The DSL suppo
 
 If the DSL adopts omit-on-nil for nil-valued `Query` (see `../declarative-requests-swift/TODO.md`), the generator can pass typed optionals straight through (`Query("limit", limit)`) and drop the `if let` wrapping entirely.
 
+## Form-urlencoded request bodies
+
+Supabase's `/saml/acs` posts `application/x-www-form-urlencoded`; the generator only maps `application/json`, so that case silently gets no body. Map form bodies to `RequestBody.urlEncoded(name, value)` per field (the DSL accumulates them across blocks).
+
+## Security schemes → auth metadata
+
+Supabase declares `security:` per operation (`APIKeyAuth`, bearer). The generator could emit a `needsAuth`-style computed property (the DSL README's Open Spec pattern) so hand-written wiring layers can gate tokens per case instead of maintaining the mapping by hand.
+
+## Server-variable base URL helper
+
+For templated server URLs (`https://{project}.supabase.co/auth/v1`) the generator now emits a doc comment. It could additionally emit `static func baseURL(project: String) -> URL?` from the declared server variables.
+
+## Enum-typed string parameters
+
+`grant_type` is an enum of five values in the spec but generates as `String`. A generated nested `enum GrantType: String` per enum parameter would make invalid values unrepresentable.
+
 ## OpenAPI 3.1 nullable types
 
 3.1 allows `type: [string, "null"]` arrays. The tolerant walker currently falls back to `String`; mapping them to optionals would be more faithful. Neither checked-in spec uses this yet.

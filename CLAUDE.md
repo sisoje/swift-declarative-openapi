@@ -5,4 +5,6 @@
 - **Golden sync**: whenever codegen output changes, regenerate `Sources/PetstoreAPI/Petstore.generated.swift` by running the generator on `Specs/petstore.yaml` — the golden test compares byte-for-byte.
 - **Spec file**: `Specs/petstore.yaml` is the byte-exact canonical petstore file from the OAI repository; don't reformat it.
 - **Verification**: `swift build && swift test` must be green before declaring anything done. The e2e test proves generated code compiles against the DSL via a real `swift build` in a temp package.
+- **Adding a spec example** (established over petstore/museum/supabase): download the canonical file byte-exact into `Specs/`, run the generator, extend the generator for real gaps the spec exposes (with unit tests), check the output into a new `Sources/<Name>API` target depending on DeclarativeRequests, add the spec to the parameterized golden + e2e tests, add request-shape tests, update README. Hand-written layers over a generated enum go in the same target as a separate `<Name>Wiring.swift` — never edit the `.generated.swift` file.
+- **Skill**: load `declarative-requests-spec-patterns` before writing or reviewing wiring layers / codegen output that consumes the DSL.
 - **Git**: commit locally on `main`; no remote, no push.
