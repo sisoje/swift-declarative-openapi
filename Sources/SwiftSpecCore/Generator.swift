@@ -402,12 +402,12 @@ extension SwiftSpecGenerator {
             // A result-builder-transformed `switch self {}` with zero cases
             // does not compile, so emit a placeholder body instead. The enum
             // has no cases, so this body can never actually run.
-            output += "    @RequestBuilder var body: some RequestBuildable {\n"
+            output += "    var body: some RequestBuildable {\n"
             output += "        // Spec contains no operations.\n"
             output += "        Method.GET\n"
             output += "    }\n"
         } else {
-            output += "    @RequestBuilder var body: some RequestBuildable {\n"
+            output += "    var body: some RequestBuildable {\n"
             output += "        switch self {\n"
             for operation in operations {
                 output += renderSwitchCase(operation)

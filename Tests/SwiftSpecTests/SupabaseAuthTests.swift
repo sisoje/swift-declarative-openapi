@@ -10,7 +10,7 @@ private let projectBaseURL = URL(string: "https://myproject.supabase.co/auth/v1"
         .refreshSession(refreshToken: "4nYUCw0wZR_DNOTSDbSGMQ")
         .keyed(apikey: "anon-key")
         .base(projectBaseURL)
-        .request
+        .request()
 
     #expect(request.url?.absoluteString
         == "https://myproject.supabase.co/auth/v1/token?grant_type=refresh_token")
@@ -23,12 +23,12 @@ private let projectBaseURL = URL(string: "https://myproject.supabase.co/auth/v1"
 }
 
 @Test func userEndpointCarriesApikeyAndBearer() throws {
-    let request = try SupabaseAuthRESTAPIEndpoint
-        .getUser
-        .authorized(accessToken: "jwt-access-token")
+    let endpoint = SupabaseAuthRESTAPIEndpoint.getUser
+    let request = try endpoint
+        .authorized(accessToken: "jwt-access-token", needsAuth: endpoint.needsUserAuth)
         .keyed(apikey: "anon-key")
         .base(projectBaseURL)
-        .request
+        .request()
 
     #expect(request.url?.absoluteString == "https://myproject.supabase.co/auth/v1/user")
     #expect(request.httpMethod == "GET")
@@ -42,26 +42,31 @@ private let projectBaseURL = URL(string: "https://myproject.supabase.co/auth/v1"
             .refreshSession(refreshToken: nil)
             .keyed(apikey: "anon-key")
             .base(projectBaseURL)
-            .request
+            .request()
     }
 }
 
 @Test func userEndpointWithoutTokenFailsAtRequest() {
+    let endpoint = SupabaseAuthRESTAPIEndpoint.getUser
     #expect(throws: MissingAccessToken.self) {
-        try SupabaseAuthRESTAPIEndpoint
-            .getUser
-            .authorized(accessToken: nil)
+        try endpoint
+            .authorized(accessToken: nil, needsAuth: endpoint.needsUserAuth)
             .keyed(apikey: "anon-key")
             .base(projectBaseURL)
-            .request
+            .request()
     }
 }
 
-@Test func callerGatesAuthorizedOnGeneratedFlag() {
-    // Public endpoints don't chain .authorized — the generated flag is the
-    // caller's gate, same rule as .keyed for keyless endpoints.
-    #expect(SupabaseAuthRESTAPIEndpoint.postSignup(body: PostSignupBody()).needsUserAuth == false)
-    #expect(SupabaseAuthRESTAPIEndpoint.getUser.needsUserAuth == true)
+@Test func publicEndpointPassesWithNilTokenViaGeneratedFlag() throws {
+    // Wire-once pattern: the same chain serves every endpoint — the
+    // generated needsUserAuth flag decides whether the bearer is demanded.
+    let endpoint = SupabaseAuthRESTAPIEndpoint.postSignup(body: PostSignupBody())
+    let request = try endpoint
+        .authorized(accessToken: nil, needsAuth: endpoint.needsUserAuth)
+        .keyed(apikey: "anon-key")
+        .base(projectBaseURL)
+        .request()
+    #expect(request.value(forHTTPHeaderField: "Authorization") == nil)
 }
 
 @Test func nilApikeyFailsAtRequest() {
@@ -70,7 +75,7 @@ private let projectBaseURL = URL(string: "https://myproject.supabase.co/auth/v1"
             .postSignup(body: PostSignupBody())
             .keyed(apikey: nil)
             .base(projectBaseURL)
-            .request
+            .request()
     }
 }
 
@@ -78,7 +83,7 @@ private let projectBaseURL = URL(string: "https://myproject.supabase.co/auth/v1"
     let request = try SupabaseAuthRESTAPIEndpoint
         .postSamlAcs(relayState: nil, sAMLArt: nil, sAMLResponse: nil)
         .base(projectBaseURL)
-        .request
+        .request()
     #expect(request.value(forHTTPHeaderField: "apikey") == nil)
 }
 
@@ -112,7 +117,7 @@ private let projectBaseURL = URL(string: "https://myproject.supabase.co/auth/v1"
         .postSignup(body: PostSignupBody())
         .keyed(apikey: "anon-key")
         .base(projectBaseURL)
-        .request
+        .request()
 
     #expect(request.url?.absoluteString == "https://myproject.supabase.co/auth/v1/signup")
     #expect(request.httpMethod == "POST")

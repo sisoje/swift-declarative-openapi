@@ -113,7 +113,7 @@ enum RedoclyMuseumAPIEndpoint: RequestBuildable {
         securitySchemes.contains("MuseumPlaceholderAuth")
     }
 
-    @RequestBuilder var body: some RequestBuildable {
+    var body: some RequestBuildable {
         switch self {
         case let .getMuseumHours(startDate, page, limit):
             Method.GET

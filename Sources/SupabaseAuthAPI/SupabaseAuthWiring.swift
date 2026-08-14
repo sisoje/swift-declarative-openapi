@@ -11,7 +11,7 @@ struct MissingRefreshToken: Error {}
 
 extension RequestBuildable {
     /// Every Supabase Auth request carries the project `apikey` header, so a
-    /// missing key is a configuration error: it fails the build at `.request`.
+    /// missing key is a configuration error: it fails the build at `.request()`.
     /// For the spec's few keyless endpoints, don't chain `.keyed` — omission
     /// is spelled by not declaring the block.
     func keyed(apikey: String?) -> some RequestBuildable {
@@ -25,16 +25,18 @@ extension RequestBuildable {
         }
     }
 
-    /// Attaches the user bearer; a nil token fails the build at `.request`.
-    /// Chain it on endpoints whose generated `needsUserAuth` is true — for
-    /// public endpoints, don't chain it, same rule as `.keyed`.
-    func authorized(accessToken: String?) -> some RequestBuildable {
+    /// Attaches the user bearer where `needsAuth` says the spec requires it
+    /// (pass the generated `needsUserAuth`); a required-but-nil token fails
+    /// the build at `.request()`.
+    func authorized(accessToken: String?, needsAuth: Bool) -> some RequestBuildable {
         RequestBlock {
             self
-            if let accessToken {
-                Authorization.bearer(accessToken)
-            } else {
-                RequestFailure(MissingAccessToken())
+            if needsAuth {
+                if let accessToken {
+                    Authorization.bearer(accessToken)
+                } else {
+                    RequestFailure(MissingAccessToken())
+                }
             }
         }
     }
@@ -45,7 +47,7 @@ extension SupabaseAuthRESTAPIEndpoint {
     ///
     /// The refresh token is this endpoint's body parameter; it is optional
     /// only because the stored token may not exist on this device yet — the
-    /// builder is always constructible, and nil fails the build at `.request`.
+    /// builder is always constructible, and nil fails the build at `.request()`.
     static func refreshSession(refreshToken: String?) -> some RequestBuildable {
         RequestBlock {
             if let refreshToken {

@@ -9,7 +9,7 @@ private let museumBaseURL = URL(string: "https://redocly.com/_mock/docs/openapi/
     let request = try RedoclyMuseumAPIEndpoint
         .getSpecialEvent(eventId: "3be6453c-03eb-4357-ae5a-984a0e574a54")
         .base(museumBaseURL)
-        .request
+        .request()
     #expect(request.url?.absoluteString
         == "https://redocly.com/_mock/docs/openapi/museum-api/special-events/3be6453c-03eb-4357-ae5a-984a0e574a54")
     #expect(request.httpMethod == "GET")
@@ -19,7 +19,7 @@ private let museumBaseURL = URL(string: "https://redocly.com/_mock/docs/openapi/
     let request = try RedoclyMuseumAPIEndpoint
         .listSpecialEvents(startDate: "2023-02-23", endDate: nil, page: 2, limit: nil)
         .base(museumBaseURL)
-        .request
+        .request()
     #expect(request.url?.query == "startDate=2023-02-23&page=2")
 }
 
@@ -27,7 +27,7 @@ private let museumBaseURL = URL(string: "https://redocly.com/_mock/docs/openapi/
     let request = try RedoclyMuseumAPIEndpoint
         .getTicketCode(ticketId: "a54a57ca-36f8-421b-a6b4-2e8f26858a4c")
         .base(museumBaseURL)
-        .request
+        .request()
     #expect(request.url?.path.hasSuffix("/tickets/a54a57ca-36f8-421b-a6b4-2e8f26858a4c/qr") == true)
 }
 
@@ -35,7 +35,7 @@ private let museumBaseURL = URL(string: "https://redocly.com/_mock/docs/openapi/
     let request = try RedoclyMuseumAPIEndpoint
         .buyMuseumTickets(body: BuyMuseumTickets(ticketDate: "2023-09-07", ticketType: .general))
         .base(museumBaseURL)
-        .request
+        .request()
     #expect(request.httpMethod == "POST")
     #expect(request.value(forHTTPHeaderField: "Content-Type") == "application/json")
     #expect(request.httpBody != nil)
@@ -45,7 +45,7 @@ private let museumBaseURL = URL(string: "https://redocly.com/_mock/docs/openapi/
     let request = try RedoclyMuseumAPIEndpoint
         .deleteSpecialEvent(eventId: "e1")
         .base(museumBaseURL)
-        .request
+        .request()
     #expect(request.httpMethod == "DELETE")
 }
 

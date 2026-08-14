@@ -790,7 +790,7 @@ enum SupabaseAuthRESTAPIEndpoint: RequestBuildable {
         securitySchemes.contains("UserAuth")
     }
 
-    @RequestBuilder var body: some RequestBuildable {
+    var body: some RequestBuildable {
         switch self {
         case let .getAuthorize(provider, scopes, inviteToken, redirectTo, codeChallengeMethod):
             Method.GET

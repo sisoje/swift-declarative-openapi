@@ -25,7 +25,7 @@ enum SwaggerPetstoreEndpoint: RequestBuildable {
 
     static let defaultBaseURL = URL(string: "http://petstore.swagger.io/v1")
 
-    @RequestBuilder var body: some RequestBuildable {
+    var body: some RequestBuildable {
         switch self {
         case let .listPets(limit):
             Method.GET
