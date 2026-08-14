@@ -1,4 +1,4 @@
-# swift-spec
+# swift-declarative-openapi
 
 An executable that takes an OpenAPI 3.0 YAML spec and generates a **compilable Swift enum** that models every endpoint using the [DeclarativeRequests](../declarative-requests-swift) result-builder DSL. Models are generated with real `Codable` properties from `properties`/`required`: optionals get `= nil` defaults (so memberwise inits need only the required fields), `allOf` is flattened via `$ref` resolution, and `CodingKeys` is emitted only when a raw name isn't a clean Swift name.
 
@@ -11,9 +11,9 @@ Two reference specs are checked in, both byte-exact canonical files from their u
 ## Usage
 
 ```sh
-swift run swift-spec Specs/petstore.yaml                 # generated Swift on stdout
-swift run swift-spec Specs/petstore.yaml -o Petstore.swift
-swift run swift-spec Specs/petstore.yaml --enum-name MyAPI
+swift run declarative-openapi Specs/petstore.yaml                 # generated Swift on stdout
+swift run declarative-openapi Specs/petstore.yaml -o Petstore.swift
+swift run declarative-openapi Specs/petstore.yaml --enum-name MyAPI
 ```
 
 Flags: `-o`/`--output <file>`, `--enum-name <Name>` (overrides the namespace name derived from `info.title`), `--exclude-scheme <Scheme>` (repeatable — drops every operation whose security requires that scheme, e.g. a server-only admin scheme, and records it in the header comment), `-h`/`--help`. Missing/unreadable input or invalid YAML produces a clear error on stderr and exit code 1.
@@ -78,11 +78,11 @@ let request = try SwaggerPetstore.Operation.showPetById(petId: "42")
 
 ## Package layout
 
-- `Sources/SwiftSpecCore` — all parsing (via [Yams](https://github.com/jpsim/Yams)) and codegen; `SwiftSpecGenerator(enumNameOverride:).generate(yaml:) -> String`.
-- `Sources/SwiftSpecCLI` — the `swift-spec` executable (plain `CommandLine.arguments`, no argument-parser dependency).
+- `Sources/DeclarativeOpenAPI` — all parsing (via [Yams](https://github.com/jpsim/Yams)) and codegen; `SpecGenerator(enumNameOverride:).generate(yaml:) -> String`.
+- `Sources/DeclarativeOpenAPICLI` — the `swift-declarative-openapi` executable (plain `CommandLine.arguments`, no argument-parser dependency).
 - `Sources/PetstoreAPI`, `Sources/MuseumAPI`, and `Sources/SupabaseAuthAPI` — the **checked-in generated outputs** (plus the hand-written Supabase wiring), compiled against DeclarativeRequests on every `swift build`, so compilability of generated code is proven by the build itself.
 - `Specs/` — the canonical spec files.
-- `Tests/SwiftSpecTests` — 55 tests:
+- `Tests/DeclarativeOpenAPITests` — 55 tests:
   - **E2E generate-then-compile** (parameterized over all three specs): generates from the spec, writes a fresh temp SwiftPM package depending on DeclarativeRequests, runs a real `swift build` there, and asserts exit 0 (compiler output is surfaced on failure).
   - **Golden** (parameterized over all three specs): generator output must equal the checked-in `*.generated.swift` byte-for-byte.
   - **Request shape**: builds actual `URLRequest`s from the generated enums and asserts URLs, methods, query items, headers, and JSON bodies — including the Supabase refresh flow (`POST …/token?grant_type=refresh_token` with the real refresh-token payload and `apikey` header).

@@ -1,5 +1,5 @@
 import Foundation
-import SwiftSpecCore
+import DeclarativeOpenAPI
 import Testing
 
 /// Absolute path to the DeclarativeRequests package the generated code targets.
@@ -9,11 +9,11 @@ private let declarativeRequestsPath = "/Users/lazar/dev/declarative-requests-swi
 func generatedCodeCompilesAgainstDeclarativeRequests(spec: String) throws {
     let specURL = packageRoot.appendingPathComponent("Specs/\(spec)")
     let yaml = try String(contentsOf: specURL, encoding: .utf8)
-    let generated = try SwiftSpecGenerator().generate(yaml: yaml)
+    let generated = try SpecGenerator().generate(yaml: yaml)
 
     let fileManager = FileManager.default
     let packageDirectory = fileManager.temporaryDirectory
-        .appendingPathComponent("swift-spec-e2e-\(UUID().uuidString)")
+        .appendingPathComponent("declarative-openapi-e2e-\(UUID().uuidString)")
     let sourcesDirectory = packageDirectory.appendingPathComponent("Sources/GeneratedCheck")
     try fileManager.createDirectory(at: sourcesDirectory, withIntermediateDirectories: true)
     defer { try? fileManager.removeItem(at: packageDirectory) }

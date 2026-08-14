@@ -1,10 +1,10 @@
 import Foundation
-import SwiftSpecCore
+import DeclarativeOpenAPI
 
-let usage = "usage: swift-spec <input.yaml> [-o <output.swift>] [--enum-name <Name>] [--exclude-scheme <Scheme> ...]"
+let usage = "usage: declarative-openapi <input.yaml> [-o <output.swift>] [--enum-name <Name>] [--exclude-scheme <Scheme> ...]"
 
 func fail(_ message: String) -> Never {
-    FileHandle.standardError.write(Data("swift-spec: error: \(message)\n".utf8))
+    FileHandle.standardError.write(Data("declarative-openapi: error: \(message)\n".utf8))
     exit(1)
 }
 
@@ -47,7 +47,7 @@ do {
 
 let generated: String
 do {
-    generated = try SwiftSpecGenerator(enumNameOverride: enumName, excludedSchemes: excludedSchemes).generate(yaml: yaml)
+    generated = try SpecGenerator(enumNameOverride: enumName, excludedSchemes: excludedSchemes).generate(yaml: yaml)
 } catch {
     fail(String(describing: error))
 }

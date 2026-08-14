@@ -1,11 +1,11 @@
 import Foundation
-import SwiftSpecCore
+import DeclarativeOpenAPI
 import Testing
 
 /// Package root derived from this test file's location.
 let packageRoot = URL(fileURLWithPath: #filePath)
     .deletingLastPathComponent() // GoldenTests.swift
-    .deletingLastPathComponent() // SwiftSpecTests
+    .deletingLastPathComponent() // DeclarativeOpenAPITests
     .deletingLastPathComponent() // Tests
 
 let petstoreSpecURL = packageRoot.appendingPathComponent("Specs/petstore.yaml")
@@ -17,7 +17,7 @@ let museumSpecURL = packageRoot.appendingPathComponent("Specs/museum.yaml")
     ("Specs/supabase-auth.yaml", "Sources/SupabaseAuthAPI/SupabaseAuth.generated.swift", ["AdminAuth"]),
 ]) func generatorOutputMatchesCheckedInGoldenFile(spec: String, golden: String, excluded: [String]) throws {
     let yaml = try String(contentsOf: packageRoot.appendingPathComponent(spec), encoding: .utf8)
-    let generated = try SwiftSpecGenerator(excludedSchemes: Set(excluded)).generate(yaml: yaml)
+    let generated = try SpecGenerator(excludedSchemes: Set(excluded)).generate(yaml: yaml)
 
     let goldenContents = try String(
         contentsOf: packageRoot.appendingPathComponent(golden),

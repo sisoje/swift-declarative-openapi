@@ -2,13 +2,13 @@
 import PackageDescription
 
 let package = Package(
-    name: "swift-spec",
+    name: "swift-declarative-openapi",
     platforms: [
         .macOS(.v14),
     ],
     products: [
-        .executable(name: "swift-spec", targets: ["SwiftSpecCLI"]),
-        .library(name: "SwiftSpecCore", targets: ["SwiftSpecCore"]),
+        .executable(name: "declarative-openapi", targets: ["DeclarativeOpenAPICLI"]),
+        .library(name: "DeclarativeOpenAPI", targets: ["DeclarativeOpenAPI"]),
         .library(name: "PetstoreAPI", targets: ["PetstoreAPI"]),
         .library(name: "MuseumAPI", targets: ["MuseumAPI"]),
         .library(name: "SupabaseAuthAPI", targets: ["SupabaseAuthAPI"]),
@@ -19,14 +19,14 @@ let package = Package(
     ],
     targets: [
         .target(
-            name: "SwiftSpecCore",
+            name: "DeclarativeOpenAPI",
             dependencies: [
                 .product(name: "Yams", package: "Yams"),
             ]
         ),
         .executableTarget(
-            name: "SwiftSpecCLI",
-            dependencies: ["SwiftSpecCore"]
+            name: "DeclarativeOpenAPICLI",
+            dependencies: ["DeclarativeOpenAPI"]
         ),
         .target(
             name: "PetstoreAPI",
@@ -47,9 +47,9 @@ let package = Package(
             ]
         ),
         .testTarget(
-            name: "SwiftSpecTests",
+            name: "DeclarativeOpenAPITests",
             dependencies: [
-                "SwiftSpecCore",
+                "DeclarativeOpenAPI",
                 "PetstoreAPI",
                 "MuseumAPI",
                 "SupabaseAuthAPI",

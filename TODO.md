@@ -12,7 +12,7 @@ Currently skipped with a `// TODO:` comment in the generated case. The DSL suppo
 
 ## E2E test portability
 
-`Tests/SwiftSpecTests/E2ETests.swift` references the DSL by absolute path (`/Users/lazar/dev/declarative-requests-swift`), so the e2e test is machine-local. Derive it from `packageRoot.appendingPathComponent("../declarative-requests-swift")` instead so any machine with the sibling checkout can run the suite.
+`Tests/DeclarativeOpenAPITests/E2ETests.swift` references the DSL by absolute path (`/Users/lazar/dev/declarative-requests-swift`), so the e2e test is machine-local. Derive it from `packageRoot.appendingPathComponent("../declarative-requests-swift")` instead so any machine with the sibling checkout can run the suite.
 
 ## Optional-query codegen simplification (blocked on DSL decision)
 
