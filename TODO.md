@@ -42,6 +42,10 @@ Two raw scheme names could PascalCase to the same property name (`user-auth` and
 
 3.1 allows `type: [string, "null"]` arrays. The tolerant walker currently falls back to `String`; mapping them to optionals would be more faithful. Neither checked-in spec uses this yet.
 
+## Enum hard tail
+
+Handled: string-enum parameters (nested enums, `.rawValue`, sanitized names, conflict fallback) and named string-enum schemas. Not handled: inline property enums (`PostTokenBody.provider`/`.chain` in supabase stay `String`), enum values that aren't valid Swift identifiers after camelization (digit-leading values would emit broken cases — needs escaping or fallback), integer enums (stay unconstrained `Int`), and unknown-case decode tolerance if enums ever appear in response models.
+
 ## Model-generation hard tail
 
 Model generation covers the easy tier (properties/required, `allOf` flattening, CodingKeys). Deliberately skipped, in rough order of likely need: inline object properties (currently fall back to `String` via the tolerant type mapper — should at least emit a TODO comment), `format` refinements (`uuid` → `UUID`, `date-time` → `Date`), `additionalProperties` → dictionaries, `oneOf`/`anyOf` with discriminators, recursive schemas (need boxing), merge-patch three-state optionality.
