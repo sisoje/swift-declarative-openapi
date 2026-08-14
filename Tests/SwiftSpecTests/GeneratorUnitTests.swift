@@ -579,3 +579,84 @@ import Testing
     #expect(generated.contains("struct Extended: Codable {\n    var id: String\n    var note: String\n}"))
 }
 
+
+// MARK: - String enums
+
+@Test func enumParametersGenerateNestedEnums() throws {
+    let yaml = """
+    openapi: "3.0.0"
+    info:
+      title: Unit Fixture
+      version: 1.0.0
+    paths:
+      /token:
+        post:
+          operationId: issueToken
+          parameters:
+            - name: grant_type
+              in: query
+              required: true
+              schema:
+                type: string
+                enum:
+                  - password
+                  - refresh_token
+    """
+    let generated = try SwiftSpecGenerator().generate(yaml: yaml)
+    #expect(generated.contains("enum GrantType: String, Codable {"))
+    #expect(generated.contains("case refreshToken = \"refresh_token\""))
+    #expect(generated.contains("case issueToken(grantType: GrantType)"))
+    #expect(generated.contains("Query(\"grant_type\", grantType.rawValue)"))
+}
+
+@Test func enumSchemasGenerateStringEnums() throws {
+    let yaml = """
+    openapi: "3.0.0"
+    info:
+      title: Unit Fixture
+      version: 1.0.0
+    paths: {}
+    components:
+      schemas:
+        Kind:
+          type: string
+          enum:
+            - big-one
+            - small
+    """
+    let generated = try SwiftSpecGenerator().generate(yaml: yaml)
+    #expect(generated.contains("enum Kind: String, Codable {"))
+    #expect(generated.contains("case bigOne = \"big-one\""))
+    #expect(generated.contains("case small\n"))
+}
+
+@Test func conflictingEnumParameterNamesFallBackToString() throws {
+    let yaml = """
+    openapi: "3.0.0"
+    info:
+      title: Unit Fixture
+      version: 1.0.0
+    paths:
+      /a:
+        get:
+          operationId: getA
+          parameters:
+            - name: mode
+              in: query
+              schema:
+                type: string
+                enum: [x, y]
+      /b:
+        get:
+          operationId: getB
+          parameters:
+            - name: mode
+              in: query
+              schema:
+                type: string
+                enum: [p, q]
+    """
+    let generated = try SwiftSpecGenerator().generate(yaml: yaml)
+    #expect(generated.contains("case getA(mode: Mode?)"))
+    #expect(generated.contains("case getB(mode: String?)"))
+}

@@ -33,7 +33,7 @@ private let museumBaseURL = URL(string: "https://redocly.com/_mock/docs/openapi/
 
 @Test func buyMuseumTicketsIsJSONPost() throws {
     let request = try RedoclyMuseumAPIEndpoint
-        .buyMuseumTickets(body: BuyMuseumTickets(ticketDate: "2023-09-07", ticketType: "general"))
+        .buyMuseumTickets(body: BuyMuseumTickets(ticketDate: "2023-09-07", ticketType: .general))
         .base(museumBaseURL)
         .request
     #expect(request.httpMethod == "POST")

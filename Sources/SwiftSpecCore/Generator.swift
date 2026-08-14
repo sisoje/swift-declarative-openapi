@@ -57,19 +57,21 @@ public struct SwiftSpecGenerator {
         let componentSchemas = anyDict(anyDict(document["components"])?["schemas"]) ?? [:]
         let documentSecurity = anyArray(document["security"])
         var models = collectSchemaModels(from: document)
-        let operations = collectOperations(
+        var operations = collectOperations(
             from: document,
             componentParameters: componentParameters,
             componentSchemas: componentSchemas,
             documentSecurity: documentSecurity,
             inlineBodyModels: &models
         )
+        let parameterEnums = resolveParameterEnums(&operations)
 
         return render(
             enumName: enumName,
             baseURL: baseURL,
             models: models.sorted { $0.name < $1.name },
-            operations: operations
+            operations: operations,
+            parameterEnums: parameterEnums
         )
     }
 }
@@ -81,6 +83,7 @@ struct Model {
         case structModel(properties: [ModelProperty])
         case arrayAlias(element: String)
         case scalarAlias(type: String)
+        case stringEnum(cases: [String])
     }
 
     var name: String
@@ -100,6 +103,9 @@ struct Parameter {
     var type: String
     var isOptional: Bool
     var location: String // "path" | "query" | "header" | "cookie"
+    /// Allowed values when the schema is a string enum; the parameter then
+    /// gets a nested `enum <Type>: String` and renders via `.rawValue`.
+    var enumCases: [String]?
 }
 
 struct Operation {
@@ -132,6 +138,9 @@ extension SwiftSpecGenerator {
                     kind: .arrayAlias(element: swiftType(for: anyDict(schema?["items"])))
                 )
             case "string", "integer", "number", "boolean":
+                if let values = anyArray(schema?["enum"])?.compactMap({ $0 as? String }), !values.isEmpty {
+                    return Model(name: modelTypeName(name), kind: .stringEnum(cases: values))
+                }
                 return Model(name: modelTypeName(name), kind: .scalarAlias(type: swiftType(for: schema)))
             default:
                 return Model(
@@ -208,6 +217,29 @@ extension SwiftSpecGenerator {
         return operations
     }
 
+    /// Collects one nested enum per distinct enum-typed parameter name
+    /// (first occurrence wins). A later parameter with the same name but a
+    /// different value set falls back to `String` — one type name can't
+    /// honestly carry two contracts.
+    func resolveParameterEnums(_ operations: inout [Operation]) -> [(name: String, cases: [String])] {
+        var enums: [(name: String, cases: [String])] = []
+        for operationIndex in operations.indices {
+            for parameterIndex in operations[operationIndex].parameters.indices {
+                guard let cases = operations[operationIndex].parameters[parameterIndex].enumCases else { continue }
+                let name = operations[operationIndex].parameters[parameterIndex].type
+                if let existing = enums.first(where: { $0.name == name }) {
+                    if existing.cases != cases {
+                        operations[operationIndex].parameters[parameterIndex].type = "String"
+                        operations[operationIndex].parameters[parameterIndex].enumCases = nil
+                    }
+                } else {
+                    enums.append((name, cases))
+                }
+            }
+        }
+        return enums
+    }
+
     /// Resolves a `$ref: "#/components/parameters/Name"` entry to its
     /// component definition; non-ref entries pass through, unresolvable
     /// refs are dropped.
@@ -261,12 +293,24 @@ extension SwiftSpecGenerator {
             guard let rawName = parameter["name"] as? String,
                   let location = parameter["in"] as? String else { continue }
             let required = location == "path" || (parameter["required"] as? Bool ?? false)
+            let schema = anyDict(parameter["schema"])
+            var type = swiftType(for: schema)
+            var enumCases: [String]?
+            if schema?["type"] as? String == "string",
+               let values = anyArray(schema?["enum"])?.compactMap({ $0 as? String }),
+               !values.isEmpty {
+                enumCases = values
+                // modelTypeName also guards names Swift forbids or shadows
+                // (a nested `enum Type` conflicts with `.Type` metatypes).
+                type = modelTypeName(rawName)
+            }
             parameters.append(Parameter(
                 rawName: rawName,
                 swiftName: camelIdentifier(rawName),
-                type: swiftType(for: anyDict(parameter["schema"])),
+                type: type,
                 isOptional: !required,
-                location: location
+                location: location,
+                enumCases: enumCases
             ))
         }
 
@@ -301,7 +345,13 @@ extension SwiftSpecGenerator {
 // MARK: - Rendering
 
 extension SwiftSpecGenerator {
-    func render(enumName: String, baseURL: String?, models: [Model], operations: [Operation]) -> String {
+    func render(
+        enumName: String,
+        baseURL: String?,
+        models: [Model],
+        operations: [Operation],
+        parameterEnums: [(name: String, cases: [String])]
+    ) -> String {
         var output = "// Generated by swift-spec. Do not edit.\n"
         if !excludedSchemes.isEmpty {
             output += "// Client-only: operations requiring \(excludedSchemes.sorted().joined(separator: ", ")) are not generated.\n"
@@ -315,6 +365,10 @@ extension SwiftSpecGenerator {
 
         output += "\n// MARK: - Endpoints\n"
         output += "enum \(enumName): RequestBuildable {\n"
+        for parameterEnum in parameterEnums {
+            output += renderStringEnum(parameterEnum.name, cases: parameterEnum.cases, indent: "    ")
+            output += "\n"
+        }
         for operation in operations {
             output += "    case \(operation.caseName)\(caseAssociatedValues(operation))\n"
         }
@@ -352,8 +406,22 @@ extension SwiftSpecGenerator {
         return output
     }
 
+    func renderStringEnum(_ name: String, cases: [String], indent: String) -> String {
+        var output = "\(indent)enum \(name): String, Codable {\n"
+        for value in cases {
+            let caseName = propertyName(value)
+            output += caseName == value
+                ? "\(indent)    case \(value)\n"
+                : "\(indent)    case \(caseName) = \"\(value)\"\n"
+        }
+        output += "\(indent)}\n"
+        return output
+    }
+
     func renderModel(_ model: Model) -> String {
         switch model.kind {
+        case let .stringEnum(cases):
+            return renderStringEnum(model.name, cases: cases, indent: "")
         case let .arrayAlias(element):
             return "typealias \(model.name) = [\(element)]\n"
         case let .scalarAlias(type):
@@ -491,7 +559,9 @@ extension SwiftSpecGenerator {
     func endpointPath(for operation: Operation) -> String {
         var path = stripLeadingSlash(operation.path)
         for parameter in operation.parameters where parameter.location == "path" {
-            let interpolation: String = if parameter.type == "String" {
+            let interpolation: String = if parameter.enumCases != nil {
+                "\\(\(parameter.swiftName).rawValue)"
+            } else if parameter.type == "String" {
                 "\\(\(parameter.swiftName))"
             } else if parameter.type.hasPrefix("[") {
                 // Array path params use OpenAPI's default (simple style):
@@ -520,9 +590,13 @@ extension SwiftSpecGenerator {
                 "}",
             ]
         }
-        let value = parameter.type == "String"
-            ? parameter.swiftName
-            : "String(\(parameter.swiftName))"
+        let value = if parameter.enumCases != nil {
+            "\(parameter.swiftName).rawValue"
+        } else if parameter.type == "String" {
+            parameter.swiftName
+        } else {
+            "String(\(parameter.swiftName))"
+        }
         return ["Query(\"\(parameter.rawName)\", \(value))"]
     }
 }

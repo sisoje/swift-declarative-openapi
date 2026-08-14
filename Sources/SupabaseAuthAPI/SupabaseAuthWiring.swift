@@ -51,7 +51,7 @@ extension SupabaseAuthRESTAPIEndpoint {
         RequestBlock {
             if let refreshToken {
                 SupabaseAuthRESTAPIEndpoint.postToken(
-                    grantType: "refresh_token",
+                    grantType: .refreshToken,
                     body: PostTokenBody(refreshToken: refreshToken)
                 )
             } else {

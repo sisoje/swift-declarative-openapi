@@ -101,7 +101,7 @@ private let projectBaseURL = URL(string: "https://myproject.supabase.co/auth/v1"
 
 @Test func generatedSecurityMatchesSpec() {
     #expect(SupabaseAuthRESTAPIEndpoint.getUser.securitySchemes == ["APIKeyAuth", "UserAuth"])
-    #expect(SupabaseAuthRESTAPIEndpoint.postToken(grantType: "password", body: PostTokenBody()).securitySchemes
+    #expect(SupabaseAuthRESTAPIEndpoint.postToken(grantType: .password, body: PostTokenBody()).securitySchemes
         == ["APIKeyAuth"])
     #expect(SupabaseAuthRESTAPIEndpoint.postSamlAcs(relayState: nil, sAMLArt: nil, sAMLResponse: nil)
         .securitySchemes.isEmpty)

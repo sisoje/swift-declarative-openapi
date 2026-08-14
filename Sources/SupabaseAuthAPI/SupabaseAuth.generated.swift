@@ -556,7 +556,38 @@ struct WebAuthnChallengeResponse: Codable {
 
 // MARK: - Endpoints
 enum SupabaseAuthRESTAPIEndpoint: RequestBuildable {
-    case getAuthorize(provider: String, scopes: String, inviteToken: String?, redirectTo: String?, codeChallengeMethod: String?)
+    enum CodeChallengeMethod: String, Codable {
+        case plain
+        case s256
+    }
+
+    enum Scope: String, Codable {
+        case global
+        case local
+        case others
+    }
+
+    enum ResponseType: String, Codable {
+        case code
+    }
+
+    enum GrantType: String, Codable {
+        case password
+        case refreshToken = "refresh_token"
+        case idToken = "id_token"
+        case pkce
+        case web3
+    }
+
+    enum APIType: String, Codable {
+        case signup
+        case invite
+        case recovery
+        case magiclink
+        case emailChange = "email_change"
+    }
+
+    case getAuthorize(provider: String, scopes: String, inviteToken: String?, redirectTo: String?, codeChallengeMethod: CodeChallengeMethod?)
     case getCallback
     case postCallback
     case postFactors(body: PostFactorsBody)
@@ -565,11 +596,11 @@ enum SupabaseAuthRESTAPIEndpoint: RequestBuildable {
     case postFactorsFactorIdVerify(factorId: String, body: PostFactorsFactorIdVerifyBody)
     case getHealth
     case postInvite(body: PostInviteBody)
-    case postLogout(scope: String?)
+    case postLogout(scope: Scope?)
     case postMagiclink(body: PostMagiclinkBody)
     case getOauthAuthorizationsAuthorizationId(authorizationId: String)
     case postOauthAuthorizationsAuthorizationIdConsent(authorizationId: String, body: PostOauthAuthorizationsAuthorizationIdConsentBody)
-    case getOauthAuthorize(responseType: String, clientId: String, redirectUri: String, scope: String?, state: String?, codeChallenge: String, codeChallengeMethod: String)
+    case getOauthAuthorize(responseType: ResponseType, clientId: String, redirectUri: String, scope: String?, state: String?, codeChallenge: String, codeChallengeMethod: String)
     case postOauthClientsRegister(body: PostOauthClientsRegisterBody)
     case postOauthToken
     case postOtp(body: PostOtpBody)
@@ -581,14 +612,14 @@ enum SupabaseAuthRESTAPIEndpoint: RequestBuildable {
     case getSettings
     case postSignup(body: PostSignupBody)
     case postSso(body: PostSsoBody)
-    case postToken(grantType: String, body: PostTokenBody)
+    case postToken(grantType: GrantType, body: PostTokenBody)
     case getUser
     case putUser(body: PutUserBody)
-    case getUserIdentitiesAuthorize(provider: String, scopes: String, redirectTo: String?, codeChallengeMethod: String?)
+    case getUserIdentitiesAuthorize(provider: String, scopes: String, redirectTo: String?, codeChallengeMethod: CodeChallengeMethod?)
     case deleteUserIdentitiesIdentityId(identityId: String)
     case getUserOauthGrants
     case deleteUserOauthGrants(clientId: String)
-    case getVerify(token: String, type: String, redirectTo: String?)
+    case getVerify(token: String, type: APIType, redirectTo: String?)
     case postVerify(body: PostVerifyBody)
 
     /// Server URL is templated — supply a resolved base URL: `https://{project}.supabase.co/auth/v1`
@@ -634,7 +665,7 @@ enum SupabaseAuthRESTAPIEndpoint: RequestBuildable {
                 Query("redirect_to", redirectTo)
             }
             if let codeChallengeMethod {
-                Query("code_challenge_method", codeChallengeMethod)
+                Query("code_challenge_method", codeChallengeMethod.rawValue)
             }
         case .getCallback:
             Method.GET
@@ -668,7 +699,7 @@ enum SupabaseAuthRESTAPIEndpoint: RequestBuildable {
             Method.POST
             Endpoint("logout")
             if let scope {
-                Query("scope", scope)
+                Query("scope", scope.rawValue)
             }
         case let .postMagiclink(body):
             Method.POST
@@ -684,7 +715,7 @@ enum SupabaseAuthRESTAPIEndpoint: RequestBuildable {
         case let .getOauthAuthorize(responseType, clientId, redirectUri, scope, state, codeChallenge, codeChallengeMethod):
             Method.GET
             Endpoint("oauth/authorize")
-            Query("response_type", responseType)
+            Query("response_type", responseType.rawValue)
             Query("client_id", clientId)
             Query("redirect_uri", redirectUri)
             if let scope {
@@ -749,7 +780,7 @@ enum SupabaseAuthRESTAPIEndpoint: RequestBuildable {
         case let .postToken(grantType, body):
             Method.POST
             Endpoint("token")
-            Query("grant_type", grantType)
+            Query("grant_type", grantType.rawValue)
             RequestBody.json(body)
         case .getUser:
             Method.GET
@@ -767,7 +798,7 @@ enum SupabaseAuthRESTAPIEndpoint: RequestBuildable {
                 Query("redirect_to", redirectTo)
             }
             if let codeChallengeMethod {
-                Query("code_challenge_method", codeChallengeMethod)
+                Query("code_challenge_method", codeChallengeMethod.rawValue)
             }
         case let .deleteUserIdentitiesIdentityId(identityId):
             Method.DELETE
@@ -783,7 +814,7 @@ enum SupabaseAuthRESTAPIEndpoint: RequestBuildable {
             Method.GET
             Endpoint("verify")
             Query("token", token)
-            Query("type", type)
+            Query("type", type.rawValue)
             if let redirectTo {
                 Query("redirect_to", redirectTo)
             }

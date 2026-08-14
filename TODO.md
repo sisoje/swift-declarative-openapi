@@ -26,10 +26,6 @@ Supabase's `/saml/acs` posts `application/x-www-form-urlencoded`; the generator 
 
 For templated server URLs (`https://{project}.supabase.co/auth/v1`) the generator now emits a doc comment. It could additionally emit `static func baseURL(project: String) -> URL?` from the declared server variables.
 
-## Enum-typed string parameters
-
-`grant_type` is an enum of five values in the spec but generates as `String`. A generated nested `enum GrantType: String` per enum parameter would make invalid values unrepresentable.
-
 ## Security scheme attachment metadata
 
 `components.securitySchemes` declares *how* each scheme attaches (`http bearer` vs `apiKey in: header, name: apikey`). Generating that (e.g. a nested type with the header name) would let wiring layers derive the attachment mechanics instead of hand-writing `Header.custom("apikey")`.

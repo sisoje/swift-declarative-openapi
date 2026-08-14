@@ -84,7 +84,10 @@ typealias TicketId = String
 
 typealias TicketMessage = String
 
-typealias TicketType = String
+enum TicketType: String, Codable {
+    case event
+    case general
+}
 
 // MARK: - Endpoints
 enum RedoclyMuseumAPIEndpoint: RequestBuildable {
