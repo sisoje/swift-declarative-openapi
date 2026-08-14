@@ -147,6 +147,20 @@ Three reference specs are checked in, byte-exact canonical files from their upst
 - `servers[0].url` becomes `static let defaultBaseURL`. Header/cookie params are not generated (a `// TODO:` comment is emitted in the case instead). Specs with zero operations still produce compiling output (placeholder body instead of an illegal empty `switch`).
 - Output is deterministic (schemas alphabetical, paths sorted, fixed method order) so it's golden-testable.
 
+## Design conclusions
+
+Settled over the project's evolution, enforced across every generated file:
+
+1. **The authority ladder.** The spec decides everything it states — shapes, statuses, schemes, attachment mechanics — and all of it is generated. The wiring decides bindings and policy — credentials, transport, decoder — and all of it is hand-written. The caller materializes. Nothing lives below its authority: `URLSession`/`JSONDecoder` never appear in generated code, and spec knowledge is never hand-maintained.
+2. **Sections mirror the document; absence mirrors absence.** No `security:` → no Security section, no `authorized` builder. No text responses → no `text` helper. What the spec doesn't say, the output doesn't contain.
+3. **No parameter defaults on the seams.** `wired` and `authorized` demand every dependency explicitly; standard bindings are named options the caller passes, never silent choices. Nil is never the spelling for "not needed" — absence of the block is.
+4. **One lossless error per boundary; store each fact once.** `ResponseError` carries operation + data + raw response; `status` is a projection, not a field. The next layer decodes the spec's error model from `data` only when it wants it.
+5. **Facts as tables, mechanics once.** `wired` is a one-line-per-operation fact table over pack-generic helpers; `schemes(_:)` is a grouped switch. Cleverness is quarantined in mechanics; generated facts stay boring.
+6. **The operation→type problem is solved at generation time**, in a table — never with phantoms, `Any`, or mirrored payload enums. Closures take the case's payload and construct the case inside, making wrong pairings unrepresentable.
+7. **Every ladder rung stays public.** The typed Client is sugar, not a gate: `request`/`authorized`/`evaluate`/raw `Data` all remain directly usable — decode-later end to end.
+8. **Base comes last.** Spec composes (`authorized` returns a block), wiring situates (`.base(url)`), caller materializes (`.request()`).
+9. **Names describe mechanics, not claims** (`wired`, not `live` or `real` — realness is decided by the closures passed), and sugar that duplicates an existing spelling gets deleted.
+
 ## Package layout
 
 - `Sources/DeclarativeOpenAPI` — all parsing (via [Yams](https://github.com/jpsim/Yams)) and codegen; `SpecGenerator(enumNameOverride:).generate(yaml:) -> String`.

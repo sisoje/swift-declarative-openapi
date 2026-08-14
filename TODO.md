@@ -26,6 +26,10 @@ Supabase's `/saml/acs` posts `application/x-www-form-urlencoded`; the generator 
 
 For templated server URLs (`https://{project}.supabase.co/auth/v1`) the generator now emits a doc comment. It could additionally emit `static func baseURL(project: String) -> URL?` from the declared server variables.
 
+## Basic-auth credential shape
+
+The `authorized` builder passes basic-auth credentials as a `(username: String, password: String)?` tuple — awkward Swift (tuples can't conform or carry doc comments). If a spec ever has multiple basic schemes, generate a small credential struct per scheme instead.
+
 ## Security AND/OR structure
 
 `securitySchemes` flattens OR-alternatives (`[{A,B},{C}]` = "(A and B) or C") into one set. Fine for the checked-in specs; a `securityAlternatives: [[String]]` would preserve the structure if a spec ever needs it.
