@@ -2,6 +2,26 @@
 
 Turns an OpenAPI document into a compile-checked **BackendSpec** for [swift-declarative-requests](../declarative-requests-swift): the whole backend as one closed Swift type — typed operations, models, and security gates.
 
+## Why
+
+**To erase networking from app code.** The endgame client is pure data — a struct of typed closures:
+
+```swift
+let pet = try await api.showPetById("42")   // Pet in, Pet out. That is the whole API.
+```
+
+No `URLSession`. No `URLRequest`. No `JSONDecoder`. No status codes, no headers, no protocols. The client needs none of it — those concepts are real, but each one lives in exactly one layer below, and never leaks up:
+
+| networking concept | its only home |
+|---|---|
+| `URLSession` | the app's transport closure (`(URLRequest) async throws -> (Data, URLResponse)`) |
+| `URLRequest` composition | the DSL blocks + the `Execution` seam |
+| status codes | `Responses.evaluate` |
+| `JSONDecoder` | the `ClientBuilder` decode step |
+| tokens, refresh, auth headers | the wiring + `RefreshingExecutor` |
+
+Because the client is a value made of closures, everything downstream gets simple: **mocking is field assignment** (`mock.showPetById = { _ in .init(id: 1, name: "Stub") }`), **middleware is closure composition** (wrap the `(Operation) → Data` seam, hand it back), and the entire networking stack is a construction-time detail the app can swap without a single call site noticing. The generator and runtime exist to manufacture that pure client from the spec — nothing more.
+
 ```sh
 swift run declarative-openapi petstore.yaml
 ```
@@ -171,7 +191,9 @@ Settled over the project's evolution, enforced across every generated file:
 6. **The operation→type problem is solved at generation time**, in a table — never with phantoms, `Any`, or mirrored payload enums. Closures take the case's payload and construct the case inside, making wrong pairings unrepresentable.
 7. **Every ladder rung stays public.** The typed Client is sugar, not a gate: `request`/`authorized`/`evaluate`/raw `Data` all remain directly usable — decode-later end to end.
 8. **Base comes last.** Spec composes (`authorized` returns a block), wiring situates (`.base(url)`), caller materializes (`.request()`).
-9. **Names describe mechanics, not claims** (`wired`, not `live` or `real` — realness is decided by the closures passed), and sugar that duplicates an existing spelling gets deleted.
+9. **The client is pure data; networking concepts never leak up.** A struct of typed closures is the entire app-facing surface; `URLSession`/`URLRequest`/`JSONDecoder`/status codes each live in exactly one lower layer. Runtime types follow one shape: dependencies as stored closures, behavior as the output function.
+10. **Universal mechanics live once, in the runtime.** Generated files carry spec facts and one-line bindings (`ResponseError` alias, `execution` binder, the `ClientBuilder` fact table); `DeclarativeOpenAPIRuntime` carries the mechanics shared by every backend.
+11. **Names describe mechanics, not claims** (`wired`, not `live` or `real` — realness is decided by the closures passed), and sugar that duplicates an existing spelling gets deleted.
 
 ## Package layout
 
