@@ -463,7 +463,9 @@ import Testing
     """
     let generated = try SwiftSpecGenerator().generate(yaml: yaml)
     #expect(generated.contains("var securitySchemes: Set<String>"))
-    #expect(generated.contains("var needsAuth: Bool"))
+    #expect(generated.contains("var needsDefaultAuth: Bool"))
+    #expect(generated.contains("var needsSpecialAuth: Bool"))
+    #expect(!generated.contains("var needsAuth: Bool"))
     #expect(generated.contains("case .openThing:\n            []"))
     #expect(generated.contains("case .lockedThing:\n            [\"OtherAuth\", \"SpecialAuth\"]"))
     #expect(generated.contains("case .inheritedThing:\n            [\"DefaultAuth\"]"))

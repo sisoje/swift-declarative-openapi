@@ -46,11 +46,6 @@ enum RedoclyMuseumAPIEndpoint: RequestBuildable {
         ["MuseumPlaceholderAuth"]
     }
 
-    /// Whether the spec declares a security requirement for this endpoint.
-    var needsAuth: Bool {
-        !securitySchemes.isEmpty
-    }
-
     /// Whether the spec requires the `MuseumPlaceholderAuth` scheme for this endpoint.
     var needsMuseumPlaceholderAuth: Bool {
         securitySchemes.contains("MuseumPlaceholderAuth")

@@ -309,7 +309,7 @@ extension SwiftSpecGenerator {
         return output
     }
 
-    /// Renders `securitySchemes` and the README-style `needsAuth` per case.
+    /// Renders `securitySchemes` and one `needs<Scheme>` flag per scheme.
     /// Omitted entirely when no operation declares a security requirement.
     func renderSecurity(_ operations: [Operation]) -> String {
         guard operations.contains(where: { !$0.securitySchemes.isEmpty }) else { return "" }
@@ -348,11 +348,6 @@ extension SwiftSpecGenerator {
             }
             output += "        }\n"
         }
-        output += "    }\n\n"
-
-        output += "    /// Whether the spec declares a security requirement for this endpoint.\n"
-        output += "    var needsAuth: Bool {\n"
-        output += "        !securitySchemes.isEmpty\n"
         output += "    }\n\n"
 
         // One `needs<Scheme>` flag per scheme the spec actually uses, so

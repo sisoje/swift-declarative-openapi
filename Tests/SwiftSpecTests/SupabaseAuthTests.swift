@@ -97,9 +97,8 @@ private let projectBaseURL = URL(string: "https://myproject.supabase.co/auth/v1"
     #expect(SupabaseAuthRESTAPIEndpoint.getUser.securitySchemes == ["APIKeyAuth", "UserAuth"])
     #expect(SupabaseAuthRESTAPIEndpoint.postToken(grantType: "password", body: PostTokenBody()).securitySchemes
         == ["APIKeyAuth"])
-    #expect(SupabaseAuthRESTAPIEndpoint.postSamlAcs(relayState: nil, sAMLArt: nil, sAMLResponse: nil).needsAuth
-        == false)
-    #expect(SupabaseAuthRESTAPIEndpoint.getUser.needsAuth == true)
+    #expect(SupabaseAuthRESTAPIEndpoint.postSamlAcs(relayState: nil, sAMLArt: nil, sAMLResponse: nil)
+        .securitySchemes.isEmpty)
 }
 
 @Test func signupIsPlainKeyedJSONPost() throws {

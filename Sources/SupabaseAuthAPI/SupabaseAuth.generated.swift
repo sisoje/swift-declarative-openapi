@@ -92,11 +92,6 @@ enum SupabaseAuthRESTAPIEndpoint: RequestBuildable {
         }
     }
 
-    /// Whether the spec declares a security requirement for this endpoint.
-    var needsAuth: Bool {
-        !securitySchemes.isEmpty
-    }
-
     /// Whether the spec requires the `APIKeyAuth` scheme for this endpoint.
     var needsAPIKeyAuth: Bool {
         securitySchemes.contains("APIKeyAuth")
