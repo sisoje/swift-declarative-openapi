@@ -14,11 +14,18 @@ struct PetstoreClient {
 
     /// Fully typed surface over this wiring: SwaggerPetstore.Client field per
     /// operation, defaults to the real transport.
+
+    /// URLSession as the transport closure — this app's transport policy.
+    private func urlSessionTransport(_ request: URLRequest) async throws -> (Data, URLResponse) {
+        try await URLSession.shared.data(for: request)
+    }
+
+    /// Every operation decodes with a plain `JSONDecoder` — this app's decoding policy.
+    private func plainDecoder(_ operation: SwaggerPetstore.Operation) -> JSONDecoder {
+        JSONDecoder()
+    }
+
     var api: SwaggerPetstore.Client {
-        .wired(
-            request: request,
-            transport: SwaggerPetstore.Client.urlSessionTransport,
-            decoder: SwaggerPetstore.Client.plainDecoder
-        )
+        .wired(request: request, transport: urlSessionTransport, decoder: plainDecoder)
     }
 }

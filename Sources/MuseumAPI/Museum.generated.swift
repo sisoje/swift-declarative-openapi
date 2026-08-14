@@ -285,16 +285,6 @@ enum RedoclyMuseumAPI {
                 getTicketCode: raw(Operation.getTicketCode)
             )
         }
-
-        /// URLSession as the transport closure: `URLRequest` in, `(Data, URLResponse)` out.
-        static func urlSessionTransport(_ request: URLRequest) async throws -> (Data, URLResponse) {
-            try await URLSession.shared.data(for: request)
-        }
-
-        /// Every operation decodes with a plain `JSONDecoder` — pass your own closure when one doesn't.
-        static func plainDecoder(_ operation: Operation) -> JSONDecoder {
-            JSONDecoder()
-        }
     }
 
     static let defaultBaseURL = URL(string: "https://redocly.com/_mock/docs/openapi/museum-api")
