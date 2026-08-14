@@ -14,6 +14,7 @@ let museumSpecURL = packageRoot.appendingPathComponent("Specs/museum.yaml")
 @Test(arguments: [
     ("Specs/petstore.yaml", "Sources/PetstoreAPI/Petstore.generated.swift"),
     ("Specs/museum.yaml", "Sources/MuseumAPI/Museum.generated.swift"),
+    ("Specs/supabase-auth.yaml", "Sources/SupabaseAuthAPI/SupabaseAuth.generated.swift"),
 ]) func generatorOutputMatchesCheckedInGoldenFile(spec: String, golden: String) throws {
     let yaml = try String(contentsOf: packageRoot.appendingPathComponent(spec), encoding: .utf8)
     let generated = try SwiftSpecGenerator().generate(yaml: yaml)

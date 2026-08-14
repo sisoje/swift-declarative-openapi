@@ -6,6 +6,7 @@ Two reference specs are checked in, both byte-exact canonical files from their u
 
 - `Specs/petstore.yaml` — the classic [petstore](https://learn.openapis.org/examples/v3.0/petstore.html) example (OpenAPI 3.0).
 - `Specs/museum.yaml` — the [Redocly Museum API](https://github.com/Redocly/museum-openapi-example) example (OpenAPI 3.1), which exercises `$ref` parameters, scalar/enum component schemas, `allOf`, nested paths (`/tickets/{ticketId}/qr`), and a `webhooks` section (ignored — webhooks aren't client-callable endpoints).
+- `Specs/supabase-auth.yaml` — the [Supabase Auth REST API](https://github.com/supabase/auth) (OpenAPI 3.0.3, ~60 operations), which exercises the no-`operationId` fallback naming (`postToken`, `getUser`, …) and templated server URLs (`https://{project}.supabase.co/auth/v1` — emitted as a doc comment, not a `defaultBaseURL`, since a template isn't a resolvable URL). `Sources/SupabaseAuthAPI` additionally carries a **hand-written wiring layer** (`SupabaseAuthWiring.swift`) on top of the generated enum: `keyed(apikey:)` / `authorized(accessToken:)` modifiers, and a **token-refresh** builder — `refreshSession(refreshToken:)` rides the generated `postToken` case for method/path/query and lays the real `{"refresh_token": …}` payload over the stub body (blocks apply in order, so the later `RequestBody.json` wins).
 
 ## Usage
 
@@ -71,12 +72,12 @@ let request = try SwaggerPetstoreEndpoint.showPetById(petId: "42")
 
 - `Sources/SwiftSpecCore` — all parsing (via [Yams](https://github.com/jpsim/Yams)) and codegen; `SwiftSpecGenerator(enumNameOverride:).generate(yaml:) -> String`.
 - `Sources/SwiftSpecCLI` — the `swift-spec` executable (plain `CommandLine.arguments`, no argument-parser dependency).
-- `Sources/PetstoreAPI` and `Sources/MuseumAPI` — the **checked-in generated outputs**, compiled against DeclarativeRequests on every `swift build`, so compilability of generated code is proven by the build itself.
+- `Sources/PetstoreAPI`, `Sources/MuseumAPI`, and `Sources/SupabaseAuthAPI` — the **checked-in generated outputs** (plus the hand-written Supabase wiring), compiled against DeclarativeRequests on every `swift build`, so compilability of generated code is proven by the build itself.
 - `Specs/` — the canonical spec files.
-- `Tests/SwiftSpecTests` — 33 tests:
-  - **E2E generate-then-compile** (parameterized over both specs): generates from the spec, writes a fresh temp SwiftPM package depending on DeclarativeRequests, runs a real `swift build` there, and asserts exit 0 (compiler output is surfaced on failure).
-  - **Golden** (parameterized over both specs): generator output must equal the checked-in `*.generated.swift` byte-for-byte.
-  - **Request shape**: builds actual `URLRequest`s from both generated enums and asserts URLs, methods, query items, and JSON Content-Type.
+- `Tests/SwiftSpecTests` — 38 tests:
+  - **E2E generate-then-compile** (parameterized over all three specs): generates from the spec, writes a fresh temp SwiftPM package depending on DeclarativeRequests, runs a real `swift build` there, and asserts exit 0 (compiler output is surfaced on failure).
+  - **Golden** (parameterized over all three specs): generator output must equal the checked-in `*.generated.swift` byte-for-byte.
+  - **Request shape**: builds actual `URLRequest`s from the generated enums and asserts URLs, methods, query items, headers, and JSON bodies — including the Supabase refresh flow (`POST …/token?grant_type=refresh_token` with the real refresh-token payload and `apikey` header).
   - **Unit**: name sanitization, type mapping, slash stripping, required/optional/array query params, operationId fallback, enum-name override, header-param TODOs, invalid-YAML errors.
 
 ## Notes & caveats

@@ -5,7 +5,7 @@ import Testing
 /// Absolute path to the DeclarativeRequests package the generated code targets.
 private let declarativeRequestsPath = "/Users/lazar/dev/declarative-requests-swift"
 
-@Test(arguments: ["petstore.yaml", "museum.yaml"])
+@Test(arguments: ["petstore.yaml", "museum.yaml", "supabase-auth.yaml"])
 func generatedCodeCompilesAgainstDeclarativeRequests(spec: String) throws {
     let specURL = packageRoot.appendingPathComponent("Specs/\(spec)")
     let yaml = try String(contentsOf: specURL, encoding: .utf8)

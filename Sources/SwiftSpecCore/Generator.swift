@@ -253,7 +253,13 @@ extension SwiftSpecGenerator {
             output += "\n"
         }
         if let baseURL {
-            output += "    static let defaultBaseURL = URL(string: \"\(baseURL)\")\n\n"
+            if baseURL.contains("{") {
+                // A templated server URL (OpenAPI server variables) is not a
+                // resolvable URL — record it, let the caller supply the base.
+                output += "    /// Server URL is templated — supply a resolved base URL: `\(baseURL)`\n\n"
+            } else {
+                output += "    static let defaultBaseURL = URL(string: \"\(baseURL)\")\n\n"
+            }
         }
         if operations.isEmpty {
             // A result-builder-transformed `switch self {}` with zero cases

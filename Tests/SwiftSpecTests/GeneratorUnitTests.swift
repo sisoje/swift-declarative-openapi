@@ -415,3 +415,23 @@ import Testing
     #expect(generated.contains("typealias Price = Double"))
     #expect(generated.contains("typealias Image = Data"))
 }
+
+// MARK: - Server URL
+
+@Test func templatedServerURLEmitsCommentInsteadOfConstant() throws {
+    let yaml = """
+    openapi: "3.0.3"
+    info:
+      title: Unit Fixture
+      version: 1.0.0
+    servers:
+      - url: "https://{tenant}.example.com/v1"
+    paths:
+      /things:
+        get:
+          operationId: listThings
+    """
+    let generated = try SwiftSpecGenerator().generate(yaml: yaml)
+    #expect(!generated.contains("defaultBaseURL"))
+    #expect(generated.contains("/// Server URL is templated — supply a resolved base URL: `https://{tenant}.example.com/v1`"))
+}
