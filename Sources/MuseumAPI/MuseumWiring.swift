@@ -42,7 +42,7 @@ struct MuseumClient {
     /// Fully typed surface over this wiring: RedoclyMuseumAPI.Client field per
     /// operation, defaults to the real transport.
     var api: RedoclyMuseumAPI.Client {
-        .real(
+        .wired(
             request: request,
             transport: { try await URLSession.shared.data(for: $0) },
             decoder: { _ in JSONDecoder() }

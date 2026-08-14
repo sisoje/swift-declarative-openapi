@@ -1185,11 +1185,11 @@ enum SupabaseAuthRESTAPI {
         var getVerify: (_ token: String, _ type: Operation.APIType, _ redirectTo: String?) async throws -> Void
         var postVerify: (_ body: PostVerifyBody) async throws -> AccessTokenResponseSchema
 
-        /// The real networking: request → transport → evaluate → decode,
-        /// wired per operation. No defaults — the caller states its transport
-        /// and decoder. The mechanics live once in the pack-generic helpers;
-        /// the table below is pure facts — case constructor, response type.
-        static func real(
+        /// Wires the pipeline per operation: request → transport → evaluate
+        /// → decode. Real or mock is decided entirely by the closures passed —
+        /// this function has no opinion and no defaults. The mechanics live
+        /// once in the pack-generic helpers; the table below is pure facts.
+        static func wired(
             request: @escaping (Operation) throws -> URLRequest,
             transport: @escaping (URLRequest) async throws -> (Data, URLResponse),
             decoder: @escaping (Operation) -> JSONDecoder

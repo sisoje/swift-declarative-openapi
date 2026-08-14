@@ -24,7 +24,7 @@ struct PetstoreClient {
     /// Fully typed surface over this wiring: SwaggerPetstore.Client field per
     /// operation, defaults to the real transport.
     var api: SwaggerPetstore.Client {
-        .real(
+        .wired(
             request: request,
             transport: { try await URLSession.shared.data(for: $0) },
             decoder: { _ in JSONDecoder() }

@@ -76,7 +76,7 @@ Each operation is itself a `RequestBuildable` block, so the bare chain works too
 The top of the ladder is the generated **Client** — the backend as one struct of typed closures, output types read from `responses:` (`204` → `Void`, `image/png` → `Data`, `text/*` → UTF-8 `String`, json `$ref` → the model). Field names carry the operation; wrong pairings are unrepresentable; any field swaps for a stub:
 
 ```swift
-let api = SwaggerPetstore.Client.real(
+let api = SwaggerPetstore.Client.wired(
     request: PetstoreClient(baseURL: url).request,
     transport: { try await URLSession.shared.data(for: $0) },
     decoder: { _ in JSONDecoder() }
@@ -87,7 +87,7 @@ var mock = api
 mock.showPetById = { _ in .init(id: 1, name: "Stub") }   // per-field mocking, no protocols
 ```
 
-`Client.real` is the real networking — request → transport → evaluate → decode, with no parameter defaults: the caller states its transport and decoder, both plain closures (`(URLRequest) async throws -> (Data, URLResponse)`, `(Operation) -> JSONDecoder`) — the spec decides shapes, the closures are the escape hatches.
+`Client.wired` wires the pipeline — request → transport → evaluate → decode — with no parameter defaults and no opinion about realness: pass `URLSession` closures and it's production, pass stubs and it's a mock (`(URLRequest) async throws -> (Data, URLResponse)`, `(Operation) -> JSONDecoder`) — the spec decides shapes, the closures are the escape hatches.
 
 Every spec also gets a **Responses section** — the modular third layer. The generated `evaluate` gates a transport result on the operation's spec-declared statuses (`deleteSpecialEvent` expects 204, `createPets` 201, …) and throws one lossless error; the layer that cares decodes the spec's typed error model from `error.data`:
 

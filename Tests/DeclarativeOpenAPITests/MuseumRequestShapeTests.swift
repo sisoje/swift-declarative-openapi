@@ -138,7 +138,7 @@ private let museumBaseURL = URL(string: "https://redocly.com/_mock/docs/openapi/
 
 @Test func typedClientVoidOperationSucceedsOn204() async throws {
     let wiring = MuseumClient(baseURL: museumBaseURL, username: "u", password: "p")
-    let api = RedoclyMuseumAPI.Client.real(
+    let api = RedoclyMuseumAPI.Client.wired(
         request: wiring.request,
         transport: { request in
             (Data(), HTTPURLResponse(url: request.url!, statusCode: 204, httpVersion: nil, headerFields: nil)!)

@@ -126,7 +126,7 @@ private let client = SupabaseAuthClient(
 }
 
 @Test func typedClientDecodesTokenRefreshResponse() async throws {
-    let api = SupabaseAuthRESTAPI.Client.real(
+    let api = SupabaseAuthRESTAPI.Client.wired(
         request: client.request,
         transport: { request in
             #expect(request.url?.query == "grant_type=refresh_token")

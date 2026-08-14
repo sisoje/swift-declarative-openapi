@@ -239,11 +239,11 @@ enum RedoclyMuseumAPI {
         var buyMuseumTickets: (_ body: BuyMuseumTickets) async throws -> MuseumTicketsConfirmation
         var getTicketCode: (_ ticketId: String) async throws -> Data
 
-        /// The real networking: request → transport → evaluate → decode,
-        /// wired per operation. No defaults — the caller states its transport
-        /// and decoder. The mechanics live once in the pack-generic helpers;
-        /// the table below is pure facts — case constructor, response type.
-        static func real(
+        /// Wires the pipeline per operation: request → transport → evaluate
+        /// → decode. Real or mock is decided entirely by the closures passed —
+        /// this function has no opinion and no defaults. The mechanics live
+        /// once in the pack-generic helpers; the table below is pure facts.
+        static func wired(
             request: @escaping (Operation) throws -> URLRequest,
             transport: @escaping (URLRequest) async throws -> (Data, URLResponse),
             decoder: @escaping (Operation) -> JSONDecoder
