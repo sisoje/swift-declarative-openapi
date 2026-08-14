@@ -49,8 +49,10 @@ extension SupabaseAuthRESTAPIEndpoint {
     /// method, path, and query, and lays the real payload over the stub body:
     /// blocks apply in order, so the later `RequestBody.json` wins.
     ///
-    /// The builder itself never requires the token — there may be none stored
-    /// on this device yet — but a nil token fails the build at `.request`.
+    /// This is an endpoint builder, not an auth modifier: the refresh token
+    /// is this endpoint's body parameter. It's optional only because the
+    /// stored token may not exist on this device yet — the builder is always
+    /// constructible, and a nil payload fails the build at `.request`.
     static func refreshSession(refreshToken: String?) -> some RequestBuildable {
         RequestBlock {
             SupabaseAuthRESTAPIEndpoint.postToken(grantType: "refresh_token", body: PostTokenBody())
