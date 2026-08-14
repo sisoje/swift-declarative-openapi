@@ -1,6 +1,6 @@
 # swift-spec
 
-An executable that takes an OpenAPI 3.0 YAML spec and generates a **compilable Swift enum** that models every endpoint using the [DeclarativeRequests](../declarative-requests-swift) result-builder DSL. Models are deliberately generated as **fake/minimal stubs** (empty `Codable` structs) — the point is the endpoint surface, not the schemas.
+An executable that takes an OpenAPI 3.0 YAML spec and generates a **compilable Swift enum** that models every endpoint using the [DeclarativeRequests](../declarative-requests-swift) result-builder DSL. By default models are **fake/minimal stubs** (empty `Codable` structs) — the point is the endpoint surface, not the schemas. Opt in with `--models full` to generate real `Codable` properties from `properties`/`required` (optionals with `= nil` defaults, `allOf` flattened via `$ref` resolution, `CodingKeys` emitted only when a raw name isn't a clean Swift name).
 
 Two reference specs are checked in, both byte-exact canonical files from their upstream repositories:
 
@@ -24,7 +24,11 @@ For the petstore spec the output is exactly `Sources/PetstoreAPI/Petstore.genera
 
 ```swift
 struct APIError: Codable {}
-struct Pet: Codable {}
+struct Pet: Codable {          // with --models full; default is `struct Pet: Codable {}`
+    var id: Int
+    var name: String
+    var tag: String? = nil
+}
 typealias Pets = [Pet]
 
 enum SwaggerPetstoreEndpoint: RequestBuildable {
@@ -75,7 +79,7 @@ let request = try SwaggerPetstoreEndpoint.showPetById(petId: "42")
 - `Sources/SwiftSpecCLI` — the `swift-spec` executable (plain `CommandLine.arguments`, no argument-parser dependency).
 - `Sources/PetstoreAPI`, `Sources/MuseumAPI`, and `Sources/SupabaseAuthAPI` — the **checked-in generated outputs** (plus the hand-written Supabase wiring), compiled against DeclarativeRequests on every `swift build`, so compilability of generated code is proven by the build itself.
 - `Specs/` — the canonical spec files.
-- `Tests/SwiftSpecTests` — 38 tests:
+- `Tests/SwiftSpecTests` — 53 tests:
   - **E2E generate-then-compile** (parameterized over all three specs): generates from the spec, writes a fresh temp SwiftPM package depending on DeclarativeRequests, runs a real `swift build` there, and asserts exit 0 (compiler output is surfaced on failure).
   - **Golden** (parameterized over all three specs): generator output must equal the checked-in `*.generated.swift` byte-for-byte.
   - **Request shape**: builds actual `URLRequest`s from the generated enums and asserts URLs, methods, query items, headers, and JSON bodies — including the Supabase refresh flow (`POST …/token?grant_type=refresh_token` with the real refresh-token payload and `apikey` header).
@@ -83,7 +87,7 @@ let request = try SwaggerPetstoreEndpoint.showPetById(petId: "42")
 
 ## Notes & caveats
 
-- Models are empty stubs by design — `Pet()` encodes/decodes nothing. Swap in real properties whenever needed.
+- Models default to empty stubs by design; the checked-in **petstore and museum targets opt into `--models full`** (real properties, `allOf` flattened), while the supabase target keeps stubs. Full models cover the easy tier only — inline object properties, `oneOf`/`anyOf`, and recursion are out of scope (see TODO.md).
 - Requires the sibling checkout `../declarative-requests-swift` (relative path dependency in `Package.swift`). The e2e test additionally references it by **absolute path** (`/Users/lazar/dev/declarative-requests-swift`), so the test suite is machine-local as-is.
 - Toolchain: swift-tools-version 6.3, macOS 14+ (matching the DSL package). First build fetches Yams from the network.
 - The initial implementation was hardened by an adversarial review pass that caught and fixed: ignored path-item-level `parameters` (literal `{petId}` left in URLs), unsanitized schema names, non-compiling `String([T])` for array params, empty-`switch` output for operation-less specs, and the `Error` schema shadowing `Swift.Error`.

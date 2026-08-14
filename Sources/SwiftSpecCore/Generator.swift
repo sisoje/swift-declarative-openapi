@@ -25,10 +25,18 @@ public struct SwiftSpecGenerator {
     /// not generated — e.g. exclude a server-only admin scheme to keep the
     /// output client-only.
     public var excludedSchemes: Set<String>
+    /// `.stub` (default) emits empty model structs; `.full` emits real
+    /// Codable properties from `properties`/`required`, flattening `allOf`.
+    public var modelStyle: ModelStyle
 
-    public init(enumNameOverride: String? = nil, excludedSchemes: Set<String> = []) {
+    public init(
+        enumNameOverride: String? = nil,
+        excludedSchemes: Set<String> = [],
+        modelStyle: ModelStyle = .stub
+    ) {
         self.enumNameOverride = enumNameOverride
         self.excludedSchemes = excludedSchemes
+        self.modelStyle = modelStyle
     }
 
     public func generate(yaml: String) throws -> String {
@@ -54,11 +62,13 @@ public struct SwiftSpecGenerator {
         }
 
         let componentParameters = anyDict(anyDict(document["components"])?["parameters"]) ?? [:]
+        let componentSchemas = anyDict(anyDict(document["components"])?["schemas"]) ?? [:]
         let documentSecurity = anyArray(document["security"])
         var models = collectSchemaModels(from: document)
         let operations = collectOperations(
             from: document,
             componentParameters: componentParameters,
+            componentSchemas: componentSchemas,
             documentSecurity: documentSecurity,
             inlineBodyModels: &models
         )
@@ -72,17 +82,30 @@ public struct SwiftSpecGenerator {
     }
 }
 
+public enum ModelStyle: String, Sendable {
+    case stub
+    case full
+}
+
 // MARK: - Intermediate representation
 
 struct Model {
     enum Kind {
         case structStub
+        case structModel(properties: [ModelProperty])
         case arrayAlias(element: String)
         case scalarAlias(type: String)
     }
 
     var name: String
     var kind: Kind
+}
+
+struct ModelProperty {
+    var rawName: String
+    var swiftName: String
+    var type: String
+    var isOptional: Bool
 }
 
 struct Parameter {
@@ -125,14 +148,55 @@ extension SwiftSpecGenerator {
             case "string", "integer", "number", "boolean":
                 return Model(name: modelTypeName(name), kind: .scalarAlias(type: swiftType(for: schema)))
             default:
-                return Model(name: modelTypeName(name), kind: .structStub)
+                return Model(name: modelTypeName(name), kind: structKind(for: schema ?? [:], in: schemas))
             }
+        }
+    }
+
+    /// `.structStub` by default; with `.full` models, real properties from
+    /// `properties`/`required`, with `allOf` branches ($refs resolved against
+    /// `components.schemas`) flattened in.
+    func structKind(for schema: [String: Any], in schemas: [String: Any]) -> Model.Kind {
+        guard modelStyle == .full else { return .structStub }
+        return .structModel(properties: collectProperties(of: schema, in: schemas))
+    }
+
+    func collectProperties(of schema: [String: Any], in schemas: [String: Any]) -> [ModelProperty] {
+        var required = Set<String>()
+        var properties: [String: [String: Any]] = [:]
+
+        func absorb(_ schema: [String: Any]) {
+            for branch in (anyArray(schema["allOf"]) ?? []).compactMap(anyDict) {
+                if let ref = branch["$ref"] as? String,
+                   ref.hasPrefix("#/components/schemas/"),
+                   let name = ref.split(separator: "/").last,
+                   let resolved = anyDict(schemas[String(name)]) {
+                    absorb(resolved)
+                } else {
+                    absorb(branch)
+                }
+            }
+            for (name, property) in anyDict(schema["properties"]) ?? [:] {
+                properties[name] = anyDict(property) ?? [:]
+            }
+            required.formUnion((anyArray(schema["required"]) ?? []).compactMap { $0 as? String })
+        }
+        absorb(schema)
+
+        return properties.keys.sorted().map { rawName in
+            ModelProperty(
+                rawName: rawName,
+                swiftName: propertyName(rawName),
+                type: swiftType(for: properties[rawName]),
+                isOptional: !required.contains(rawName)
+            )
         }
     }
 
     func collectOperations(
         from document: [String: Any],
         componentParameters: [String: Any],
+        componentSchemas: [String: Any],
         documentSecurity: [Any]?,
         inlineBodyModels: inout [Model]
     ) -> [Operation] {
@@ -151,6 +215,7 @@ extension SwiftSpecGenerator {
                     operation: operation,
                     pathItemParameters: pathItemParameters,
                     componentParameters: componentParameters,
+                    componentSchemas: componentSchemas,
                     documentSecurity: documentSecurity,
                     inlineBodyModels: &inlineBodyModels
                 ) else { continue }
@@ -176,6 +241,7 @@ extension SwiftSpecGenerator {
         operation: [String: Any],
         pathItemParameters: [[String: Any]],
         componentParameters: [String: Any],
+        componentSchemas: [String: Any],
         documentSecurity: [Any]?,
         inlineBodyModels: inout [Model]
     ) -> Operation? {
@@ -230,7 +296,7 @@ extension SwiftSpecGenerator {
                 bodyType = refTypeName(ref)
             } else {
                 let stubName = pascalIdentifier(caseName) + "Body"
-                inlineBodyModels.append(Model(name: stubName, kind: .structStub))
+                inlineBodyModels.append(Model(name: stubName, kind: structKind(for: schema, in: componentSchemas)))
                 bodyType = stubName
             }
         }
@@ -254,20 +320,15 @@ extension SwiftSpecGenerator {
         if !excludedSchemes.isEmpty {
             output += "// Client-only: operations requiring \(excludedSchemes.sorted().joined(separator: ", ")) are not generated.\n"
         }
+        if modelStyle == .full {
+            output += "// Models: full — properties from the spec's schemas, allOf flattened.\n"
+        }
         output += "\nimport DeclarativeRequests\nimport Foundation\n"
 
         if !models.isEmpty {
-            output += "\n// MARK: - Model stubs\n"
-            for model in models {
-                switch model.kind {
-                case .structStub:
-                    output += "struct \(model.name): Codable {}\n"
-                case let .arrayAlias(element):
-                    output += "typealias \(model.name) = [\(element)]\n"
-                case let .scalarAlias(type):
-                    output += "typealias \(model.name) = \(type)\n"
-                }
-            }
+            output += modelStyle == .full ? "\n// MARK: - Models\n" : "\n// MARK: - Model stubs\n"
+            let blocks = models.map(renderModel)
+            output += modelStyle == .full ? blocks.joined(separator: "\n") : blocks.joined()
         }
 
         output += "\n// MARK: - Endpoints\n"
@@ -307,6 +368,35 @@ extension SwiftSpecGenerator {
         }
         output += "}\n"
         return output
+    }
+
+    func renderModel(_ model: Model) -> String {
+        switch model.kind {
+        case .structStub:
+            return "struct \(model.name): Codable {}\n"
+        case let .arrayAlias(element):
+            return "typealias \(model.name) = [\(element)]\n"
+        case let .scalarAlias(type):
+            return "typealias \(model.name) = \(type)\n"
+        case let .structModel(properties):
+            guard !properties.isEmpty else { return "struct \(model.name): Codable {}\n" }
+            var output = "struct \(model.name): Codable {\n"
+            for property in properties {
+                output += "    var \(property.swiftName): \(property.type)\(property.isOptional ? "? = nil" : "")\n"
+            }
+            // CodingKeys only when a raw name isn't already a clean Swift name.
+            if properties.contains(where: { $0.swiftName != $0.rawName }) {
+                output += "\n    enum CodingKeys: String, CodingKey {\n"
+                for property in properties {
+                    output += property.swiftName == property.rawName
+                        ? "        case \(property.swiftName)\n"
+                        : "        case \(property.swiftName) = \"\(property.rawName)\"\n"
+                }
+                output += "    }\n"
+            }
+            output += "}\n"
+            return output
+        }
     }
 
     /// Renders `securitySchemes` and one `needs<Scheme>` flag per scheme.
@@ -525,6 +615,20 @@ let stdlibCollidingTypeNames: Set<String> = [
 func modelTypeName(_ raw: String) -> String {
     let name = pascalIdentifier(raw)
     return stdlibCollidingTypeNames.contains(name) ? "API" + name : name
+}
+
+/// Swift keywords a schema property name could collide with; escaped with backticks.
+let swiftPropertyKeywords: Set<String> = [
+    "as", "case", "class", "default", "enum", "extension", "false", "for", "func",
+    "import", "in", "internal", "is", "nil", "operator", "private", "protocol",
+    "public", "return", "self", "static", "struct", "true", "var", "where", "while",
+]
+
+/// Camel-cases a raw property name; keywords get backticks. When the result
+/// differs from the raw name, the emitted struct carries `CodingKeys`.
+func propertyName(_ raw: String) -> String {
+    let name = camelIdentifier(raw)
+    return swiftPropertyKeywords.contains(name) ? "`\(name)`" : name
 }
 
 func stripLeadingSlash(_ path: String) -> String {

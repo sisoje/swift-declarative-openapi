@@ -31,7 +31,7 @@ private let baseURL = URL(string: "http://petstore.swagger.io/v1")!
 }
 
 @Test func createPetsIsJSONPost() throws {
-    let request = try SwaggerPetstoreEndpoint.createPets(body: Pet())
+    let request = try SwaggerPetstoreEndpoint.createPets(body: Pet(id: 1, name: "Rex"))
         .base(baseURL)
         .request
     #expect(request.httpMethod == "POST")

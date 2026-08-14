@@ -514,3 +514,87 @@ import Testing
     #expect(!generated.contains("AdminThingBody"))
     #expect(generated.contains("// Client-only: operations requiring AdminAuth are not generated."))
 }
+
+// MARK: - Full models
+
+@Test func fullModelsEmitRealProperties() throws {
+    let yaml = """
+    openapi: "3.0.0"
+    info:
+      title: Unit Fixture
+      version: 1.0.0
+    paths: {}
+    components:
+      schemas:
+        Thing:
+          type: object
+          required:
+            - id
+          properties:
+            id:
+              type: integer
+            display_name:
+              type: string
+            tags:
+              type: array
+              items:
+                type: string
+    """
+    let generated = try SwiftSpecGenerator(modelStyle: .full).generate(yaml: yaml)
+    #expect(generated.contains("struct Thing: Codable {"))
+    #expect(generated.contains("var id: Int\n"))
+    #expect(generated.contains("var displayName: String? = nil"))
+    #expect(generated.contains("var tags: [String]? = nil"))
+    #expect(generated.contains("case displayName = \"display_name\""))
+    #expect(generated.contains("case id\n"))
+}
+
+@Test func fullModelsFlattenAllOf() throws {
+    let yaml = """
+    openapi: "3.0.0"
+    info:
+      title: Unit Fixture
+      version: 1.0.0
+    paths: {}
+    components:
+      schemas:
+        Base:
+          type: object
+          required:
+            - id
+          properties:
+            id:
+              type: string
+        Extended:
+          allOf:
+            - $ref: "#/components/schemas/Base"
+            - type: object
+              required:
+                - note
+              properties:
+                note:
+                  type: string
+    """
+    let generated = try SwiftSpecGenerator(modelStyle: .full).generate(yaml: yaml)
+    #expect(generated.contains("struct Extended: Codable {\n    var id: String\n    var note: String\n}"))
+}
+
+@Test func defaultModelStyleStaysStub() throws {
+    let yaml = """
+    openapi: "3.0.0"
+    info:
+      title: Unit Fixture
+      version: 1.0.0
+    paths: {}
+    components:
+      schemas:
+        Thing:
+          type: object
+          properties:
+            id:
+              type: integer
+    """
+    let generated = try SwiftSpecGenerator().generate(yaml: yaml)
+    #expect(generated.contains("struct Thing: Codable {}"))
+    #expect(!generated.contains("var id"))
+}
