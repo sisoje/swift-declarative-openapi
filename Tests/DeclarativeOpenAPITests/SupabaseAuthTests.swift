@@ -9,7 +9,6 @@ private let client = SupabaseAuthClient(
     baseURL: projectBaseURL,
     apikey: .constant("anon-key"),
     accessToken: .constant("jwt-access-token"),
-    refreshToken: .constant("4nYUCw0wZR_DNOTSDbSGMQ")
 )
 
 @Test func refreshSessionBuildsTokenRefreshRequest() throws {
@@ -34,7 +33,7 @@ private let client = SupabaseAuthClient(
 }
 
 @Test func userEndpointWithoutTokenFailsAtRequest() {
-    let loggedOut = SupabaseAuthClient(baseURL: projectBaseURL, apikey: .constant("anon-key"), accessToken: .constant(nil), refreshToken: .constant(nil))
+    let loggedOut = SupabaseAuthClient(baseURL: projectBaseURL, apikey: .constant("anon-key"), accessToken: .constant(nil))
     #expect(throws: SupabaseAuthRESTAPI.MissingUserAuth.self) {
         try loggedOut.request(.getUser)
     }
@@ -43,13 +42,13 @@ private let client = SupabaseAuthClient(
 @Test func publicEndpointPassesWithNilTokenViaSecuritySection() throws {
     // One wire-once request(_:) serves every operation — the generated
     // Security gates decide which credentials are demanded.
-    let loggedOut = SupabaseAuthClient(baseURL: projectBaseURL, apikey: .constant("anon-key"), accessToken: .constant(nil), refreshToken: .constant(nil))
+    let loggedOut = SupabaseAuthClient(baseURL: projectBaseURL, apikey: .constant("anon-key"), accessToken: .constant(nil))
     let request = try loggedOut.request(.postSignup(body: .init()))
     #expect(request.value(forHTTPHeaderField: "Authorization") == nil)
 }
 
 @Test func nilApikeyFailsAtRequest() {
-    let unconfigured = SupabaseAuthClient(baseURL: projectBaseURL, apikey: .constant(nil), accessToken: .constant(nil), refreshToken: .constant(nil))
+    let unconfigured = SupabaseAuthClient(baseURL: projectBaseURL, apikey: .constant(nil), accessToken: .constant(nil))
     #expect(throws: SupabaseAuthRESTAPI.MissingAPIKeyAuth.self) {
         try unconfigured.request(.postSignup(body: .init()))
     }
