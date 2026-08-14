@@ -68,7 +68,8 @@ private let client = SupabaseAuthClient(
     #expect(SupabaseAuthRESTAPI.Security.needsUserAuth(.getUser) == true)
     #expect(SupabaseAuthRESTAPI.Security.needsUserAuth(.postSignup(body: .init())) == false)
     #expect(SupabaseAuthRESTAPI.Security.needsAPIKeyAuth(
-        .postSamlAcs(relayState: nil, sAMLArt: nil, sAMLResponse: nil)) == false)
+        .postSamlAcs(relayState: nil, sAMLArt: nil, sAMLResponse: nil)
+    ) == false)
 }
 
 @Test func signupIsPlainKeyedJSONPost() throws {
@@ -100,11 +101,11 @@ private let client = SupabaseAuthClient(
 
 @Test func evaluatePassesDeclaredStatusAndFailsRateLimit() throws {
     let url = projectBaseURL
-    let ok = HTTPURLResponse(url: url, statusCode: 200, httpVersion: nil, headerFields: nil)!
+    let ok = try #require(HTTPURLResponse(url: url, statusCode: 200, httpVersion: nil, headerFields: nil))
     let tokens = Data(#"{"access_token":"t"}"#.utf8)
     #expect(try SupabaseAuthRESTAPI.Responses.evaluate(.getUser, (tokens, ok)) == tokens)
 
-    let limited = HTTPURLResponse(url: url, statusCode: 429, httpVersion: nil, headerFields: nil)!
+    let limited = try #require(HTTPURLResponse(url: url, statusCode: 429, httpVersion: nil, headerFields: nil))
     do {
         _ = try SupabaseAuthRESTAPI.Responses.evaluate(.getUser, (Data(), limited))
         Issue.record("expected ResponseError")

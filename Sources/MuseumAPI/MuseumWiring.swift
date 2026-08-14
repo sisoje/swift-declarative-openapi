@@ -5,7 +5,6 @@
 import DeclarativeRequests
 import Foundation
 
-
 /// Session + environment in one place. Credentials are optional so the
 /// client is constructible before any exist — a required-but-missing pair
 /// fails the build at `request(_:)` with the generated scheme error.
@@ -19,8 +18,8 @@ struct MuseumClient {
             .request()
     }
 
-    /// Fully typed surface over this wiring: RedoclyMuseumAPI.Client field per
-    /// operation, defaults to the real transport.
+    // Fully typed surface over this wiring: RedoclyMuseumAPI.Client field per
+    // operation, defaults to the real transport.
 
     /// URLSession as the transport closure — this app's transport policy.
     private func urlSessionTransport(_ request: URLRequest) async throws -> (Data, URLResponse) {
@@ -28,7 +27,7 @@ struct MuseumClient {
     }
 
     /// Every operation decodes with a plain `JSONDecoder` — this app's decoding policy.
-    private func plainDecoder(_ operation: RedoclyMuseumAPI.Operation) -> JSONDecoder {
+    private func plainDecoder(_: RedoclyMuseumAPI.Operation) -> JSONDecoder {
         JSONDecoder()
     }
 

@@ -7,7 +7,6 @@ import DeclarativeRequests
 import Foundation
 import SwiftUI
 
-
 // we want client to be reactive
 
 /// Session + environment in one place; gating on the generated Security
@@ -26,9 +25,8 @@ struct SupabaseAuthClient {
             .request()
     }
 
-
-    /// Fully typed surface over this wiring: SupabaseAuthRESTAPI.Client field per
-    /// operation, defaults to the real transport.
+    // Fully typed surface over this wiring: SupabaseAuthRESTAPI.Client field per
+    // operation, defaults to the real transport.
 
     /// URLSession as the transport closure — this app's transport policy.
     private func urlSessionTransport(_ request: URLRequest) async throws -> (Data, URLResponse) {
@@ -36,7 +34,7 @@ struct SupabaseAuthClient {
     }
 
     /// Every operation decodes with a plain `JSONDecoder` — this app's decoding policy.
-    private func plainDecoder(_ operation: SupabaseAuthRESTAPI.Operation) -> JSONDecoder {
+    private func plainDecoder(_: SupabaseAuthRESTAPI.Operation) -> JSONDecoder {
         JSONDecoder()
     }
 

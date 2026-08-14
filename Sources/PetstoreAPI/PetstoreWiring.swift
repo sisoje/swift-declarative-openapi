@@ -4,7 +4,6 @@
 import DeclarativeRequests
 import Foundation
 
-
 struct PetstoreClient {
     var baseURL: URL
 
@@ -12,8 +11,8 @@ struct PetstoreClient {
         try operation.base(baseURL).request()
     }
 
-    /// Fully typed surface over this wiring: SwaggerPetstore.Client field per
-    /// operation, defaults to the real transport.
+    // Fully typed surface over this wiring: SwaggerPetstore.Client field per
+    // operation, defaults to the real transport.
 
     /// URLSession as the transport closure — this app's transport policy.
     private func urlSessionTransport(_ request: URLRequest) async throws -> (Data, URLResponse) {
@@ -21,7 +20,7 @@ struct PetstoreClient {
     }
 
     /// Every operation decodes with a plain `JSONDecoder` — this app's decoding policy.
-    private func plainDecoder(_ operation: SwaggerPetstore.Operation) -> JSONDecoder {
+    private func plainDecoder(_: SwaggerPetstore.Operation) -> JSONDecoder {
         JSONDecoder()
     }
 

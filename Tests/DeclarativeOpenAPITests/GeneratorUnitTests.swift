@@ -1,5 +1,5 @@
-import Foundation
 @testable import DeclarativeOpenAPI
+import Foundation
 import Testing
 
 // MARK: - Name sanitization
@@ -579,7 +579,6 @@ import Testing
     let generated = try SpecGenerator().generate(yaml: yaml)
     #expect(generated.contains("struct Extended: Codable {\n        var id: String\n        var note: String\n    }"))
 }
-
 
 // MARK: - String enums
 

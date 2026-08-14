@@ -1,5 +1,5 @@
-import Foundation
 import DeclarativeOpenAPI
+import Foundation
 import Testing
 
 /// Package root derived from this test file's location.

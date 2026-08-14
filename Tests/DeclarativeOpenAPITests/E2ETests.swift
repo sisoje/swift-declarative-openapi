@@ -1,5 +1,5 @@
-import Foundation
 import DeclarativeOpenAPI
+import Foundation
 import Testing
 
 /// Absolute path to the DeclarativeRequests package the generated code targets.

@@ -72,18 +72,18 @@ private let museumBaseURL = URL(string: "https://redocly.com/_mock/docs/openapi/
 
 @Test func evaluateReturnsPayloadOnDeclaredStatus() throws {
     let payload = Data("[]".utf8)
-    let response = HTTPURLResponse(
+    let response = try #require(HTTPURLResponse(
         url: museumBaseURL, statusCode: 204, httpVersion: nil, headerFields: nil
-    )!
+    ))
     let data = try RedoclyMuseumAPI.Responses.evaluate(.deleteSpecialEvent(eventId: "e1"), (payload, response))
     #expect(data == payload)
 }
 
-@Test func evaluateRejectsUndeclaredSuccessStatus() {
+@Test func evaluateRejectsUndeclaredSuccessStatus() throws {
     // deleteSpecialEvent declares 204 — a 200 is not an expected shape.
-    let response = HTTPURLResponse(
+    let response = try #require(HTTPURLResponse(
         url: museumBaseURL, statusCode: 200, httpVersion: nil, headerFields: nil
-    )!
+    ))
     #expect(throws: RedoclyMuseumAPI.ResponseError.self) {
         try RedoclyMuseumAPI.Responses.evaluate(.deleteSpecialEvent(eventId: "e1"), (Data(), response))
     }
@@ -93,9 +93,9 @@ private let museumBaseURL = URL(string: "https://redocly.com/_mock/docs/openapi/
     // The museum's typed error is decoded by the layer that wants it, from
     // the error's own lossless data — evaluate never guesses.
     let errorBody = Data(#"{"type":"validation","title":"Validation failed"}"#.utf8)
-    let response = HTTPURLResponse(
+    let response = try #require(HTTPURLResponse(
         url: museumBaseURL, statusCode: 400, httpVersion: nil, headerFields: nil
-    )!
+    ))
     do {
         _ = try RedoclyMuseumAPI.Responses.evaluate(.getSpecialEvent(eventId: "bad"), (errorBody, response))
         Issue.record("expected ResponseError")
@@ -154,5 +154,5 @@ private let museumBaseURL = URL(string: "https://redocly.com/_mock/docs/openapi/
         },
         decoder: { _ in JSONDecoder() }
     )
-    try await api.deleteSpecialEvent("e1")   // returns Void, throws on anything but 204
+    try await api.deleteSpecialEvent("e1") // returns Void, throws on anything but 204
 }

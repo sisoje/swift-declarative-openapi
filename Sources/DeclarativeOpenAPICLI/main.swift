@@ -1,5 +1,5 @@
-import Foundation
 import DeclarativeOpenAPI
+import Foundation
 
 let usage = "usage: declarative-openapi <input.yaml> [-o <output.swift>] [--enum-name <Name>] [--exclude-scheme <Scheme> ...]"
 
