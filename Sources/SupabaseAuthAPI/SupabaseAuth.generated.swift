@@ -1249,6 +1249,16 @@ enum SupabaseAuthRESTAPI {
                 postVerify: endpoint(Operation.postVerify, AccessTokenResponseSchema.self)
             )
         }
+
+        /// URLSession as the transport closure: `URLRequest` in, `(Data, URLResponse)` out.
+        static func urlSessionTransport(_ request: URLRequest) async throws -> (Data, URLResponse) {
+            try await URLSession.shared.data(for: request)
+        }
+
+        /// Every operation decodes with a plain `JSONDecoder` — pass your own closure when one doesn't.
+        static func plainDecoder(_ operation: Operation) -> JSONDecoder {
+            JSONDecoder()
+        }
     }
 
     /// Server URL is templated — supply a resolved base URL: `https://{project}.supabase.co/auth/v1`

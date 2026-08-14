@@ -5,16 +5,6 @@ import DeclarativeRequests
 import Foundation
 
 
-/// URLSession as the transport closure: `URLRequest` in, `(Data, URLResponse)` out.
-func urlSessionTransport(_ request: URLRequest) async throws -> (Data, URLResponse) {
-    try await URLSession.shared.data(for: request)
-}
-
-/// Every operation decodes with a plain `JSONDecoder` — swap this when one doesn't.
-func plainDecoder(_ operation: SwaggerPetstore.Operation) -> JSONDecoder {
-    JSONDecoder()
-}
-
 struct PetstoreClient {
     var baseURL: URL
 
@@ -25,6 +15,10 @@ struct PetstoreClient {
     /// Fully typed surface over this wiring: SwaggerPetstore.Client field per
     /// operation, defaults to the real transport.
     var api: SwaggerPetstore.Client {
-        .wired(request: request, transport: urlSessionTransport, decoder: plainDecoder)
+        .wired(
+            request: request,
+            transport: SwaggerPetstore.Client.urlSessionTransport,
+            decoder: SwaggerPetstore.Client.plainDecoder
+        )
     }
 }

@@ -736,6 +736,14 @@ extension SpecGenerator {
             output += "                \(operation.caseName): \(entry)\(comma)\n"
         }
         output += "            )\n"
+        output += "        }\n\n"
+        output += "        /// URLSession as the transport closure: `URLRequest` in, `(Data, URLResponse)` out.\n"
+        output += "        static func urlSessionTransport(_ request: URLRequest) async throws -> (Data, URLResponse) {\n"
+        output += "            try await URLSession.shared.data(for: request)\n"
+        output += "        }\n\n"
+        output += "        /// Every operation decodes with a plain `JSONDecoder` — pass your own closure when one doesn't.\n"
+        output += "        static func plainDecoder(_ operation: Operation) -> JSONDecoder {\n"
+        output += "            JSONDecoder()\n"
         output += "        }\n"
         output += "    }\n"
         return output
