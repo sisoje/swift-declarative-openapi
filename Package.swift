@@ -9,6 +9,7 @@ let package = Package(
     products: [
         .executable(name: "declarative-openapi", targets: ["DeclarativeOpenAPICLI"]),
         .library(name: "DeclarativeOpenAPI", targets: ["DeclarativeOpenAPI"]),
+        .library(name: "DeclarativeOpenAPIRuntime", targets: ["DeclarativeOpenAPIRuntime"]),
         .library(name: "PetstoreAPI", targets: ["PetstoreAPI"]),
         .library(name: "MuseumAPI", targets: ["MuseumAPI"]),
         .library(name: "SupabaseAuthAPI", targets: ["SupabaseAuthAPI"]),
@@ -29,20 +30,26 @@ let package = Package(
             dependencies: ["DeclarativeOpenAPI"]
         ),
         .target(
+            name: "DeclarativeOpenAPIRuntime"
+        ),
+        .target(
             name: "PetstoreAPI",
             dependencies: [
+                "DeclarativeOpenAPIRuntime",
                 .product(name: "DeclarativeRequests", package: "declarative-requests-swift"),
             ]
         ),
         .target(
             name: "MuseumAPI",
             dependencies: [
+                "DeclarativeOpenAPIRuntime",
                 .product(name: "DeclarativeRequests", package: "declarative-requests-swift"),
             ]
         ),
         .target(
             name: "SupabaseAuthAPI",
             dependencies: [
+                "DeclarativeOpenAPIRuntime",
                 .product(name: "DeclarativeRequests", package: "declarative-requests-swift"),
             ]
         ),
@@ -53,6 +60,7 @@ let package = Package(
                 "PetstoreAPI",
                 "MuseumAPI",
                 "SupabaseAuthAPI",
+                "DeclarativeOpenAPIRuntime",
                 .product(name: "DeclarativeRequests", package: "declarative-requests-swift"),
             ]
         ),
