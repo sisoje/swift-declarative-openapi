@@ -5,6 +5,17 @@
 import DeclarativeRequests
 import Foundation
 
+
+/// URLSession as the transport closure: `URLRequest` in, `(Data, URLResponse)` out.
+func urlSessionTransport(_ request: URLRequest) async throws -> (Data, URLResponse) {
+    try await URLSession.shared.data(for: request)
+}
+
+/// Every operation decodes with a plain `JSONDecoder` — swap this when one doesn't.
+func plainDecoder(_ operation: RedoclyMuseumAPI.Operation) -> JSONDecoder {
+    JSONDecoder()
+}
+
 struct MissingCredentials: Error {}
 
 /// Session + environment in one place. Credentials are optional so the
@@ -42,10 +53,6 @@ struct MuseumClient {
     /// Fully typed surface over this wiring: RedoclyMuseumAPI.Client field per
     /// operation, defaults to the real transport.
     var api: RedoclyMuseumAPI.Client {
-        .wired(
-            request: request,
-            transport: { try await URLSession.shared.data(for: $0) },
-            decoder: { _ in JSONDecoder() }
-        )
+        .wired(request: request, transport: urlSessionTransport, decoder: plainDecoder)
     }
 }

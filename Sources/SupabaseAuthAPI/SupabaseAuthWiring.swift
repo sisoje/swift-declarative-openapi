@@ -7,6 +7,17 @@ import DeclarativeRequests
 import Foundation
 import SwiftUI
 
+
+/// URLSession as the transport closure: `URLRequest` in, `(Data, URLResponse)` out.
+func urlSessionTransport(_ request: URLRequest) async throws -> (Data, URLResponse) {
+    try await URLSession.shared.data(for: request)
+}
+
+/// Every operation decodes with a plain `JSONDecoder` — swap this when one doesn't.
+func plainDecoder(_ operation: SupabaseAuthRESTAPI.Operation) -> JSONDecoder {
+    JSONDecoder()
+}
+
 struct MissingAPIKey: Error {}
 struct MissingAccessToken: Error {}
 struct MissingRefreshToken: Error {}
@@ -73,10 +84,6 @@ struct SupabaseAuthClient {
     /// Fully typed surface over this wiring: SupabaseAuthRESTAPI.Client field per
     /// operation, defaults to the real transport.
     var api: SupabaseAuthRESTAPI.Client {
-        .wired(
-            request: request,
-            transport: { try await URLSession.shared.data(for: $0) },
-            decoder: { _ in JSONDecoder() }
-        )
+        .wired(request: request, transport: urlSessionTransport, decoder: plainDecoder)
     }
 }
