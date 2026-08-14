@@ -8,25 +8,24 @@ import SwiftUI
 /// never start while one is in flight. `alreadyRefreshing` doubles as the
 /// staleness barrier: a call that joined a refresh ran with the fresh token,
 /// so its failure escalates instead of re-refreshing.
-@MainActor
 struct Pseudo<Operation> {
-    @Binding var refreshTask: Task<Void, Never>? // it will update refresh and/or access token
+    @Binding var refreshTask: Task<Void, Never>?
     @Binding var accessToken: String?
 
-    let execute: @MainActor (Operation) async throws -> Data
-    let refresh: @Sendable () async -> Void
+    let executeOnce: (Operation) async throws -> Data
+    let refresh: @Sendable () async -> Void // it will update access token
     let isError401: (Error) -> Bool
     let needsAuth: (Operation) -> Bool
 
-    func run(_ operation: Operation) async throws -> Data {
-        let oldtoken = accessToken
+    func runRefreshed(_ operation: Operation) async throws -> Data {
+        let oldToken = accessToken
         var alreadyRefreshing = false
         if let refreshTask {
             alreadyRefreshing = true
             await refreshTask.value
         }
         do {
-            return try await execute(operation)
+            return try await executeOnce(operation)
         } catch {
             guard !alreadyRefreshing, isError401(error), needsAuth(operation) else {
                 throw error
@@ -34,7 +33,7 @@ struct Pseudo<Operation> {
 
             if let refreshTask {
                 await refreshTask.value
-            } else if oldtoken == accessToken {
+            } else if oldToken == accessToken {
                 let task = Task { [refresh] in
                     await refresh()
                 }
@@ -43,11 +42,11 @@ struct Pseudo<Operation> {
                 refreshTask = nil
             }
 
-            guard oldtoken != accessToken else { // not refreshed
+            guard oldToken != accessToken else {
                 throw error
             }
 
-            return try await execute(operation)
+            return try await executeOnce(operation)
         }
     }
 }
