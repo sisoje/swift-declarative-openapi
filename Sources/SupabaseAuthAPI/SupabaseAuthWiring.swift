@@ -20,7 +20,7 @@ extension RequestBuildable {
             if let apikey {
                 Header.custom("apikey").setValue(apikey)
             } else {
-                RequestBlock { _ in throw MissingAPIKey() }
+                RequestFailure(MissingAPIKey())
             }
         }
     }
@@ -34,7 +34,7 @@ extension RequestBuildable {
             if let accessToken {
                 Authorization.bearer(accessToken)
             } else {
-                RequestBlock { _ in throw MissingAccessToken() }
+                RequestFailure(MissingAccessToken())
             }
         }
     }
@@ -54,7 +54,7 @@ extension SupabaseAuthRESTAPIEndpoint {
                     body: PostTokenBody(refreshToken: refreshToken)
                 )
             } else {
-                RequestBlock { _ in throw MissingRefreshToken() }
+                RequestFailure(MissingRefreshToken())
             }
         }
     }
