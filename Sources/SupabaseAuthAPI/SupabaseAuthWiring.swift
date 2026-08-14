@@ -5,18 +5,23 @@
 import DeclarativeRequests
 import Foundation
 
+struct MissingAPIKey: Error {}
+
 extension RequestBuildable {
-    /// Every Supabase Auth request carries the project `apikey` header;
-    /// `nil` omits it (only sensible for the spec's few public endpoints).
+    /// Every Supabase Auth request carries the project `apikey` header, so a
+    /// missing key is a configuration error: it fails the build at `.request`.
+    /// For the spec's few keyless endpoints, don't chain `.keyed` — omission
+    /// is spelled by not declaring the block.
     func keyed(apikey: String?) -> some RequestBuildable {
         RequestBlock {
             self
             if let apikey {
                 Header.custom("apikey").setValue(apikey)
+            } else {
+                RequestBlock { _ in throw MissingAPIKey() }
             }
         }
     }
-
 }
 
 extension SupabaseAuthRESTAPIEndpoint {

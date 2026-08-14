@@ -67,10 +67,19 @@ private let projectBaseURL = URL(string: "https://myproject.supabase.co/auth/v1"
     #expect(request.value(forHTTPHeaderField: "Authorization") == nil)
 }
 
-@Test func nilApikeyOmitsHeader() throws {
+@Test func nilApikeyFailsAtRequest() {
+    #expect(throws: MissingAPIKey.self) {
+        try SupabaseAuthRESTAPIEndpoint
+            .postSignup(body: PostSignupBody())
+            .keyed(apikey: nil)
+            .base(projectBaseURL)
+            .request
+    }
+}
+
+@Test func keylessEndpointSkipsKeyedEntirely() throws {
     let request = try SupabaseAuthRESTAPIEndpoint
-        .postSignup(body: PostSignupBody())
-        .keyed(apikey: nil)
+        .postSamlAcs(relayState: nil, sAMLArt: nil, sAMLResponse: nil)
         .base(projectBaseURL)
         .request
     #expect(request.value(forHTTPHeaderField: "apikey") == nil)
