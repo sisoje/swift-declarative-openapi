@@ -109,14 +109,6 @@ enum SwaggerPetstore {
             transport: @escaping (URLRequest) async throws -> (Data, URLResponse) = { try await URLSession.shared.data(for: $0) },
             decoder: @escaping (Operation) -> JSONDecoder = { _ in JSONDecoder() }
         ) -> Client {
-            func raw<each Input>(
-                _ makeCase: @escaping (repeat each Input) -> Operation
-            ) -> (repeat each Input) async throws -> Data {
-                { (input: repeat each Input) in
-                    let operation = makeCase(repeat each input)
-                    return try Responses.evaluate(operation, try await transport(request(operation)))
-                }
-            }
             func endpoint<each Input, Output: Decodable>(
                 _ makeCase: @escaping (repeat each Input) -> Operation,
                 _ output: Output.Type
@@ -125,14 +117,6 @@ enum SwaggerPetstore {
                     let operation = makeCase(repeat each input)
                     let data = try Responses.evaluate(operation, try await transport(request(operation)))
                     return try decoder(operation).decode(Output.self, from: data)
-                }
-            }
-            func text<each Input>(
-                _ makeCase: @escaping (repeat each Input) -> Operation
-            ) -> (repeat each Input) async throws -> String {
-                { (input: repeat each Input) in
-                    let operation = makeCase(repeat each input)
-                    return try String(decoding: Responses.evaluate(operation, try await transport(request(operation))), as: UTF8.self)
                 }
             }
             func fire<each Input>(

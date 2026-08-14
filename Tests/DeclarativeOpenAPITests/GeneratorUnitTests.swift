@@ -729,3 +729,24 @@ import Testing
     #expect(generated.contains("getName: endpoint({ Operation.getName }, String.self)"))
     #expect(generated.contains("ping: fire({ Operation.ping })"))
 }
+
+@Test func onlyUsedClientHelpersAreEmitted() throws {
+    let yaml = """
+    openapi: "3.0.0"
+    info:
+      title: Unit Fixture
+      version: 1.0.0
+    paths:
+      /ping:
+        post:
+          operationId: ping
+          responses:
+            "204":
+              description: no content
+    """
+    let generated = try SpecGenerator().generate(yaml: yaml)
+    #expect(generated.contains("func fire<each Input>"))
+    #expect(!generated.contains("func endpoint<"))
+    #expect(!generated.contains("func raw<"))
+    #expect(!generated.contains("func text<"))
+}
