@@ -1146,6 +1146,39 @@ enum SupabaseAuthRESTAPI {
         }
     }
 
+    // MARK: - Request
+
+    struct MissingAPIKeyAuth: Error {}
+    struct MissingUserAuth: Error {}
+
+    /// Composes an operation with the environment and the spec-required
+    /// credentials; a required-but-nil credential fails the build.
+    static func request(
+        _ operation: Operation,
+        baseURL: URL,
+        apiKeyAuth: String?,
+        userAuth: String?
+    ) throws -> URLRequest {
+        try RequestBlock {
+            operation
+            BaseURL(baseURL)
+            if Security.needsAPIKeyAuth(operation) {
+                if let apiKeyAuth {
+                    Security.apiKeyAuth(apiKeyAuth)
+                } else {
+                    RequestFailure(MissingAPIKeyAuth())
+                }
+            }
+            if Security.needsUserAuth(operation) {
+                if let userAuth {
+                    Security.userAuth(token: userAuth)
+                } else {
+                    RequestFailure(MissingUserAuth())
+                }
+            }
+        }.request()
+    }
+
     // MARK: - Client
 
     /// The backend as one set of typed closures — swap any field to stub.

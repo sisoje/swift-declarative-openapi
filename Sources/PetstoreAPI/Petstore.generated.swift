@@ -93,6 +93,20 @@ enum SwaggerPetstore {
         }
     }
 
+    // MARK: - Request
+
+    /// Composes an operation with the environment and the spec-required
+    /// credentials; a required-but-nil credential fails the build.
+    static func request(
+        _ operation: Operation,
+        baseURL: URL
+    ) throws -> URLRequest {
+        try RequestBlock {
+            operation
+            BaseURL(baseURL)
+        }.request()
+    }
+
     // MARK: - Client
 
     /// The backend as one set of typed closures — swap any field to stub.

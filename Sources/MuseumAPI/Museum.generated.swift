@@ -226,6 +226,30 @@ enum RedoclyMuseumAPI {
         }
     }
 
+    // MARK: - Request
+
+    struct MissingMuseumPlaceholderAuth: Error {}
+
+    /// Composes an operation with the environment and the spec-required
+    /// credentials; a required-but-nil credential fails the build.
+    static func request(
+        _ operation: Operation,
+        baseURL: URL,
+        museumPlaceholderAuth: (username: String, password: String)?
+    ) throws -> URLRequest {
+        try RequestBlock {
+            operation
+            BaseURL(baseURL)
+            if Security.needsMuseumPlaceholderAuth(operation) {
+                if let museumPlaceholderAuth {
+                    Security.museumPlaceholderAuth(username: museumPlaceholderAuth.username, password: museumPlaceholderAuth.password)
+                } else {
+                    RequestFailure(MissingMuseumPlaceholderAuth())
+                }
+            }
+        }.request()
+    }
+
     // MARK: - Client
 
     /// The backend as one set of typed closures — swap any field to stub.

@@ -8,9 +8,6 @@ import Foundation
 import SwiftUI
 
 
-struct MissingAPIKey: Error {}
-struct MissingAccessToken: Error {}
-
 // we want client to be reactive
 
 /// Session + environment in one place; gating on the generated Security
@@ -24,24 +21,7 @@ struct SupabaseAuthClient {
     @Binding var refreshToken: String?
 
     func request(_ operation: SupabaseAuthRESTAPI.Operation) throws -> URLRequest {
-        try RequestBlock {
-            operation
-            BaseURL(baseURL)
-            if SupabaseAuthRESTAPI.Security.needsAPIKeyAuth(operation) {
-                if let apikey {
-                    SupabaseAuthRESTAPI.Security.apiKeyAuth(apikey)
-                } else {
-                    RequestFailure(MissingAPIKey())
-                }
-            }
-            if SupabaseAuthRESTAPI.Security.needsUserAuth(operation) {
-                if let accessToken {
-                    SupabaseAuthRESTAPI.Security.userAuth(token: accessToken)
-                } else {
-                    RequestFailure(MissingAccessToken())
-                }
-            }
-        }.request()
+        try SupabaseAuthRESTAPI.request(operation, baseURL: baseURL, apiKeyAuth: apikey, userAuth: accessToken)
     }
 
 

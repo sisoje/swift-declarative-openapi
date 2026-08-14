@@ -56,7 +56,7 @@ private let museumBaseURL = URL(string: "https://redocly.com/_mock/docs/openapi/
 }
 
 @Test func clientAttachesBasicAuthEverywhere() throws {
-    let client = MuseumClient(baseURL: museumBaseURL, username: "curator", password: "secret")
+    let client = MuseumClient(baseURL: museumBaseURL, credentials: (username: "curator", password: "secret"))
     let request = try client.request(.getMuseumHours(startDate: nil, page: nil, limit: nil))
     let expected = "Basic " + Data("curator:secret".utf8).base64EncodedString()
     #expect(request.value(forHTTPHeaderField: "Authorization") == expected)
@@ -65,7 +65,7 @@ private let museumBaseURL = URL(string: "https://redocly.com/_mock/docs/openapi/
 
 @Test func clientWithoutCredentialsFailsAtRequest() {
     let client = MuseumClient(baseURL: museumBaseURL)
-    #expect(throws: MissingCredentials.self) {
+    #expect(throws: RedoclyMuseumAPI.MissingMuseumPlaceholderAuth.self) {
         try client.request(.getMuseumHours(startDate: nil, page: nil, limit: nil))
     }
 }
@@ -108,7 +108,7 @@ private let museumBaseURL = URL(string: "https://redocly.com/_mock/docs/openapi/
 }
 
 @Test func wiredClientComposesLayersThroughInjectedTransport() async throws {
-    let wiring = MuseumClient(baseURL: museumBaseURL, username: "u", password: "p")
+    let wiring = MuseumClient(baseURL: museumBaseURL, credentials: (username: "u", password: "p"))
     let api = RedoclyMuseumAPI.Client.wired(
         request: wiring.request,
         transport: { request in
@@ -123,7 +123,7 @@ private let museumBaseURL = URL(string: "https://redocly.com/_mock/docs/openapi/
 }
 
 @Test func wiredClientSurfacesResponseError() async {
-    let wiring = MuseumClient(baseURL: museumBaseURL, username: "u", password: "p")
+    let wiring = MuseumClient(baseURL: museumBaseURL, credentials: (username: "u", password: "p"))
     let api = RedoclyMuseumAPI.Client.wired(
         request: wiring.request,
         transport: { request in
@@ -146,7 +146,7 @@ private let museumBaseURL = URL(string: "https://redocly.com/_mock/docs/openapi/
 }
 
 @Test func typedClientVoidOperationSucceedsOn204() async throws {
-    let wiring = MuseumClient(baseURL: museumBaseURL, username: "u", password: "p")
+    let wiring = MuseumClient(baseURL: museumBaseURL, credentials: (username: "u", password: "p"))
     let api = RedoclyMuseumAPI.Client.wired(
         request: wiring.request,
         transport: { request in

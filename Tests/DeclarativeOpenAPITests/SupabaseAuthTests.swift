@@ -35,7 +35,7 @@ private let client = SupabaseAuthClient(
 
 @Test func userEndpointWithoutTokenFailsAtRequest() {
     let loggedOut = SupabaseAuthClient(baseURL: projectBaseURL, apikey: .constant("anon-key"), accessToken: .constant(nil), refreshToken: .constant(nil))
-    #expect(throws: MissingAccessToken.self) {
+    #expect(throws: SupabaseAuthRESTAPI.MissingUserAuth.self) {
         try loggedOut.request(.getUser)
     }
 }
@@ -50,7 +50,7 @@ private let client = SupabaseAuthClient(
 
 @Test func nilApikeyFailsAtRequest() {
     let unconfigured = SupabaseAuthClient(baseURL: projectBaseURL, apikey: .constant(nil), accessToken: .constant(nil), refreshToken: .constant(nil))
-    #expect(throws: MissingAPIKey.self) {
+    #expect(throws: SupabaseAuthRESTAPI.MissingAPIKeyAuth.self) {
         try unconfigured.request(.postSignup(body: .init()))
     }
 }

@@ -6,28 +6,15 @@ import DeclarativeRequests
 import Foundation
 
 
-struct MissingCredentials: Error {}
-
 /// Session + environment in one place. Credentials are optional so the
 /// client is constructible before any exist — a required-but-missing pair
-/// fails the build at `request(_:)`.
+/// fails the build at `request(_:)` with the generated scheme error.
 struct MuseumClient {
     var baseURL: URL
-    var username: String?
-    var password: String?
+    var credentials: (username: String, password: String)? = nil
 
     func request(_ operation: RedoclyMuseumAPI.Operation) throws -> URLRequest {
-        try RequestBlock {
-            operation
-            BaseURL(baseURL)
-            if RedoclyMuseumAPI.Security.needsMuseumPlaceholderAuth(operation) {
-                if let username, let password {
-                    RedoclyMuseumAPI.Security.museumPlaceholderAuth(username: username, password: password)
-                } else {
-                    RequestFailure(MissingCredentials())
-                }
-            }
-        }.request()
+        try RedoclyMuseumAPI.request(operation, baseURL: baseURL, museumPlaceholderAuth: credentials)
     }
 
     /// Fully typed surface over this wiring: RedoclyMuseumAPI.Client field per

@@ -443,6 +443,7 @@ extension SpecGenerator {
 
         output += renderResponses(operations)
         output += renderSecurity(operations, definitions: securitySchemeDefinitions)
+        output += renderRequestBuilder(operations, definitions: securitySchemeDefinitions)
         output += renderClient(operations)
 
         if let baseURL {
@@ -642,6 +643,69 @@ extension SpecGenerator {
             parameters.append((name: "body", type: bodyType))
         }
         return parameters
+    }
+
+
+    /// Per-scheme credential binding for the generated request builder:
+    /// parameter type, factory call, derived from the scheme's definition.
+    func schemeBinding(_ scheme: String, definition: [String: Any]?) -> (paramType: String, call: String)? {
+        guard let definition else { return nil }
+        let name = factoryName(scheme)
+        switch (definition["type"] as? String, definition["scheme"] as? String) {
+        case ("http", "bearer"):
+            return ("String", "Security.\(name)(token: \(name))")
+        case ("http", "basic"):
+            return ("(username: String, password: String)",
+                    "Security.\(name)(username: \(name).username, password: \(name).password)")
+        case ("apiKey", _):
+            return ("String", "Security.\(name)(\(name))")
+        default:
+            return nil
+        }
+    }
+
+    /// The `Request` section: composes an operation with the environment and
+    /// the spec-required credentials — one optional parameter per security
+    /// scheme; a required-but-nil credential fails the build with the
+    /// scheme's own error.
+    func renderRequestBuilder(_ operations: [Operation], definitions: [String: Any]) -> String {
+        guard !operations.isEmpty else { return "" }
+        let schemes = Set(operations.flatMap(\.securitySchemes)).sorted()
+        let bindings = schemes.compactMap { scheme -> (scheme: String, param: String, type: String, error: String, call: String)? in
+            guard let binding = schemeBinding(scheme, definition: anyDict(definitions[scheme])) else { return nil }
+            return (scheme, factoryName(scheme), binding.paramType, "Missing" + pascalIdentifier(scheme), binding.call)
+        }
+
+        var output = "\n    // MARK: - Request\n\n"
+        for binding in bindings {
+            output += "    struct \(binding.error): Error {}\n"
+        }
+        if !bindings.isEmpty { output += "\n" }
+        output += "    /// Composes an operation with the environment and the spec-required\n"
+        output += "    /// credentials; a required-but-nil credential fails the build.\n"
+        output += "    static func request(\n"
+        output += "        _ operation: Operation,\n"
+        output += "        baseURL: URL" + (bindings.isEmpty ? "\n" : ",\n")
+        for (index, binding) in bindings.enumerated() {
+            let comma = index == bindings.count - 1 ? "" : ","
+            output += "        \(binding.param): \(binding.type)?\(comma)\n"
+        }
+        output += "    ) throws -> URLRequest {\n"
+        output += "        try RequestBlock {\n"
+        output += "            operation\n"
+        output += "            BaseURL(baseURL)\n"
+        for binding in bindings {
+            output += "            if Security.needs\(pascalIdentifier(binding.scheme))(operation) {\n"
+            output += "                if let \(binding.param) {\n"
+            output += "                    \(binding.call)\n"
+            output += "                } else {\n"
+            output += "                    RequestFailure(\(binding.error)())\n"
+            output += "                }\n"
+            output += "            }\n"
+        }
+        output += "        }.request()\n"
+        output += "    }\n"
+        return output
     }
 
     /// The `Client` section: the backend as one set of typed closures —

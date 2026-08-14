@@ -9,7 +9,7 @@ struct PetstoreClient {
     var baseURL: URL
 
     func request(_ operation: SwaggerPetstore.Operation) throws -> URLRequest {
-        try operation.base(baseURL).request()
+        try SwaggerPetstore.request(operation, baseURL: baseURL)
     }
 
     /// Fully typed surface over this wiring: SwaggerPetstore.Client field per
