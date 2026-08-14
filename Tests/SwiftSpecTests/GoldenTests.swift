@@ -9,13 +9,18 @@ let packageRoot = URL(fileURLWithPath: #filePath)
     .deletingLastPathComponent() // Tests
 
 let petstoreSpecURL = packageRoot.appendingPathComponent("Specs/petstore.yaml")
+let museumSpecURL = packageRoot.appendingPathComponent("Specs/museum.yaml")
 
-@Test func generatorOutputMatchesCheckedInGoldenFile() throws {
-    let yaml = try String(contentsOf: petstoreSpecURL, encoding: .utf8)
+@Test(arguments: [
+    ("Specs/petstore.yaml", "Sources/PetstoreAPI/Petstore.generated.swift"),
+    ("Specs/museum.yaml", "Sources/MuseumAPI/Museum.generated.swift"),
+]) func generatorOutputMatchesCheckedInGoldenFile(spec: String, golden: String) throws {
+    let yaml = try String(contentsOf: packageRoot.appendingPathComponent(spec), encoding: .utf8)
     let generated = try SwiftSpecGenerator().generate(yaml: yaml)
 
-    let goldenURL = packageRoot.appendingPathComponent("Sources/PetstoreAPI/Petstore.generated.swift")
-    let golden = try String(contentsOf: goldenURL, encoding: .utf8)
-
-    #expect(generated == golden)
+    let goldenContents = try String(
+        contentsOf: packageRoot.appendingPathComponent(golden),
+        encoding: .utf8
+    )
+    #expect(generated == goldenContents)
 }

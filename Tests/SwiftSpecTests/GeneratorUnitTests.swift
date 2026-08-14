@@ -335,3 +335,83 @@ import Testing
         try SwiftSpecGenerator().generate(yaml: "- just\n- a\n- list")
     }
 }
+
+// MARK: - Component parameter refs
+
+@Test func parameterRefsResolveToComponentDefinitions() throws {
+    let yaml = """
+    openapi: "3.1.0"
+    info:
+      title: Unit Fixture
+      version: 1.0.0
+    paths:
+      /things/{thingId}:
+        get:
+          operationId: getThing
+          parameters:
+            - $ref: "#/components/parameters/ThingId"
+            - $ref: "#/components/parameters/Verbose"
+    components:
+      parameters:
+        ThingId:
+          name: thingId
+          in: path
+          required: true
+          schema:
+            type: string
+        Verbose:
+          name: verbose
+          in: query
+          schema:
+            type: boolean
+    """
+    let generated = try SwiftSpecGenerator().generate(yaml: yaml)
+    #expect(generated.contains("case getThing(thingId: String, verbose: Bool?)"))
+    #expect(generated.contains("Endpoint(\"things/\\(thingId)\")"))
+    #expect(generated.contains("Query(\"verbose\", String(verbose))"))
+}
+
+@Test func unresolvableParameterRefIsDropped() throws {
+    let yaml = """
+    openapi: "3.1.0"
+    info:
+      title: Unit Fixture
+      version: 1.0.0
+    paths:
+      /things:
+        get:
+          operationId: listThings
+          parameters:
+            - $ref: "#/components/parameters/Missing"
+    """
+    let generated = try SwiftSpecGenerator().generate(yaml: yaml)
+    #expect(generated.contains("case listThings\n"))
+}
+
+// MARK: - Scalar schema aliases
+
+@Test func scalarSchemasBecomeTypealiases() throws {
+    let yaml = """
+    openapi: "3.1.0"
+    info:
+      title: Unit Fixture
+      version: 1.0.0
+    paths: {}
+    components:
+      schemas:
+        Email:
+          type: string
+        Count:
+          type: integer
+        Price:
+          type: number
+        Image:
+          type: string
+          format: binary
+    """
+    let generated = try SwiftSpecGenerator().generate(yaml: yaml)
+    #expect(generated.contains("typealias Email = String"))
+    #expect(generated.contains("typealias Count = Int"))
+    #expect(generated.contains("typealias Price = Double"))
+    #expect(generated.contains("typealias Image = Data"))
+}

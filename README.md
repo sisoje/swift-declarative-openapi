@@ -2,7 +2,10 @@
 
 An executable that takes an OpenAPI 3.0 YAML spec and generates a **compilable Swift enum** that models every endpoint using the [DeclarativeRequests](../declarative-requests-swift) result-builder DSL. Models are deliberately generated as **fake/minimal stubs** (empty `Codable` structs) — the point is the endpoint surface, not the schemas.
 
-The reference spec is the classic [petstore](https://learn.openapis.org/examples/v3.0/petstore.html) example, checked in at `Specs/petstore.yaml` as the byte-exact canonical file from the OAI repository.
+Two reference specs are checked in, both byte-exact canonical files from their upstream repositories:
+
+- `Specs/petstore.yaml` — the classic [petstore](https://learn.openapis.org/examples/v3.0/petstore.html) example (OpenAPI 3.0).
+- `Specs/museum.yaml` — the [Redocly Museum API](https://github.com/Redocly/museum-openapi-example) example (OpenAPI 3.1), which exercises `$ref` parameters, scalar/enum component schemas, `allOf`, nested paths (`/tickets/{ticketId}/qr`), and a `webhooks` section (ignored — webhooks aren't client-callable endpoints).
 
 ## Usage
 
@@ -58,7 +61,8 @@ let request = try SwaggerPetstoreEndpoint.showPetById(petId: "42")
 - Path params are interpolated into `Endpoint(...)`; leading `/` is stripped because `Endpoint` paths are joined onto the base URL by `.base(url)`. Path-item-level `parameters` are merged into each operation (operation-level entries win by `(name, in)`).
 - Query params: required → `Query("name", value)`; optional → wrapped in `if let`; non-`String` types stringified via `String(...)`; array-typed params emit a `for` loop of repeated `Query` blocks (the DSL's `buildArray`).
 - `requestBody` (application/json): `$ref` → associated value of that model type + `RequestBody.json(body)`; inline schemas get a generated `<OperationId>Body` stub.
-- `components.schemas`: `object` → empty `struct X: Codable {}`, `array` → `typealias X = [Element]`. Names are sanitized to valid Swift identifiers (`thing-request` → `ThingRequest`); a schema literally named `Error` becomes `APIError` so it doesn't shadow `Swift.Error`.
+- Parameters written as `$ref: "#/components/parameters/X"` are resolved to their component definitions (unresolvable refs are dropped).
+- `components.schemas`: `object` (or `allOf`) → empty `struct X: Codable {}`, `array` → `typealias X = [Element]`, scalars → `typealias X = String/Int/Double/Bool` (`format: binary` → `Data`). Names are sanitized to valid Swift identifiers (`thing-request` → `ThingRequest`); names that would shadow stdlib types are prefixed (`Error` → `APIError`, `Date` → `APIDate`).
 - Type mapping: `string`→`String`, `integer`→`Int`, `number`→`Double`, `boolean`→`Bool`, `array`→`[Element]`, `$ref`→model type.
 - `servers[0].url` becomes `static let defaultBaseURL`. Header/cookie params are not generated (a `// TODO:` comment is emitted in the case instead). Specs with zero operations still produce compiling output (placeholder body instead of an illegal empty `switch`).
 - Output is deterministic (schemas alphabetical, paths sorted, fixed method order) so it's golden-testable.
@@ -67,12 +71,12 @@ let request = try SwaggerPetstoreEndpoint.showPetById(petId: "42")
 
 - `Sources/SwiftSpecCore` — all parsing (via [Yams](https://github.com/jpsim/Yams)) and codegen; `SwiftSpecGenerator(enumNameOverride:).generate(yaml:) -> String`.
 - `Sources/SwiftSpecCLI` — the `swift-spec` executable (plain `CommandLine.arguments`, no argument-parser dependency).
-- `Sources/PetstoreAPI` — the **checked-in generated output**, compiled against DeclarativeRequests on every `swift build`, so compilability of generated code is proven by the build itself.
-- `Specs/petstore.yaml` — canonical petstore spec.
-- `Tests/SwiftSpecTests` — 25 tests:
-  - **E2E generate-then-compile**: generates from the spec, writes a fresh temp SwiftPM package depending on DeclarativeRequests, runs a real `swift build` there, and asserts exit 0 (compiler output is surfaced on failure).
-  - **Golden**: generator output must equal the checked-in `Petstore.generated.swift` byte-for-byte.
-  - **Request shape**: builds actual `URLRequest`s from the generated enum and asserts URLs, methods, query items, and JSON Content-Type.
+- `Sources/PetstoreAPI` and `Sources/MuseumAPI` — the **checked-in generated outputs**, compiled against DeclarativeRequests on every `swift build`, so compilability of generated code is proven by the build itself.
+- `Specs/` — the canonical spec files.
+- `Tests/SwiftSpecTests` — 33 tests:
+  - **E2E generate-then-compile** (parameterized over both specs): generates from the spec, writes a fresh temp SwiftPM package depending on DeclarativeRequests, runs a real `swift build` there, and asserts exit 0 (compiler output is surfaced on failure).
+  - **Golden** (parameterized over both specs): generator output must equal the checked-in `*.generated.swift` byte-for-byte.
+  - **Request shape**: builds actual `URLRequest`s from both generated enums and asserts URLs, methods, query items, and JSON Content-Type.
   - **Unit**: name sanitization, type mapping, slash stripping, required/optional/array query params, operationId fallback, enum-name override, header-param TODOs, invalid-YAML errors.
 
 ## Notes & caveats

@@ -10,6 +10,7 @@ let package = Package(
         .executable(name: "swift-spec", targets: ["SwiftSpecCLI"]),
         .library(name: "SwiftSpecCore", targets: ["SwiftSpecCore"]),
         .library(name: "PetstoreAPI", targets: ["PetstoreAPI"]),
+        .library(name: "MuseumAPI", targets: ["MuseumAPI"]),
     ],
     dependencies: [
         .package(url: "https://github.com/jpsim/Yams.git", from: "5.0.0"),
@@ -32,11 +33,18 @@ let package = Package(
                 .product(name: "DeclarativeRequests", package: "declarative-requests-swift"),
             ]
         ),
+        .target(
+            name: "MuseumAPI",
+            dependencies: [
+                .product(name: "DeclarativeRequests", package: "declarative-requests-swift"),
+            ]
+        ),
         .testTarget(
             name: "SwiftSpecTests",
             dependencies: [
                 "SwiftSpecCore",
                 "PetstoreAPI",
+                "MuseumAPI",
                 .product(name: "DeclarativeRequests", package: "declarative-requests-swift"),
             ]
         ),

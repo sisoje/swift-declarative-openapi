@@ -5,8 +5,10 @@ import Testing
 /// Absolute path to the DeclarativeRequests package the generated code targets.
 private let declarativeRequestsPath = "/Users/lazar/dev/declarative-requests-swift"
 
-@Test func generatedPetstoreCodeCompilesAgainstDeclarativeRequests() throws {
-    let yaml = try String(contentsOf: petstoreSpecURL, encoding: .utf8)
+@Test(arguments: ["petstore.yaml", "museum.yaml"])
+func generatedCodeCompilesAgainstDeclarativeRequests(spec: String) throws {
+    let specURL = packageRoot.appendingPathComponent("Specs/\(spec)")
+    let yaml = try String(contentsOf: specURL, encoding: .utf8)
     let generated = try SwiftSpecGenerator().generate(yaml: yaml)
 
     let fileManager = FileManager.default
@@ -42,7 +44,7 @@ private let declarativeRequestsPath = "/Users/lazar/dev/declarative-requests-swi
         encoding: .utf8
     )
     try generated.write(
-        to: sourcesDirectory.appendingPathComponent("Petstore.generated.swift"),
+        to: sourcesDirectory.appendingPathComponent("Generated.swift"),
         atomically: true,
         encoding: .utf8
     )

@@ -14,7 +14,7 @@ public enum GeneratorError: Swift.Error, CustomStringConvertible, Equatable {
     }
 }
 
-/// Generates a single Swift source file from an OpenAPI 3.0 YAML document.
+/// Generates a single Swift source file from an OpenAPI 3.x YAML document.
 ///
 /// The output models every operation as one enum conforming to the
 /// DeclarativeRequests `RequestBuildable` protocol, plus empty model stubs
@@ -48,8 +48,13 @@ public struct SwiftSpecGenerator {
             baseURL = url
         }
 
+        let componentParameters = anyDict(anyDict(document["components"])?["parameters"]) ?? [:]
         var models = collectSchemaModels(from: document)
-        let operations = collectOperations(from: document, inlineBodyModels: &models)
+        let operations = collectOperations(
+            from: document,
+            componentParameters: componentParameters,
+            inlineBodyModels: &models
+        )
 
         return render(
             enumName: enumName,
@@ -66,6 +71,7 @@ struct Model {
     enum Kind {
         case structStub
         case arrayAlias(element: String)
+        case scalarAlias(type: String)
     }
 
     var name: String
@@ -99,22 +105,32 @@ extension SwiftSpecGenerator {
               let schemas = anyDict(components["schemas"]) else { return [] }
         return schemas.keys.map { name in
             let schema = anyDict(schemas[name])
-            if schema?["type"] as? String == "array" {
+            switch schema?["type"] as? String {
+            case "array":
                 return Model(
                     name: modelTypeName(name),
                     kind: .arrayAlias(element: swiftType(for: anyDict(schema?["items"])))
                 )
+            case "string", "integer", "number", "boolean":
+                return Model(name: modelTypeName(name), kind: .scalarAlias(type: swiftType(for: schema)))
+            default:
+                return Model(name: modelTypeName(name), kind: .structStub)
             }
-            return Model(name: modelTypeName(name), kind: .structStub)
         }
     }
 
-    func collectOperations(from document: [String: Any], inlineBodyModels: inout [Model]) -> [Operation] {
+    func collectOperations(
+        from document: [String: Any],
+        componentParameters: [String: Any],
+        inlineBodyModels: inout [Model]
+    ) -> [Operation] {
         guard let paths = anyDict(document["paths"]) else { return [] }
         var operations: [Operation] = []
         for path in paths.keys.sorted() {
             guard let pathItem = anyDict(paths[path]) else { continue }
-            let pathItemParameters = (anyArray(pathItem["parameters"]) ?? []).compactMap(anyDict)
+            let pathItemParameters = (anyArray(pathItem["parameters"]) ?? [])
+                .compactMap(anyDict)
+                .compactMap { resolveParameter($0, componentParameters: componentParameters) }
             for method in Self.methodOrder {
                 guard let operation = anyDict(pathItem[method]) else { continue }
                 operations.append(makeOperation(
@@ -122,6 +138,7 @@ extension SwiftSpecGenerator {
                     path: path,
                     operation: operation,
                     pathItemParameters: pathItemParameters,
+                    componentParameters: componentParameters,
                     inlineBodyModels: &inlineBodyModels
                 ))
             }
@@ -129,11 +146,22 @@ extension SwiftSpecGenerator {
         return operations
     }
 
+    /// Resolves a `$ref: "#/components/parameters/Name"` entry to its
+    /// component definition; non-ref entries pass through, unresolvable
+    /// refs are dropped.
+    func resolveParameter(_ parameter: [String: Any], componentParameters: [String: Any]) -> [String: Any]? {
+        guard let ref = parameter["$ref"] as? String else { return parameter }
+        guard let name = ref.split(separator: "/").last,
+              ref.hasPrefix("#/components/parameters/") else { return nil }
+        return anyDict(componentParameters[String(name)])
+    }
+
     func makeOperation(
         method: String,
         path: String,
         operation: [String: Any],
         pathItemParameters: [[String: Any]],
+        componentParameters: [String: Any],
         inlineBodyModels: inout [Model]
     ) -> Operation {
         let caseName: String = if let operationId = operation["operationId"] as? String {
@@ -145,7 +173,8 @@ extension SwiftSpecGenerator {
         // Path-item-level parameters apply to every operation under the path;
         // operation-level entries override them by (name, in).
         var rawParameters = pathItemParameters
-        for parameter in (anyArray(operation["parameters"]) ?? []).compactMap(anyDict) {
+        for parameter in (anyArray(operation["parameters"]) ?? []).compactMap(anyDict)
+            .compactMap({ resolveParameter($0, componentParameters: componentParameters) }) {
             if let index = rawParameters.firstIndex(where: {
                 $0["name"] as? String == parameter["name"] as? String
                     && $0["in"] as? String == parameter["in"] as? String
@@ -209,6 +238,8 @@ extension SwiftSpecGenerator {
                     output += "struct \(model.name): Codable {}\n"
                 case let .arrayAlias(element):
                     output += "typealias \(model.name) = [\(element)]\n"
+                case let .scalarAlias(type):
+                    output += "typealias \(model.name) = \(type)\n"
                 }
             }
         }
@@ -373,7 +404,7 @@ func swiftType(for schema: [String: Any]?) -> String {
         return refTypeName(ref)
     }
     switch schema["type"] as? String {
-    case "string": return "String"
+    case "string": return schema["format"] as? String == "binary" ? "Data" : "String"
     case "integer": return "Int"
     case "number": return "Double"
     case "boolean": return "Bool"
