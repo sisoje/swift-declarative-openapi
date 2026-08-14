@@ -120,6 +120,12 @@ enum SupabaseAuthRESTAPI {
         }
     }
 
+    struct DeleteFactorsFactorIdResponse: Codable {
+        var id: String? = nil
+    }
+
+    struct DeleteUserIdentitiesIdentityIdResponse: Codable {}
+
     struct ErrorSchema: Codable {
         var code: Int? = nil
         var error: String? = nil
@@ -135,6 +141,46 @@ enum SupabaseAuthRESTAPI {
             case errorDescription = "error_description"
             case msg
             case weakPassword = "weak_password"
+        }
+    }
+
+    struct GetHealthResponse: Codable {
+        var description: String? = nil
+        var name: String? = nil
+        var version: String? = nil
+    }
+
+    struct GetOauthAuthorizationsAuthorizationIdResponse: Codable {
+        var authorizationId: String? = nil
+        var client: String? = nil
+        var redirectUri: String? = nil
+        var scope: String? = nil
+        var user: String? = nil
+
+        enum CodingKeys: String, CodingKey {
+            case authorizationId = "authorization_id"
+            case client
+            case redirectUri = "redirect_uri"
+            case scope
+            case user
+        }
+    }
+
+    struct GetSettingsResponse: Codable {
+        var disableSignup: Bool? = nil
+        var external: String? = nil
+        var mailerAutoconfirm: Bool? = nil
+        var phoneAutoconfirm: Bool? = nil
+        var samlEnabled: Bool? = nil
+        var smsProvider: String? = nil
+
+        enum CodingKeys: String, CodingKey {
+            case disableSignup = "disable_signup"
+            case external
+            case mailerAutoconfirm = "mailer_autoconfirm"
+            case phoneAutoconfirm = "phone_autoconfirm"
+            case samlEnabled = "saml_enabled"
+            case smsProvider = "sms_provider"
         }
     }
 
@@ -285,6 +331,19 @@ enum SupabaseAuthRESTAPI {
         }
     }
 
+    struct PostFactorsResponse: Codable {
+        enum APIType: String, Codable {
+            case totp
+            case phone
+            case webauthn
+        }
+
+        var id: String? = nil
+        var phone: String? = nil
+        var totp: String? = nil
+        var type: APIType? = nil
+    }
+
     struct PostInviteBody: Codable {
         var data: String? = nil
         var email: String
@@ -302,6 +361,8 @@ enum SupabaseAuthRESTAPI {
         }
     }
 
+    struct PostMagiclinkResponse: Codable {}
+
     struct PostOauthAuthorizationsAuthorizationIdConsentBody: Codable {
         enum Action: String, Codable {
             case approve
@@ -309,6 +370,14 @@ enum SupabaseAuthRESTAPI {
         }
 
         var action: Action
+    }
+
+    struct PostOauthAuthorizationsAuthorizationIdConsentResponse: Codable {
+        var redirectUrl: String? = nil
+
+        enum CodingKeys: String, CodingKey {
+            case redirectUrl = "redirect_url"
+        }
     }
 
     struct PostOauthClientsRegisterBody: Codable {
@@ -346,6 +415,22 @@ enum SupabaseAuthRESTAPI {
         }
     }
 
+    struct PostOauthTokenResponse: Codable {
+        var accessToken: String? = nil
+        var expiresIn: Int? = nil
+        var refreshToken: String? = nil
+        var scope: String? = nil
+        var tokenType: String? = nil
+
+        enum CodingKeys: String, CodingKey {
+            case accessToken = "access_token"
+            case expiresIn = "expires_in"
+            case refreshToken = "refresh_token"
+            case scope
+            case tokenType = "token_type"
+        }
+    }
+
     struct PostOtpBody: Codable {
         enum Channel: String, Codable {
             case sms
@@ -378,6 +463,16 @@ enum SupabaseAuthRESTAPI {
         }
     }
 
+    struct PostOtpResponse: Codable {
+        var messageId: String? = nil
+
+        enum CodingKeys: String, CodingKey {
+            case messageId = "message_id"
+        }
+    }
+
+    struct PostReauthenticateResponse: Codable {}
+
     struct PostRecoverBody: Codable {
         enum CodeChallengeMethod: String, Codable {
             case plain
@@ -397,6 +492,8 @@ enum SupabaseAuthRESTAPI {
         }
     }
 
+    struct PostRecoverResponse: Codable {}
+
     struct PostResendBody: Codable {
         enum APIType: String, Codable {
             case signup
@@ -415,6 +512,14 @@ enum SupabaseAuthRESTAPI {
             case gotrueMetaSecurity = "gotrue_meta_security"
             case phone
             case type
+        }
+    }
+
+    struct PostResendResponse: Codable {
+        var messageId: String? = nil
+
+        enum CodingKeys: String, CodingKey {
+            case messageId = "message_id"
         }
     }
 
@@ -473,6 +578,10 @@ enum SupabaseAuthRESTAPI {
             case redirectTo = "redirect_to"
             case skipHttpRedirect = "skip_http_redirect"
         }
+    }
+
+    struct PostSsoResponse: Codable {
+        var url: String? = nil
     }
 
     struct PostTokenBody: Codable {
@@ -1034,6 +1143,216 @@ enum SupabaseAuthRESTAPI {
 
         static func userAuth(token: String) -> some RequestBuildable {
             Authorization.bearer(token)
+        }
+    }
+
+    // MARK: - Client
+
+    /// The backend as one set of typed closures — swap any field to stub.
+    struct Client {
+        var getAuthorize: (_ provider: String, _ scopes: String, _ inviteToken: String?, _ redirectTo: String?, _ codeChallengeMethod: Operation.CodeChallengeMethod?) async throws -> Void
+        var getCallback: () async throws -> Void
+        var postCallback: () async throws -> Void
+        var postFactors: (_ body: PostFactorsBody) async throws -> PostFactorsResponse
+        var deleteFactorsFactorId: (_ factorId: String) async throws -> DeleteFactorsFactorIdResponse
+        var postFactorsFactorIdChallenge: (_ factorId: String, _ body: PostFactorsFactorIdChallengeBody) async throws -> String
+        var postFactorsFactorIdVerify: (_ factorId: String, _ body: PostFactorsFactorIdVerifyBody) async throws -> AccessTokenResponseSchema
+        var getHealth: () async throws -> GetHealthResponse
+        var postInvite: (_ body: PostInviteBody) async throws -> UserSchema
+        var postLogout: (_ scope: Operation.Scope?) async throws -> Void
+        var postMagiclink: (_ body: PostMagiclinkBody) async throws -> PostMagiclinkResponse
+        var getOauthAuthorizationsAuthorizationId: (_ authorizationId: String) async throws -> GetOauthAuthorizationsAuthorizationIdResponse
+        var postOauthAuthorizationsAuthorizationIdConsent: (_ authorizationId: String, _ body: PostOauthAuthorizationsAuthorizationIdConsentBody) async throws -> PostOauthAuthorizationsAuthorizationIdConsentResponse
+        var getOauthAuthorize: (_ responseType: Operation.ResponseType, _ clientId: String, _ redirectUri: String, _ scope: String?, _ state: String?, _ codeChallenge: String, _ codeChallengeMethod: String) async throws -> Void
+        var postOauthClientsRegister: (_ body: PostOauthClientsRegisterBody) async throws -> OAuthClientSchema
+        var postOauthToken: () async throws -> PostOauthTokenResponse
+        var postOtp: (_ body: PostOtpBody) async throws -> PostOtpResponse
+        var postReauthenticate: () async throws -> PostReauthenticateResponse
+        var postRecover: (_ body: PostRecoverBody) async throws -> PostRecoverResponse
+        var postResend: (_ body: PostResendBody) async throws -> PostResendResponse
+        var postSamlAcs: (_ relayState: String?, _ sAMLArt: String?, _ sAMLResponse: String?) async throws -> Void
+        var getSamlMetadata: (_ download: Bool?) async throws -> Void
+        var getSettings: () async throws -> GetSettingsResponse
+        var postSignup: (_ body: PostSignupBody) async throws -> String
+        var postSso: (_ body: PostSsoBody) async throws -> PostSsoResponse
+        var postToken: (_ grantType: Operation.GrantType, _ body: PostTokenBody) async throws -> AccessTokenResponseSchema
+        var getUser: () async throws -> UserSchema
+        var putUser: (_ body: PutUserBody) async throws -> UserSchema
+        var getUserIdentitiesAuthorize: (_ provider: String, _ scopes: String, _ redirectTo: String?, _ codeChallengeMethod: Operation.CodeChallengeMethod?) async throws -> Void
+        var deleteUserIdentitiesIdentityId: (_ identityId: String) async throws -> DeleteUserIdentitiesIdentityIdResponse
+        var getUserOauthGrants: () async throws -> [String]
+        var deleteUserOauthGrants: (_ clientId: String) async throws -> Void
+        var getVerify: (_ token: String, _ type: Operation.APIType, _ redirectTo: String?) async throws -> Void
+        var postVerify: (_ body: PostVerifyBody) async throws -> AccessTokenResponseSchema
+
+        /// request → transport → evaluate → decode, wired per operation.
+        static func live(
+            request: @escaping (Operation) throws -> URLRequest,
+            transport: @escaping (URLRequest) async throws -> (Data, URLResponse) = { try await URLSession.shared.data(for: $0) },
+            decoder: @escaping (Operation) -> JSONDecoder = { _ in JSONDecoder() }
+        ) -> Client {
+            Client(
+                getAuthorize: { provider, scopes, inviteToken, redirectTo, codeChallengeMethod in
+                    let operation = Operation.getAuthorize(provider: provider, scopes: scopes, inviteToken: inviteToken, redirectTo: redirectTo, codeChallengeMethod: codeChallengeMethod)
+                    _ = try Responses.evaluate(operation, try await transport(request(operation)))
+                },
+                getCallback: {
+                    let operation = Operation.getCallback
+                    _ = try Responses.evaluate(operation, try await transport(request(operation)))
+                },
+                postCallback: {
+                    let operation = Operation.postCallback
+                    _ = try Responses.evaluate(operation, try await transport(request(operation)))
+                },
+                postFactors: { body in
+                    let operation = Operation.postFactors(body: body)
+                    let data = try Responses.evaluate(operation, try await transport(request(operation)))
+                    return try decoder(operation).decode(PostFactorsResponse.self, from: data)
+                },
+                deleteFactorsFactorId: { factorId in
+                    let operation = Operation.deleteFactorsFactorId(factorId: factorId)
+                    let data = try Responses.evaluate(operation, try await transport(request(operation)))
+                    return try decoder(operation).decode(DeleteFactorsFactorIdResponse.self, from: data)
+                },
+                postFactorsFactorIdChallenge: { factorId, body in
+                    let operation = Operation.postFactorsFactorIdChallenge(factorId: factorId, body: body)
+                    let data = try Responses.evaluate(operation, try await transport(request(operation)))
+                    return try decoder(operation).decode(String.self, from: data)
+                },
+                postFactorsFactorIdVerify: { factorId, body in
+                    let operation = Operation.postFactorsFactorIdVerify(factorId: factorId, body: body)
+                    let data = try Responses.evaluate(operation, try await transport(request(operation)))
+                    return try decoder(operation).decode(AccessTokenResponseSchema.self, from: data)
+                },
+                getHealth: {
+                    let operation = Operation.getHealth
+                    let data = try Responses.evaluate(operation, try await transport(request(operation)))
+                    return try decoder(operation).decode(GetHealthResponse.self, from: data)
+                },
+                postInvite: { body in
+                    let operation = Operation.postInvite(body: body)
+                    let data = try Responses.evaluate(operation, try await transport(request(operation)))
+                    return try decoder(operation).decode(UserSchema.self, from: data)
+                },
+                postLogout: { scope in
+                    let operation = Operation.postLogout(scope: scope)
+                    _ = try Responses.evaluate(operation, try await transport(request(operation)))
+                },
+                postMagiclink: { body in
+                    let operation = Operation.postMagiclink(body: body)
+                    let data = try Responses.evaluate(operation, try await transport(request(operation)))
+                    return try decoder(operation).decode(PostMagiclinkResponse.self, from: data)
+                },
+                getOauthAuthorizationsAuthorizationId: { authorizationId in
+                    let operation = Operation.getOauthAuthorizationsAuthorizationId(authorizationId: authorizationId)
+                    let data = try Responses.evaluate(operation, try await transport(request(operation)))
+                    return try decoder(operation).decode(GetOauthAuthorizationsAuthorizationIdResponse.self, from: data)
+                },
+                postOauthAuthorizationsAuthorizationIdConsent: { authorizationId, body in
+                    let operation = Operation.postOauthAuthorizationsAuthorizationIdConsent(authorizationId: authorizationId, body: body)
+                    let data = try Responses.evaluate(operation, try await transport(request(operation)))
+                    return try decoder(operation).decode(PostOauthAuthorizationsAuthorizationIdConsentResponse.self, from: data)
+                },
+                getOauthAuthorize: { responseType, clientId, redirectUri, scope, state, codeChallenge, codeChallengeMethod in
+                    let operation = Operation.getOauthAuthorize(responseType: responseType, clientId: clientId, redirectUri: redirectUri, scope: scope, state: state, codeChallenge: codeChallenge, codeChallengeMethod: codeChallengeMethod)
+                    _ = try Responses.evaluate(operation, try await transport(request(operation)))
+                },
+                postOauthClientsRegister: { body in
+                    let operation = Operation.postOauthClientsRegister(body: body)
+                    let data = try Responses.evaluate(operation, try await transport(request(operation)))
+                    return try decoder(operation).decode(OAuthClientSchema.self, from: data)
+                },
+                postOauthToken: {
+                    let operation = Operation.postOauthToken
+                    let data = try Responses.evaluate(operation, try await transport(request(operation)))
+                    return try decoder(operation).decode(PostOauthTokenResponse.self, from: data)
+                },
+                postOtp: { body in
+                    let operation = Operation.postOtp(body: body)
+                    let data = try Responses.evaluate(operation, try await transport(request(operation)))
+                    return try decoder(operation).decode(PostOtpResponse.self, from: data)
+                },
+                postReauthenticate: {
+                    let operation = Operation.postReauthenticate
+                    let data = try Responses.evaluate(operation, try await transport(request(operation)))
+                    return try decoder(operation).decode(PostReauthenticateResponse.self, from: data)
+                },
+                postRecover: { body in
+                    let operation = Operation.postRecover(body: body)
+                    let data = try Responses.evaluate(operation, try await transport(request(operation)))
+                    return try decoder(operation).decode(PostRecoverResponse.self, from: data)
+                },
+                postResend: { body in
+                    let operation = Operation.postResend(body: body)
+                    let data = try Responses.evaluate(operation, try await transport(request(operation)))
+                    return try decoder(operation).decode(PostResendResponse.self, from: data)
+                },
+                postSamlAcs: { relayState, sAMLArt, sAMLResponse in
+                    let operation = Operation.postSamlAcs(relayState: relayState, sAMLArt: sAMLArt, sAMLResponse: sAMLResponse)
+                    _ = try Responses.evaluate(operation, try await transport(request(operation)))
+                },
+                getSamlMetadata: { download in
+                    let operation = Operation.getSamlMetadata(download: download)
+                    _ = try Responses.evaluate(operation, try await transport(request(operation)))
+                },
+                getSettings: {
+                    let operation = Operation.getSettings
+                    let data = try Responses.evaluate(operation, try await transport(request(operation)))
+                    return try decoder(operation).decode(GetSettingsResponse.self, from: data)
+                },
+                postSignup: { body in
+                    let operation = Operation.postSignup(body: body)
+                    let data = try Responses.evaluate(operation, try await transport(request(operation)))
+                    return try decoder(operation).decode(String.self, from: data)
+                },
+                postSso: { body in
+                    let operation = Operation.postSso(body: body)
+                    let data = try Responses.evaluate(operation, try await transport(request(operation)))
+                    return try decoder(operation).decode(PostSsoResponse.self, from: data)
+                },
+                postToken: { grantType, body in
+                    let operation = Operation.postToken(grantType: grantType, body: body)
+                    let data = try Responses.evaluate(operation, try await transport(request(operation)))
+                    return try decoder(operation).decode(AccessTokenResponseSchema.self, from: data)
+                },
+                getUser: {
+                    let operation = Operation.getUser
+                    let data = try Responses.evaluate(operation, try await transport(request(operation)))
+                    return try decoder(operation).decode(UserSchema.self, from: data)
+                },
+                putUser: { body in
+                    let operation = Operation.putUser(body: body)
+                    let data = try Responses.evaluate(operation, try await transport(request(operation)))
+                    return try decoder(operation).decode(UserSchema.self, from: data)
+                },
+                getUserIdentitiesAuthorize: { provider, scopes, redirectTo, codeChallengeMethod in
+                    let operation = Operation.getUserIdentitiesAuthorize(provider: provider, scopes: scopes, redirectTo: redirectTo, codeChallengeMethod: codeChallengeMethod)
+                    _ = try Responses.evaluate(operation, try await transport(request(operation)))
+                },
+                deleteUserIdentitiesIdentityId: { identityId in
+                    let operation = Operation.deleteUserIdentitiesIdentityId(identityId: identityId)
+                    let data = try Responses.evaluate(operation, try await transport(request(operation)))
+                    return try decoder(operation).decode(DeleteUserIdentitiesIdentityIdResponse.self, from: data)
+                },
+                getUserOauthGrants: {
+                    let operation = Operation.getUserOauthGrants
+                    let data = try Responses.evaluate(operation, try await transport(request(operation)))
+                    return try decoder(operation).decode([String].self, from: data)
+                },
+                deleteUserOauthGrants: { clientId in
+                    let operation = Operation.deleteUserOauthGrants(clientId: clientId)
+                    _ = try Responses.evaluate(operation, try await transport(request(operation)))
+                },
+                getVerify: { token, type, redirectTo in
+                    let operation = Operation.getVerify(token: token, type: type, redirectTo: redirectTo)
+                    _ = try Responses.evaluate(operation, try await transport(request(operation)))
+                },
+                postVerify: { body in
+                    let operation = Operation.postVerify(body: body)
+                    let data = try Responses.evaluate(operation, try await transport(request(operation)))
+                    return try decoder(operation).decode(AccessTokenResponseSchema.self, from: data)
+                }
+            )
         }
     }
 

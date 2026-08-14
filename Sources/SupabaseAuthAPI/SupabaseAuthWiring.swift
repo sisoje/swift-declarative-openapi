@@ -70,4 +70,9 @@ struct SupabaseAuthClient {
         let (data, response) = try await transport(request(operation))
         return try SupabaseAuthRESTAPI.Responses.evaluate(operation, (data, response))
     }
+    /// Fully typed surface over this wiring: SupabaseAuthRESTAPI.Client field per
+    /// operation, defaults to the real transport.
+    var api: SupabaseAuthRESTAPI.Client {
+        .live(request: request)
+    }
 }

@@ -226,5 +226,67 @@ enum RedoclyMuseumAPI {
         }
     }
 
+    // MARK: - Client
+
+    /// The backend as one set of typed closures — swap any field to stub.
+    struct Client {
+        var getMuseumHours: (_ startDate: String?, _ page: Int?, _ limit: Int?) async throws -> MuseumHours
+        var listSpecialEvents: (_ startDate: String?, _ endDate: String?, _ page: Int?, _ limit: Int?) async throws -> SpecialEventCollection
+        var createSpecialEvent: (_ body: SpecialEvent) async throws -> SpecialEvent
+        var getSpecialEvent: (_ eventId: String) async throws -> SpecialEvent
+        var updateSpecialEvent: (_ eventId: String, _ body: SpecialEventFields) async throws -> SpecialEvent
+        var deleteSpecialEvent: (_ eventId: String) async throws -> Void
+        var buyMuseumTickets: (_ body: BuyMuseumTickets) async throws -> MuseumTicketsConfirmation
+        var getTicketCode: (_ ticketId: String) async throws -> Data
+
+        /// request → transport → evaluate → decode, wired per operation.
+        static func live(
+            request: @escaping (Operation) throws -> URLRequest,
+            transport: @escaping (URLRequest) async throws -> (Data, URLResponse) = { try await URLSession.shared.data(for: $0) },
+            decoder: @escaping (Operation) -> JSONDecoder = { _ in JSONDecoder() }
+        ) -> Client {
+            Client(
+                getMuseumHours: { startDate, page, limit in
+                    let operation = Operation.getMuseumHours(startDate: startDate, page: page, limit: limit)
+                    let data = try Responses.evaluate(operation, try await transport(request(operation)))
+                    return try decoder(operation).decode(MuseumHours.self, from: data)
+                },
+                listSpecialEvents: { startDate, endDate, page, limit in
+                    let operation = Operation.listSpecialEvents(startDate: startDate, endDate: endDate, page: page, limit: limit)
+                    let data = try Responses.evaluate(operation, try await transport(request(operation)))
+                    return try decoder(operation).decode(SpecialEventCollection.self, from: data)
+                },
+                createSpecialEvent: { body in
+                    let operation = Operation.createSpecialEvent(body: body)
+                    let data = try Responses.evaluate(operation, try await transport(request(operation)))
+                    return try decoder(operation).decode(SpecialEvent.self, from: data)
+                },
+                getSpecialEvent: { eventId in
+                    let operation = Operation.getSpecialEvent(eventId: eventId)
+                    let data = try Responses.evaluate(operation, try await transport(request(operation)))
+                    return try decoder(operation).decode(SpecialEvent.self, from: data)
+                },
+                updateSpecialEvent: { eventId, body in
+                    let operation = Operation.updateSpecialEvent(eventId: eventId, body: body)
+                    let data = try Responses.evaluate(operation, try await transport(request(operation)))
+                    return try decoder(operation).decode(SpecialEvent.self, from: data)
+                },
+                deleteSpecialEvent: { eventId in
+                    let operation = Operation.deleteSpecialEvent(eventId: eventId)
+                    _ = try Responses.evaluate(operation, try await transport(request(operation)))
+                },
+                buyMuseumTickets: { body in
+                    let operation = Operation.buyMuseumTickets(body: body)
+                    let data = try Responses.evaluate(operation, try await transport(request(operation)))
+                    return try decoder(operation).decode(MuseumTicketsConfirmation.self, from: data)
+                },
+                getTicketCode: { ticketId in
+                    let operation = Operation.getTicketCode(ticketId: ticketId)
+                    return try Responses.evaluate(operation, try await transport(request(operation)))
+                }
+            )
+        }
+    }
+
     static let defaultBaseURL = URL(string: "https://redocly.com/_mock/docs/openapi/museum-api")
 }

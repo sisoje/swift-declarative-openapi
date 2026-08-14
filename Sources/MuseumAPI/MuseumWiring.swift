@@ -39,4 +39,9 @@ struct MuseumClient {
         let (data, response) = try await transport(request(operation))
         return try RedoclyMuseumAPI.Responses.evaluate(operation, (data, response))
     }
+    /// Fully typed surface over this wiring: RedoclyMuseumAPI.Client field per
+    /// operation, defaults to the real transport.
+    var api: RedoclyMuseumAPI.Client {
+        .live(request: request)
+    }
 }

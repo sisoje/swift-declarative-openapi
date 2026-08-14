@@ -127,6 +127,10 @@ struct Operation {
     /// the operation's expected (non-error) responses. Empty when the spec
     /// declares none (evaluation then falls back to the 2xx range).
     var successStatuses: [Int]
+    /// Swift type of the lowest declared success response: a model name for
+    /// application/json, "Data" for other content (or undeclared success),
+    /// "Void" for no content.
+    var successType: String
 }
 
 // MARK: - Walking the document
@@ -352,10 +356,36 @@ extension SpecGenerator {
 
         // Declared statuses below 400 are the operation's expected responses
         // ("default" and error statuses are not success shapes).
-        let successStatuses = (anyDict(operation["responses"]) ?? [:]).keys
+        let responses = anyDict(operation["responses"]) ?? [:]
+        let successStatuses = responses.keys
             .compactMap { Int($0) }
             .filter { $0 < 400 }
             .sorted()
+
+        var successType = "Void"
+        if let first = successStatuses.first, let response = anyDict(responses[String(first)]) {
+            if let content = anyDict(response["content"]) {
+                if let json = anyDict(content["application/json"]), let schema = anyDict(json["schema"]) {
+                    if let ref = schema["$ref"] as? String {
+                        successType = refTypeName(ref)
+                    } else if schema["properties"] != nil || schema["allOf"] != nil || schema["type"] as? String == "object" {
+                        let name = pascalIdentifier(caseName) + "Response"
+                        inlineBodyModels.append(Model(
+                            name: name,
+                            kind: .structModel(properties: collectProperties(of: schema, in: componentSchemas))
+                        ))
+                        successType = name
+                    } else {
+                        successType = swiftType(for: schema)
+                    }
+                } else if !content.isEmpty {
+                    successType = "Data"
+                }
+            }
+        } else if successStatuses.isEmpty {
+            // Undeclared success shape: hand back the raw bytes, honestly.
+            successType = "Data"
+        }
 
         return Operation(
             caseName: caseName,
@@ -364,7 +394,8 @@ extension SpecGenerator {
             parameters: parameters,
             bodyType: bodyType,
             securitySchemes: schemes,
-            successStatuses: successStatuses
+            successStatuses: successStatuses,
+            successType: successType
         )
     }
 }
@@ -403,6 +434,7 @@ extension SpecGenerator {
 
         output += renderResponses(operations)
         output += renderSecurity(operations, definitions: securitySchemeDefinitions)
+        output += renderClient(operations)
 
         if let baseURL {
             output += "\n"
@@ -582,6 +614,72 @@ extension SpecGenerator {
         output += "                throw ResponseError(operation: operation, data: output.data, response: http)\n"
         output += "            }\n"
         output += "            return output.data\n"
+        output += "        }\n"
+        output += "    }\n"
+        return output
+    }
+
+    /// Parameters a client closure takes for one operation: path + query
+    /// params, then the body — same order as the case's associated values.
+    func clientParameters(_ operation: Operation) -> [(name: String, type: String)] {
+        var parameters = operation.parameters
+            .filter { $0.location == "path" || $0.location == "query" }
+            .map { parameter in
+                // Parameter enums are nested in Operation; Client is a sibling.
+                let base = parameter.enumCases != nil ? "Operation.\(parameter.type)" : parameter.type
+                return (name: parameter.swiftName, type: base + (parameter.isOptional ? "?" : ""))
+            }
+        if let bodyType = operation.bodyType {
+            parameters.append((name: "body", type: bodyType))
+        }
+        return parameters
+    }
+
+    /// The `Client` section: the backend as one set of typed closures —
+    /// output types from `responses:`, one field per operation, any field
+    /// swappable for a stub. `live` wires request → transport → evaluate →
+    /// decode; transport and decoder are injectable closures.
+    func renderClient(_ operations: [Operation]) -> String {
+        guard !operations.isEmpty else { return "" }
+
+        var output = "\n    // MARK: - Client\n\n"
+        output += "    /// The backend as one set of typed closures — swap any field to stub.\n"
+        output += "    struct Client {\n"
+        for operation in operations {
+            let parameters = clientParameters(operation)
+            let signature = "(" + parameters.map { "_ \($0.name): \($0.type)" }.joined(separator: ", ") + ")"
+            output += "        var \(operation.caseName): \(signature) async throws -> \(operation.successType)\n"
+        }
+        output += "\n"
+        output += "        /// request → transport → evaluate → decode, wired per operation.\n"
+        output += "        static func live(\n"
+        output += "            request: @escaping (Operation) throws -> URLRequest,\n"
+        output += "            transport: @escaping (URLRequest) async throws -> (Data, URLResponse) = { try await URLSession.shared.data(for: $0) },\n"
+        output += "            decoder: @escaping (Operation) -> JSONDecoder = { _ in JSONDecoder() }\n"
+        output += "        ) -> Client {\n"
+        output += "            Client(\n"
+        for (index, operation) in operations.enumerated() {
+            let parameters = clientParameters(operation)
+            let bindings = parameters.map(\.name).joined(separator: ", ")
+            let header = parameters.isEmpty ? "{" : "{ \(bindings) in"
+            let construct = parameters.isEmpty
+                ? "Operation.\(operation.caseName)"
+                : "Operation.\(operation.caseName)(" + parameters.map { "\($0.name): \($0.name)" }.joined(separator: ", ") + ")"
+            let comma = index == operations.count - 1 ? "" : ","
+            output += "                \(operation.caseName): \(header)\n"
+            output += "                    let operation = \(construct)\n"
+            switch operation.successType {
+            case "Void":
+                output += "                    _ = try Responses.evaluate(operation, try await transport(request(operation)))\n"
+            case "Data":
+                output += "                    return try Responses.evaluate(operation, try await transport(request(operation)))\n"
+            default:
+                output += "                    let data = try Responses.evaluate(operation, try await transport(request(operation)))\n"
+                output += "                    return try decoder(operation).decode(\(operation.successType).self, from: data)\n"
+            }
+            output += "                }\(comma)\n"
+        }
+        output += "            )\n"
         output += "        }\n"
         output += "    }\n"
         return output

@@ -93,5 +93,38 @@ enum SwaggerPetstore {
         }
     }
 
+    // MARK: - Client
+
+    /// The backend as one set of typed closures — swap any field to stub.
+    struct Client {
+        var listPets: (_ limit: Int?) async throws -> Pets
+        var createPets: (_ body: Pet) async throws -> Void
+        var showPetById: (_ petId: String) async throws -> Pet
+
+        /// request → transport → evaluate → decode, wired per operation.
+        static func live(
+            request: @escaping (Operation) throws -> URLRequest,
+            transport: @escaping (URLRequest) async throws -> (Data, URLResponse) = { try await URLSession.shared.data(for: $0) },
+            decoder: @escaping (Operation) -> JSONDecoder = { _ in JSONDecoder() }
+        ) -> Client {
+            Client(
+                listPets: { limit in
+                    let operation = Operation.listPets(limit: limit)
+                    let data = try Responses.evaluate(operation, try await transport(request(operation)))
+                    return try decoder(operation).decode(Pets.self, from: data)
+                },
+                createPets: { body in
+                    let operation = Operation.createPets(body: body)
+                    _ = try Responses.evaluate(operation, try await transport(request(operation)))
+                },
+                showPetById: { petId in
+                    let operation = Operation.showPetById(petId: petId)
+                    let data = try Responses.evaluate(operation, try await transport(request(operation)))
+                    return try decoder(operation).decode(Pet.self, from: data)
+                }
+            )
+        }
+    }
+
     static let defaultBaseURL = URL(string: "http://petstore.swagger.io/v1")
 }

@@ -21,4 +21,9 @@ struct PetstoreClient {
         let (data, response) = try await transport(request(operation))
         return try SwaggerPetstore.Responses.evaluate(operation, (data, response))
     }
+    /// Fully typed surface over this wiring: SwaggerPetstore.Client field per
+    /// operation, defaults to the real transport.
+    var api: SwaggerPetstore.Client {
+        .live(request: request)
+    }
 }

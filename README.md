@@ -73,6 +73,18 @@ let request = try client.request(.showPetById(petId: "42"))
 
 Each operation is itself a `RequestBuildable` block, so the bare chain works too: `try SwaggerPetstore.Operation.showPetById(petId: "42").base(url).request()`.
 
+The top of the ladder is the generated **Client** — the backend as one struct of typed closures, output types read from `responses:` (`204` → `Void`, `image/png` → `Data`, json `$ref` → the model). Field names carry the operation; wrong pairings are unrepresentable; any field swaps for a stub:
+
+```swift
+let api = SwaggerPetstore.Client.live(request: PetstoreClient(baseURL: url).request)
+let pet = try await api.showPetById("42")            // Pet — no type stated, none stateable wrongly
+
+var mock = api
+mock.showPetById = { _ in .init(id: 1, name: "Stub") }   // per-field mocking, no protocols
+```
+
+`live` wires request → transport → evaluate → decode; `transport` and `decoder` are injectable closures (`(URLRequest) async throws -> (Data, URLResponse)`, `(Operation) -> JSONDecoder`) — the spec decides shapes, the closures are the escape hatches.
+
 Every spec also gets a **Responses section** — the modular third layer. The generated `evaluate` gates a transport result on the operation's spec-declared statuses (`deleteSpecialEvent` expects 204, `createPets` 201, …) and throws one lossless error; the layer that cares decodes the spec's typed error model from `error.data`:
 
 ```swift
