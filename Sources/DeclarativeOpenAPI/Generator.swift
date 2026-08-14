@@ -424,7 +424,7 @@ extension SpecGenerator {
         if !excludedSchemes.isEmpty {
             output += "// Client-only: operations requiring \(excludedSchemes.sorted().joined(separator: ", ")) are not generated.\n"
         }
-        output += "\nimport DeclarativeRequests\nimport Foundation\n\n"
+        output += "\nimport DeclarativeOpenAPIRuntime\nimport DeclarativeRequests\nimport Foundation\n\n"
 
         // "Whole" would be a lie when operations are excluded — say which slice this is.
         output += excludedSchemes.isEmpty
@@ -563,17 +563,8 @@ extension SpecGenerator {
         guard !operations.isEmpty else { return "" }
 
         var output = "\n    // MARK: - Responses (responses)\n\n"
-        output += "    /// One error, nothing lost: payload and the raw response —\n"
-        output += "    /// decode the spec's error model from `data` in the layer that needs it.\n"
-        output += "    struct ResponseError: Error {\n"
-        output += "        let operation: Operation\n"
-        output += "        let data: Data\n"
-        output += "        let response: URLResponse\n\n"
-        output += "        /// Projection, not storage: nil when the transport didn't speak HTTP.\n"
-        output += "        var status: Int? {\n"
-        output += "            (response as? HTTPURLResponse)?.statusCode\n"
-        output += "        }\n"
-        output += "    }\n\n"
+        output += "    /// The universal lossless error, bound to this backend's Operation.\n"
+        output += "    typealias ResponseError = DeclarativeOpenAPIRuntime.ResponseError<Operation>\n\n"
         output += "    enum Responses {\n"
         output += "        /// Statuses the spec declares below 400 for the operation.\n"
         output += "        static func successStatuses(_ operation: Operation) -> Set<Int> {\n"
@@ -724,62 +715,15 @@ extension SpecGenerator {
             output += "        var \(operation.caseName): \(signature) async throws -> \(operation.successType)\n"
         }
         output += "\n"
-        output += "        /// Wires the pipeline per operation: request → transport → evaluate\n"
-        output += "        /// → decode. Real or mock is decided entirely by the closures passed —\n"
-        output += "        /// this function has no opinion and no defaults. The mechanics live\n"
-        output += "        /// once in the pack-generic helpers; the table below is pure facts.\n"
+        output += "        /// Wires the typed surface over the (Operation) → Data seam. Real,\n"
+        output += "        /// mocked, or middleware-wrapped is decided entirely by the closures\n"
+        output += "        /// passed — no opinion, no defaults. The mechanics live once in the\n"
+        output += "        /// runtime's ClientBuilder; the table below is pure facts.\n"
         output += "        static func wired(\n"
-        output += "            request: @escaping (Operation) throws -> URLRequest,\n"
-        output += "            transport: @escaping (URLRequest) async throws -> (Data, URLResponse),\n"
+        output += "            execute: @escaping (Operation) async throws -> Data,\n"
         output += "            decoder: @escaping (Operation) -> JSONDecoder\n"
         output += "        ) -> Client {\n"
-        // Emit only the helpers this backend's operations actually use.
-        let usesText = operations.contains(where: \.successIsText)
-        let usesVoid = operations.contains { !$0.successIsText && $0.successType == "Void" }
-        let usesData = operations.contains { !$0.successIsText && $0.successType == "Data" }
-        let usesJSON = operations.contains { !$0.successIsText && $0.successType != "Void" && $0.successType != "Data" }
-        if usesData {
-            output += "            func raw<each Input>(\n"
-            output += "                _ makeCase: @escaping (repeat each Input) -> Operation\n"
-            output += "            ) -> (repeat each Input) async throws -> Data {\n"
-            output += "                { (input: repeat each Input) in\n"
-            output += "                    let operation = makeCase(repeat each input)\n"
-            output += "                    return try Responses.evaluate(operation, try await transport(request(operation)))\n"
-            output += "                }\n"
-            output += "            }\n"
-        }
-        if usesJSON {
-            output += "            func endpoint<each Input, Output: Decodable>(\n"
-            output += "                _ makeCase: @escaping (repeat each Input) -> Operation,\n"
-            output += "                _ output: Output.Type\n"
-            output += "            ) -> (repeat each Input) async throws -> Output {\n"
-            output += "                { (input: repeat each Input) in\n"
-            output += "                    let operation = makeCase(repeat each input)\n"
-            output += "                    let data = try Responses.evaluate(operation, try await transport(request(operation)))\n"
-            output += "                    return try decoder(operation).decode(Output.self, from: data)\n"
-            output += "                }\n"
-            output += "            }\n"
-        }
-        if usesText {
-            output += "            func text<each Input>(\n"
-            output += "                _ makeCase: @escaping (repeat each Input) -> Operation\n"
-            output += "            ) -> (repeat each Input) async throws -> String {\n"
-            output += "                { (input: repeat each Input) in\n"
-            output += "                    let operation = makeCase(repeat each input)\n"
-            output += "                    return try String(decoding: Responses.evaluate(operation, try await transport(request(operation))), as: UTF8.self)\n"
-            output += "                }\n"
-            output += "            }\n"
-        }
-        if usesVoid {
-            output += "            func fire<each Input>(\n"
-            output += "                _ makeCase: @escaping (repeat each Input) -> Operation\n"
-            output += "            ) -> (repeat each Input) async throws -> Void {\n"
-            output += "                { (input: repeat each Input) in\n"
-            output += "                    let operation = makeCase(repeat each input)\n"
-            output += "                    _ = try Responses.evaluate(operation, try await transport(request(operation)))\n"
-            output += "                }\n"
-            output += "            }\n"
-        }
+        output += "            let build = ClientBuilder(execute: execute, decoder: decoder)\n"
         output += "            return Client(\n"
         for (index, operation) in operations.enumerated() {
             let parameters = clientParameters(operation)
@@ -788,18 +732,25 @@ extension SpecGenerator {
                 ? "{ Operation.\(operation.caseName) }"
                 : "Operation.\(operation.caseName)"
             let entry = if operation.successIsText {
-                "text(\(constructor))"
+                "build.text(\(constructor))"
             } else {
                 switch operation.successType {
-                case "Void": "fire(\(constructor))"
-                case "Data": "raw(\(constructor))"
-                default: "endpoint(\(constructor), \(operation.successType).self)"
+                case "Void": "build.fire(\(constructor))"
+                case "Data": "build.raw(\(constructor))"
+                default: "build.endpoint(\(constructor), \(operation.successType).self)"
                 }
             }
             let comma = index == operations.count - 1 ? "" : ","
             output += "                \(operation.caseName): \(entry)\(comma)\n"
         }
         output += "            )\n"
+        output += "        }\n\n"
+        output += "        /// The (Operation) → Data seam, bound to this backend's evaluate.\n"
+        output += "        static func execution(\n"
+        output += "            request: @escaping (Operation) throws -> URLRequest,\n"
+        output += "            transport: @escaping (URLRequest) async throws -> (Data, URLResponse)\n"
+        output += "        ) -> (Operation) async throws -> Data {\n"
+        output += "            Execution(request: request, transport: transport, evaluate: Responses.evaluate).execute\n"
         output += "        }\n"
         output += "    }\n"
         return output

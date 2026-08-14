@@ -167,7 +167,7 @@ Settled over the project's evolution, enforced across every generated file:
 2. **Sections mirror the document; absence mirrors absence.** No `security:` → no Security section, no `authorized` builder. No text responses → no `text` helper. What the spec doesn't say, the output doesn't contain.
 3. **No parameter defaults on the seams.** `wired` and `authorized` demand every dependency explicitly; standard bindings are named options the caller passes, never silent choices. Nil is never the spelling for "not needed" — absence of the block is.
 4. **One lossless error per boundary; store each fact once.** `ResponseError` carries operation + data + raw response; `status` is a projection, not a field. The next layer decodes the spec's error model from `data` only when it wants it.
-5. **Facts as tables, mechanics once.** `wired` is a one-line-per-operation fact table over pack-generic helpers; `schemes(_:)` is a grouped switch. Cleverness is quarantined in mechanics; generated facts stay boring.
+5. **Facts as tables, mechanics once.** `wired` is a one-line-per-operation fact table over the runtime's pack-generic `ClientBuilder`; `schemes(_:)` is a grouped switch. Cleverness is quarantined in mechanics; generated facts stay boring.
 6. **The operation→type problem is solved at generation time**, in a table — never with phantoms, `Any`, or mirrored payload enums. Closures take the case's payload and construct the case inside, making wrong pairings unrepresentable.
 7. **Every ladder rung stays public.** The typed Client is sugar, not a gate: `request`/`authorized`/`evaluate`/raw `Data` all remain directly usable — decode-later end to end.
 8. **Base comes last.** Spec composes (`authorized` returns a block), wiring situates (`.base(url)`), caller materializes (`.request()`).
@@ -176,6 +176,7 @@ Settled over the project's evolution, enforced across every generated file:
 ## Package layout
 
 - `Sources/DeclarativeOpenAPI` — all parsing (via [Yams](https://github.com/jpsim/Yams)) and codegen; `SpecGenerator(enumNameOverride:).generate(yaml:) -> String`.
+- `Sources/DeclarativeOpenAPIRuntime` — the small shared runtime generated code imports: the universal `ResponseError<Operation>` (each namespace aliases it to its own `Operation`), `ClientBuilder<Operation>` (the pack-generic typed-closure mechanics `wired` tables are built over), and `RefreshingExecutor<Operation>` (401 → single-flight refresh → one retry), ready to slap onto any generated backend's `Client.execution` seam.
 - `Sources/DeclarativeOpenAPICLI` — the `swift-declarative-openapi` executable (plain `CommandLine.arguments`, no argument-parser dependency).
 - `Sources/PetstoreAPI`, `Sources/MuseumAPI`, and `Sources/SupabaseAuthAPI` — the **checked-in generated outputs** (plus the hand-written Supabase wiring), compiled against DeclarativeRequests on every `swift build`, so compilability of generated code is proven by the build itself.
 - `Specs/` — the canonical spec files.

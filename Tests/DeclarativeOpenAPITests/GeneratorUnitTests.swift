@@ -724,12 +724,12 @@ import Testing
     """
     let generated = try SpecGenerator().generate(yaml: yaml)
     #expect(generated.contains("var getReport: () async throws -> String"))
-    #expect(generated.contains("getReport: text({ Operation.getReport })"))
-    #expect(generated.contains("getName: endpoint({ Operation.getName }, String.self)"))
-    #expect(generated.contains("ping: fire({ Operation.ping })"))
+    #expect(generated.contains("getReport: build.text({ Operation.getReport })"))
+    #expect(generated.contains("getName: build.endpoint({ Operation.getName }, String.self)"))
+    #expect(generated.contains("ping: build.fire({ Operation.ping })"))
 }
 
-@Test func onlyUsedClientHelpersAreEmitted() throws {
+@Test func helpersLiveInRuntimeNotInGeneratedCode() throws {
     let yaml = """
     openapi: "3.0.0"
     info:
@@ -744,7 +744,8 @@ import Testing
               description: no content
     """
     let generated = try SpecGenerator().generate(yaml: yaml)
-    #expect(generated.contains("func fire<each Input>"))
+    #expect(generated.contains("let build = ClientBuilder(execute: execute, decoder: decoder)"))
+    #expect(!generated.contains("func fire<"))
     #expect(!generated.contains("func endpoint<"))
     #expect(!generated.contains("func raw<"))
     #expect(!generated.contains("func text<"))

@@ -32,6 +32,9 @@ struct MuseumClient {
     }
 
     var api: RedoclyMuseumAPI.Client {
-        .wired(request: request, transport: urlSessionTransport, decoder: plainDecoder)
+        .wired(
+            execute: RedoclyMuseumAPI.Client.execution(request: request, transport: urlSessionTransport),
+            decoder: plainDecoder
+        )
     }
 }

@@ -1,3 +1,4 @@
+import DeclarativeOpenAPIRuntime
 import DeclarativeRequests
 import Foundation
 @testable import SupabaseAuthAPI
@@ -9,6 +10,8 @@ private let client = SupabaseAuthClient(
     baseURL: projectBaseURL,
     apikey: .constant("anon-key"),
     accessToken: .constant("jwt-access-token"),
+    refreshToken: .constant("4nYUCw0wZR_DNOTSDbSGMQ"),
+    refreshTask: .constant(nil)
 )
 
 @Test func refreshSessionBuildsTokenRefreshRequest() throws {
@@ -33,7 +36,7 @@ private let client = SupabaseAuthClient(
 }
 
 @Test func userEndpointWithoutTokenFailsAtRequest() {
-    let loggedOut = SupabaseAuthClient(baseURL: projectBaseURL, apikey: .constant("anon-key"), accessToken: .constant(nil))
+    let loggedOut = SupabaseAuthClient(baseURL: projectBaseURL, apikey: .constant("anon-key"), accessToken: .constant(nil), refreshToken: .constant(nil), refreshTask: .constant(nil))
     #expect(throws: SupabaseAuthRESTAPI.MissingUserAuth.self) {
         try loggedOut.request(.getUser)
     }
@@ -42,13 +45,13 @@ private let client = SupabaseAuthClient(
 @Test func publicEndpointPassesWithNilTokenViaSecuritySection() throws {
     // One wire-once request(_:) serves every operation — the generated
     // Security gates decide which credentials are demanded.
-    let loggedOut = SupabaseAuthClient(baseURL: projectBaseURL, apikey: .constant("anon-key"), accessToken: .constant(nil))
+    let loggedOut = SupabaseAuthClient(baseURL: projectBaseURL, apikey: .constant("anon-key"), accessToken: .constant(nil), refreshToken: .constant(nil), refreshTask: .constant(nil))
     let request = try loggedOut.request(.postSignup(body: .init()))
     #expect(request.value(forHTTPHeaderField: "Authorization") == nil)
 }
 
 @Test func nilApikeyFailsAtRequest() {
-    let unconfigured = SupabaseAuthClient(baseURL: projectBaseURL, apikey: .constant(nil), accessToken: .constant(nil))
+    let unconfigured = SupabaseAuthClient(baseURL: projectBaseURL, apikey: .constant(nil), accessToken: .constant(nil), refreshToken: .constant(nil), refreshTask: .constant(nil))
     #expect(throws: SupabaseAuthRESTAPI.MissingAPIKeyAuth.self) {
         try unconfigured.request(.postSignup(body: .init()))
     }
@@ -115,15 +118,83 @@ private let client = SupabaseAuthClient(
 
 @Test func typedClientDecodesTokenRefreshResponse() async throws {
     let api = SupabaseAuthRESTAPI.Client.wired(
-        request: client.request,
+        execute: SupabaseAuthRESTAPI.Client.execution(request: client.request,
         transport: { request in
             #expect(request.url?.query == "grant_type=refresh_token")
             return (Data(#"{"access_token":"new-jwt","refresh_token":"new-r"}"#.utf8),
                     HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: nil)!)
-        },
+        }),
         decoder: { _ in JSONDecoder() }
     )
     let session = try await api.postToken(.refreshToken, .init(refreshToken: "old-r"))
     #expect(session.accessToken == "new-jwt")
     #expect(session.refreshToken == "new-r")
+}
+
+final class RefreshHarness: @unchecked Sendable {
+    var accessToken: String? = "expired"
+    var refreshTask: Task<Void, Never>?
+    var executions = 0
+    var refreshes = 0
+}
+
+@Test func refreshingExecutorRefreshesOn401ThenRetriesOnce() async throws {
+    let h = RefreshHarness()
+    let executor = RefreshingExecutor<SupabaseAuthRESTAPI.Operation>(
+        refreshTask: Binding(get: { h.refreshTask }, set: { h.refreshTask = $0 }),
+        accessToken: Binding(get: { h.accessToken }, set: { h.accessToken = $0 }),
+        executeOnce: { operation in
+            h.executions += 1
+            if h.accessToken == "fresh" { return Data("ok".utf8) }
+            throw SupabaseAuthRESTAPI.ResponseError(
+                operation: operation,
+                data: Data(),
+                response: HTTPURLResponse(
+                    url: projectBaseURL, statusCode: 401, httpVersion: nil, headerFields: nil
+                )!
+            )
+        },
+        refresh: {
+            Task {
+                h.refreshes += 1
+                h.accessToken = "fresh"
+            }
+        },
+        isError401: { ($0 as? SupabaseAuthRESTAPI.ResponseError)?.status == 401 },
+        needsAuth: SupabaseAuthRESTAPI.Security.needsUserAuth
+    )
+
+    let data = try await executor.executeRefreshed(.getUser)
+    #expect(String(decoding: data, as: UTF8.self) == "ok")
+    #expect(h.executions == 2)   // failed attempt + one retry
+    #expect(h.refreshes == 1)    // single-flight
+
+    // second call: token already fresh — no refresh, one execution
+    _ = try await executor.executeRefreshed(.getUser)
+    #expect(h.executions == 3)
+    #expect(h.refreshes == 1)
+}
+
+@Test func refreshingExecutorThrowsOriginalErrorWhenRefreshDoesNotHappen() async {
+    let h = RefreshHarness()
+    let executor = RefreshingExecutor<SupabaseAuthRESTAPI.Operation>(
+        refreshTask: Binding(get: { h.refreshTask }, set: { h.refreshTask = $0 }),
+        accessToken: Binding(get: { h.accessToken }, set: { h.accessToken = $0 }),
+        executeOnce: { operation in
+            throw SupabaseAuthRESTAPI.ResponseError(
+                operation: operation,
+                data: Data(),
+                response: HTTPURLResponse(
+                    url: projectBaseURL, statusCode: 401, httpVersion: nil, headerFields: nil
+                )!
+            )
+        },
+        refresh: { Task { h.refreshes += 1 } },   // refresh runs but tokens unchanged
+        isError401: { ($0 as? SupabaseAuthRESTAPI.ResponseError)?.status == 401 },
+        needsAuth: SupabaseAuthRESTAPI.Security.needsUserAuth
+    )
+    await #expect(throws: SupabaseAuthRESTAPI.ResponseError.self) {
+        try await executor.executeRefreshed(.getUser)
+    }
+    #expect(h.refreshes == 1)
 }

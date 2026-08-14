@@ -25,6 +25,9 @@ struct PetstoreClient {
     }
 
     var api: SwaggerPetstore.Client {
-        .wired(request: request, transport: urlSessionTransport, decoder: plainDecoder)
+        .wired(
+            execute: SwaggerPetstore.Client.execution(request: request, transport: urlSessionTransport),
+            decoder: plainDecoder
+        )
     }
 }

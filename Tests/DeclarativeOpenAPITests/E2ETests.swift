@@ -27,12 +27,14 @@ func generatedCodeCompilesAgainstDeclarativeRequests(spec: String) throws {
         platforms: [.macOS(.v14)],
         dependencies: [
             .package(path: "\(declarativeRequestsPath)"),
+            .package(path: "\(packageRoot.path)"),
         ],
         targets: [
             .target(
                 name: "GeneratedCheck",
                 dependencies: [
                     .product(name: "DeclarativeRequests", package: "declarative-requests-swift"),
+                    .product(name: "DeclarativeOpenAPIRuntime", package: "swift-declarative-openapi"),
                 ]
             ),
         ]
