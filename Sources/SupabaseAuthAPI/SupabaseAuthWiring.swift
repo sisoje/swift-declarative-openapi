@@ -21,14 +21,6 @@ func plainDecoder(_ operation: SupabaseAuthRESTAPI.Operation) -> JSONDecoder {
 struct MissingAPIKey: Error {}
 struct MissingAccessToken: Error {}
 
-extension SupabaseAuthRESTAPI.Operation {
-    /// `POST /token?grant_type=refresh_token` with the generated body model —
-    /// a named constructor for the one `postToken` shape a client refreshes with.
-    static func refreshSession(refreshToken: String) -> Self {
-        .postToken(grantType: .refreshToken, body: .init(refreshToken: refreshToken))
-    }
-}
-
 // we want client to be reactive
 
 /// Session + environment in one place; gating on the generated Security

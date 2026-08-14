@@ -13,7 +13,7 @@ private let client = SupabaseAuthClient(
 )
 
 @Test func refreshSessionBuildsTokenRefreshRequest() throws {
-    let request = try client.request(.refreshSession(refreshToken: "4nYUCw0wZR_DNOTSDbSGMQ"))
+    let request = try client.request(.postToken(grantType: .refreshToken, body: .init(refreshToken: "4nYUCw0wZR_DNOTSDbSGMQ")))
 
     #expect(request.url?.absoluteString
         == "https://myproject.supabase.co/auth/v1/token?grant_type=refresh_token")
