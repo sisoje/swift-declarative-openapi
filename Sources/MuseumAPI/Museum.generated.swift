@@ -161,20 +161,17 @@ enum RedoclyMuseumAPI {
 
     // MARK: - Responses (responses)
 
-    /// One error, nothing lost: status, payload, and the raw response —
+    /// One error, nothing lost: payload and the raw response —
     /// decode the spec's error model from `data` in the layer that needs it.
     struct ResponseError: Error {
         let operation: Operation
         let data: Data
-        let response: HTTPURLResponse
-    }
-
-    /// Thrown when the transport yields something other than HTTP —
-    /// same rule, nothing lost.
-    struct NonHTTPResponse: Error {
-        let operation: Operation
-        let data: Data
         let response: URLResponse
+
+        /// Projection, not storage: nil when the transport didn't speak HTTP.
+        var status: Int? {
+            (response as? HTTPURLResponse)?.statusCode
+        }
     }
 
     enum Responses {
@@ -198,7 +195,7 @@ enum RedoclyMuseumAPI {
             _ output: (data: Data, response: URLResponse)
         ) throws -> Data {
             guard let http = output.response as? HTTPURLResponse else {
-                throw NonHTTPResponse(operation: operation, data: output.data, response: output.response)
+                throw ResponseError(operation: operation, data: output.data, response: output.response)
             }
             let declared = successStatuses(operation)
             let status = http.statusCode

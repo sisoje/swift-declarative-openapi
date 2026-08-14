@@ -121,6 +121,6 @@ private let client = SupabaseAuthClient(
         _ = try SupabaseAuthRESTAPI.Responses.evaluate(.getUser, (Data(), limited))
         Issue.record("expected ResponseError")
     } catch let error as SupabaseAuthRESTAPI.ResponseError {
-        #expect(error.response.statusCode == 429)
+        #expect(error.status == 429)
     }
 }
