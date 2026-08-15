@@ -97,15 +97,15 @@ private let museumBaseURL = URL(string: "https://redocly.com/_mock/docs/openapi/
     let response = try #require(HTTPURLResponse(
         url: museumBaseURL, statusCode: 400, httpVersion: nil, headerFields: nil
     ))
-    do {
-        _ = try ResponseError.evaluate((errorBody, response), successStatuses: RedoclyMuseumAPI.Responses.successStatuses(.getSpecialEvent(eventId: "bad")))
-        Issue.record("expected ResponseError")
-    } catch let error as ResponseError {
-        #expect(error.status == 400)
-        let typed = try JSONDecoder().decode(RedoclyMuseumAPI.APIError.self, from: error.data)
-        #expect(typed.title == "Validation failed")
-        #expect(typed.type == "validation")
+    // #expect(throws:) instead of do/catch-as: typed-throws calls inside a
+    // catch-as pattern crash the Swift 6.3 SILGen verifier (fixed in 6.4).
+    let error = #expect(throws: ResponseError.self) {
+        try ResponseError.evaluate((errorBody, response), successStatuses: RedoclyMuseumAPI.Responses.successStatuses(.getSpecialEvent(eventId: "bad")))
     }
+    #expect(error?.status == 400)
+    let typed = try JSONDecoder().decode(RedoclyMuseumAPI.APIError.self, from: error?.data ?? Data())
+    #expect(typed.title == "Validation failed")
+    #expect(typed.type == "validation")
 }
 
 @Test func wiredClientComposesLayersThroughInjectedTransport() async throws {

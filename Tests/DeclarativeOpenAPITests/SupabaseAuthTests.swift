@@ -108,12 +108,12 @@ private let client = SupabaseAuthClient(
     #expect(try ResponseError.evaluate((tokens, ok), successStatuses: SupabaseAuthRESTAPI.Responses.successStatuses(.getUser)) == tokens)
 
     let limited = try #require(HTTPURLResponse(url: url, statusCode: 429, httpVersion: nil, headerFields: nil))
-    do {
-        _ = try ResponseError.evaluate((Data(), limited), successStatuses: SupabaseAuthRESTAPI.Responses.successStatuses(.getUser))
-        Issue.record("expected ResponseError")
-    } catch let error as ResponseError {
-        #expect(error.status == 429)
+    // #expect(throws:) instead of do/catch-as: typed-throws calls inside a
+    // catch-as pattern crash the Swift 6.3 SILGen verifier (fixed in 6.4).
+    let error = #expect(throws: ResponseError.self) {
+        try ResponseError.evaluate((Data(), limited), successStatuses: SupabaseAuthRESTAPI.Responses.successStatuses(.getUser))
     }
+    #expect(error?.status == 429)
 }
 
 @Test func typedClientDecodesTokenRefreshResponse() async throws {
