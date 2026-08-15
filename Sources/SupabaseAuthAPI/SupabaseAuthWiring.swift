@@ -39,7 +39,7 @@ struct SupabaseAuthClient {
 
     /// The (Operation) → Data seam without middleware.
     private var executeOnce: (SupabaseAuthRESTAPI.Operation) async throws -> Data {
-        SupabaseAuthRESTAPI.Client.execution(request: request, transport: urlSessionTransport)
+        NetworkExecution(request: request, transport: urlSessionTransport, evaluate: SupabaseAuthRESTAPI.Responses.evaluate).execute
     }
 
     /// The refresh work as a Task — spends the stored refresh token through

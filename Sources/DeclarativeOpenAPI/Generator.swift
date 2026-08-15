@@ -731,13 +731,6 @@ extension SpecGenerator {
             output += "                \(operation.caseName): \(entry)\(comma)\n"
         }
         output += "            )\n"
-        output += "        }\n\n"
-        output += "        /// The (Operation) → Data seam, bound to this backend's evaluate.\n"
-        output += "        static func execution(\n"
-        output += "            request: @escaping (Operation) throws -> URLRequest,\n"
-        output += "            transport: @escaping (URLRequest) async throws -> (Data, URLResponse)\n"
-        output += "        ) -> (Operation) async throws -> Data {\n"
-        output += "            NetworkExecution(request: request, transport: transport, evaluate: Responses.evaluate).execute\n"
         output += "        }\n"
         output += "    }\n"
         return output

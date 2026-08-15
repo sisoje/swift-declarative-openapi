@@ -2,6 +2,7 @@
 // declares one basic-auth scheme document-wide, so every operation is gated
 // the same way, through the generated Security section.
 
+import DeclarativeOpenAPIRuntime
 import DeclarativeRequests
 import Foundation
 
@@ -33,7 +34,7 @@ struct MuseumClient {
 
     var api: RedoclyMuseumAPI.Client {
         .wired(
-            execute: RedoclyMuseumAPI.Client.execution(request: request, transport: urlSessionTransport),
+            execute: NetworkExecution(request: request, transport: urlSessionTransport, evaluate: RedoclyMuseumAPI.Responses.evaluate).execute,
             decoder: plainDecoder
         )
     }

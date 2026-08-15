@@ -1,6 +1,7 @@
 // Hand-written layer over Petstore.generated.swift — the degenerate wiring:
 // the spec declares no security, so the client carries only the environment.
 
+import DeclarativeOpenAPIRuntime
 import DeclarativeRequests
 import Foundation
 
@@ -26,7 +27,7 @@ struct PetstoreClient {
 
     var api: SwaggerPetstore.Client {
         .wired(
-            execute: SwaggerPetstore.Client.execution(request: request, transport: urlSessionTransport),
+            execute: NetworkExecution(request: request, transport: urlSessionTransport, evaluate: SwaggerPetstore.Responses.evaluate).execute,
             decoder: plainDecoder
         )
     }

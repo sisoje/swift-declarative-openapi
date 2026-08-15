@@ -1239,14 +1239,6 @@ enum SupabaseAuthRESTAPI {
                 postVerify: build.endpoint(Operation.postVerify, AccessTokenResponseSchema.self)
             )
         }
-
-        /// The (Operation) → Data seam, bound to this backend's evaluate.
-        static func execution(
-            request: @escaping (Operation) throws -> URLRequest,
-            transport: @escaping (URLRequest) async throws -> (Data, URLResponse)
-        ) -> (Operation) async throws -> Data {
-            NetworkExecution(request: request, transport: transport, evaluate: Responses.evaluate).execute
-        }
     }
 
     /// Server URL is templated — supply a resolved base URL: `https://{project}.supabase.co/auth/v1`

@@ -111,12 +111,12 @@ private let museumBaseURL = URL(string: "https://redocly.com/_mock/docs/openapi/
 @Test func wiredClientComposesLayersThroughInjectedTransport() async throws {
     let wiring = MuseumClient(baseURL: museumBaseURL, credentials: (username: "u", password: "p"))
     let api = RedoclyMuseumAPI.Client.wired(
-        execute: RedoclyMuseumAPI.Client.execution(request: wiring.request,
+        execute: NetworkExecution(request: wiring.request,
         transport: { request in
             #expect(request.url?.path.hasSuffix("/museum-hours") == true)
             #expect(request.value(forHTTPHeaderField: "Authorization")?.hasPrefix("Basic ") == true)
             return (Data("[]".utf8), HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: nil)!)
-        }),
+        }, evaluate: RedoclyMuseumAPI.Responses.evaluate).execute,
         decoder: { _ in JSONDecoder() }
     )
     let hours = try await api.getMuseumHours(nil, nil, nil)
@@ -126,10 +126,10 @@ private let museumBaseURL = URL(string: "https://redocly.com/_mock/docs/openapi/
 @Test func wiredClientSurfacesResponseError() async {
     let wiring = MuseumClient(baseURL: museumBaseURL, credentials: (username: "u", password: "p"))
     let api = RedoclyMuseumAPI.Client.wired(
-        execute: RedoclyMuseumAPI.Client.execution(request: wiring.request,
+        execute: NetworkExecution(request: wiring.request,
         transport: { request in
             (Data(), HTTPURLResponse(url: request.url!, statusCode: 500, httpVersion: nil, headerFields: nil)!)
-        }),
+        }, evaluate: RedoclyMuseumAPI.Responses.evaluate).execute,
         decoder: { _ in JSONDecoder() }
     )
     await #expect(throws: ResponseError.self) {
@@ -149,10 +149,10 @@ private let museumBaseURL = URL(string: "https://redocly.com/_mock/docs/openapi/
 @Test func typedClientVoidOperationSucceedsOn204() async throws {
     let wiring = MuseumClient(baseURL: museumBaseURL, credentials: (username: "u", password: "p"))
     let api = RedoclyMuseumAPI.Client.wired(
-        execute: RedoclyMuseumAPI.Client.execution(request: wiring.request,
+        execute: NetworkExecution(request: wiring.request,
         transport: { request in
             (Data(), HTTPURLResponse(url: request.url!, statusCode: 204, httpVersion: nil, headerFields: nil)!)
-        }),
+        }, evaluate: RedoclyMuseumAPI.Responses.evaluate).execute,
         decoder: { _ in JSONDecoder() }
     )
     try await api.deleteSpecialEvent("e1") // returns Void, throws on anything but 204

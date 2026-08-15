@@ -258,14 +258,6 @@ enum RedoclyMuseumAPI {
                 getTicketCode: build.raw(Operation.getTicketCode)
             )
         }
-
-        /// The (Operation) → Data seam, bound to this backend's evaluate.
-        static func execution(
-            request: @escaping (Operation) throws -> URLRequest,
-            transport: @escaping (URLRequest) async throws -> (Data, URLResponse)
-        ) -> (Operation) async throws -> Data {
-            NetworkExecution(request: request, transport: transport, evaluate: Responses.evaluate).execute
-        }
     }
 
     static let defaultBaseURL = URL(string: "https://redocly.com/_mock/docs/openapi/museum-api")
