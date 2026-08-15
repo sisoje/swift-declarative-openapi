@@ -180,7 +180,7 @@ enum RedoclyMuseumAPI {
             _ operation: Operation,
             _ output: (data: Data, response: URLResponse)
         ) throws(ResponseError) -> Data {
-            try DeclarativeOpenAPIRuntime.Responses.evaluate(output, successStatuses: successStatuses(operation))
+            try ResponseError.evaluate(output, successStatuses: successStatuses(operation))
         }
     }
 

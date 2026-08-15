@@ -601,7 +601,7 @@ extension SpecGenerator {
         output += "            _ operation: Operation,\n"
         output += "            _ output: (data: Data, response: URLResponse)\n"
         output += "        ) throws(ResponseError) -> Data {\n"
-        output += "            try DeclarativeOpenAPIRuntime.Responses.evaluate(output, successStatuses: successStatuses(operation))\n"
+        output += "            try ResponseError.evaluate(output, successStatuses: successStatuses(operation))\n"
         output += "        }\n"
         output += "    }\n"
         return output

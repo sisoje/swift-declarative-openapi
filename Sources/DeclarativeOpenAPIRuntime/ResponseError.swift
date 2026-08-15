@@ -16,9 +16,7 @@ public struct ResponseError: Error {
         self.data = data
         self.response = response
     }
-}
 
-public enum Responses {
     /// Gates a transport result through the spec: payload on an expected
     /// status, `ResponseError` otherwise (non-HTTP responses throw too). An
     /// empty declared set falls back to the 2xx range.
