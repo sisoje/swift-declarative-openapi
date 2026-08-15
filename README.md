@@ -16,7 +16,7 @@ No `URLSession`. No `URLRequest`. No `JSONDecoder`. No status codes, no headers,
 |---|---|
 | `URLSession` | the app's transport closure (`(URLRequest) async throws -> (Data, URLResponse)`) |
 | `URLRequest` composition | the DSL blocks + the `NetworkExecution` seam |
-| status codes | `Responses.evaluate` |
+| status codes | the generated `successStatuses` table + `ResponseError.evaluate` |
 | `JSONDecoder` | the `ClientBuilder` decode step |
 | tokens, refresh, auth headers | the wiring + `RefreshingExecutor` |
 
@@ -71,7 +71,7 @@ enum SwaggerPetstore {
         }
     }
 
-    // MARK: - Responses (responses)   — evaluate + lossless error, shown below
+    // MARK: - Responses (responses)   — the per-operation status table, shown below
 
     // MARK: - Client                  — typed closures, shown below
 
@@ -119,9 +119,9 @@ var mock = api
 mock.showPetById = { _ in .init(id: 1, name: "Stub") }   // per-field mocking, no protocols
 ```
 
-`Client.wired(request:transport:decoder:)` wires the pipeline — request → transport → evaluate → decode — with no parameter defaults and no opinion about realness: the transport is just `(URLRequest) async throws -> (Data, URLResponse)` and the decoder `(Operation) -> JSONDecoder`; pass `URLSession` closures and it's production, pass stubs and it's a mock.
+`Client.wired(execute:decoder:)` wires the typed surface over the `(Operation) async throws -> Data` seam, with no parameter defaults and no opinion about realness: build the seam with the runtime's `NetworkExecution(request:transport:successStatuses:)`, wrap it in middleware or replace it with a stub — the fields can't tell the difference.
 
-Every spec also gets a **Responses section** — the modular third layer. The generated `evaluate` gates a transport result on the operation's spec-declared statuses (`deleteSpecialEvent` expects 204, `createPets` 201, …) and throws one lossless error; the layer that cares decodes the spec's typed error model from `error.data`:
+Every spec also gets a **Responses section** — a pure fact table of the operation's spec-declared statuses (`deleteSpecialEvent` expects 204, `createPets` 201, …). The runtime's `ResponseError.evaluate` gates transport results through it and throws one lossless error; the layer that cares decodes the spec's typed error model from `error.data`:
 
 ```swift
 struct ResponseError: Error {                  // universal, non-generic — from the runtime
@@ -130,10 +130,11 @@ struct ResponseError: Error {                  // universal, non-generic — fro
     var status: Int? { get }           // projection: nil when the transport didn't speak HTTP
 }
 
-// request → execute → evaluate, each layer separable:
-let request = try client.request(.getSpecialEvent(eventId: id))
+// request → transport → evaluate, each layer separable:
+let op = RedoclyMuseumAPI.Operation.getSpecialEvent(eventId: id)
+let request = try client.request(op)
 let (data, response) = try await session.data(for: request)
-let payload = try RedoclyMuseumAPI.Responses.evaluate(.getSpecialEvent(eventId: id), (data, response))
+let payload = try ResponseError.evaluate((data, response), successStatuses: RedoclyMuseumAPI.Responses.successStatuses(op))
 ```
 
 Specs that declare `security:` also get a **Security section** — gates and attachment factories generated from the spec, so a client wires everything once:
@@ -191,13 +192,13 @@ Settled over the project's evolution, enforced across every generated file:
 7. **Every ladder rung stays public.** The typed Client is sugar, not a gate: `request`/`authorized`/`evaluate`/raw `Data` all remain directly usable — decode-later end to end.
 8. **Base comes last.** Spec composes (`authorized` returns a block), wiring situates (`.base(url)`), caller materializes (`.request()`).
 9. **The client is pure data; networking concepts never leak up.** A struct of typed closures is the entire app-facing surface; `URLSession`/`URLRequest`/`JSONDecoder`/status codes each live in exactly one lower layer. Runtime types follow one shape: dependencies as stored closures, behavior as the output function.
-10. **Universal mechanics live once, in the runtime.** Generated files carry spec facts and one-line bindings (`ResponseError` alias, `execution` binder, the `ClientBuilder` fact table); `DeclarativeOpenAPIRuntime` carries the mechanics shared by every backend.
+10. **Universal mechanics live once, in the runtime; generated files carry facts only.** Every generated one-liner was audited by one test — *does deleting it create a place where hand-written code could contradict the spec and still compile?* — and none survived: inject the generated fact (`successStatuses`, `schemes`) into runtime mechanics (`NetworkExecution`, `ResponseError.evaluate`, `ClientBuilder`) rather than generating pre-composed conveniences.
 11. **Names describe mechanics, not claims** (`wired`, not `live` or `real` — realness is decided by the closures passed), and sugar that duplicates an existing spelling gets deleted.
 
 ## Package layout
 
 - `Sources/DeclarativeOpenAPI` — all parsing (via [Yams](https://github.com/jpsim/Yams)) and codegen; `SpecGenerator(enumNameOverride:).generate(yaml:) -> String`.
-- `Sources/DeclarativeOpenAPIRuntime` — the small shared runtime generated code imports: the universal `ResponseError<Operation>` (each namespace aliases it to its own `Operation`), `ClientBuilder<Operation>` (the pack-generic typed-closure mechanics `wired` tables are built over), and `RefreshingExecutor<Operation>` (401 → single-flight refresh → one retry), ready to slap onto any generated backend's `Client.execution` seam.
+- `Sources/DeclarativeOpenAPIRuntime` — the small shared runtime generated code imports, four witness structs (dependencies as properties, behavior as the output function): the universal non-generic `ResponseError` with its `evaluate` gate (typed throws), `NetworkExecution<Operation>` (the `(Operation) → Data` seam: request → transport → gate over the injected `successStatuses` table), `ClientBuilder<Operation>` (the pack-generic typed-closure mechanics `wired` tables build over), and `RefreshingExecutor<Operation>` (401 → single-flight refresh → one retry), ready to slap onto any backend's seam.
 - `Sources/DeclarativeOpenAPICLI` — the `swift-declarative-openapi` executable (plain `CommandLine.arguments`, no argument-parser dependency).
 - `Sources/PetstoreAPI`, `Sources/MuseumAPI`, and `Sources/SupabaseAuthAPI` — the **checked-in generated outputs** (plus the hand-written Supabase wiring), compiled against DeclarativeRequests on every `swift build`, so compilability of generated code is proven by the build itself.
 - `Specs/` — the canonical spec files.
