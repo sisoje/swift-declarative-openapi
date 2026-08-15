@@ -563,8 +563,6 @@ extension SpecGenerator {
         guard !operations.isEmpty else { return "" }
 
         var output = "\n    // MARK: - Responses (responses)\n\n"
-        output += "    /// The universal lossless error, bound to this backend's Operation.\n"
-        output += "    typealias ResponseError = DeclarativeOpenAPIRuntime.ResponseError<Operation>\n\n"
         output += "    enum Responses {\n"
         output += "        /// Statuses the spec declares below 400 for the operation.\n"
         output += "        static func successStatuses(_ operation: Operation) -> Set<Int> {\n"

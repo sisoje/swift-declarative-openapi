@@ -55,7 +55,7 @@ struct SupabaseAuthClient {
                 accessToken = session.accessToken
                 refreshToken = session.refreshToken ?? refreshToken
             } catch {
-                if let status = (error as? SupabaseAuthRESTAPI.ResponseError)?.status, (400 ..< 500).contains(status) {
+                if let status = (error as? ResponseError<SupabaseAuthRESTAPI.Operation>)?.status, (400 ..< 500).contains(status) {
                     // The server rejected the refresh token — session dead, log out.
                     accessToken = nil
                     refreshToken = nil

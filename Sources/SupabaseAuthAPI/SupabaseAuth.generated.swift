@@ -1053,9 +1053,6 @@ enum SupabaseAuthRESTAPI {
 
     // MARK: - Responses (responses)
 
-    /// The universal lossless error, bound to this backend's Operation.
-    typealias ResponseError = DeclarativeOpenAPIRuntime.ResponseError<Operation>
-
     enum Responses {
         /// Statuses the spec declares below 400 for the operation.
         static func successStatuses(_ operation: Operation) -> Set<Int> {
