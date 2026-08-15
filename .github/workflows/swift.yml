@@ -1,0 +1,26 @@
+name: DeclarativeOpenAPI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  test:
+    runs-on: macos-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+    steps:
+    - uses: maxim-lobanov/setup-xcode@v1
+      with:
+        xcode-version: 'latest'
+    - uses: actions/checkout@v6
+      with:
+        path: swift-declarative-openapi
+    - uses: actions/checkout@v6
+      with:
+        repository: sisoje/swift-declarative-requests
+        path: declarative-requests-swift
+    - name: Run tests
+      run: swift test --package-path swift-declarative-openapi

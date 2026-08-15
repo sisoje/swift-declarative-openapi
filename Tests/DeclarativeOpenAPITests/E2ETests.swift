@@ -2,8 +2,11 @@ import DeclarativeOpenAPI
 import Foundation
 import Testing
 
-/// Absolute path to the DeclarativeRequests package the generated code targets.
-private let declarativeRequestsPath = "/Users/lazar/dev/declarative-requests-swift"
+/// The DeclarativeRequests sibling checkout, derived from this package's
+/// location — works on any machine (and CI) with the standard layout.
+private let declarativeRequestsPath = packageRoot
+    .deletingLastPathComponent()
+    .appendingPathComponent("declarative-requests-swift").path
 
 @Test(arguments: ["petstore.yaml", "museum.yaml", "supabase-auth.yaml"])
 func generatedCodeCompilesAgainstDeclarativeRequests(spec: String) throws {

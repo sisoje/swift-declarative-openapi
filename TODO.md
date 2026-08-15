@@ -10,10 +10,6 @@ Neither checked-in spec uses `multipart/form-data` — the DSL's `RequestBody.mu
 
 Currently skipped with a `// TODO:` comment in the generated case. The DSL supports arbitrary headers (`Header.custom(name).setValue(value)`), so header params could become associated values wired to that block. Cookie params likewise via `Cookie(name, value)`.
 
-## E2E test portability
-
-`Tests/DeclarativeOpenAPITests/E2ETests.swift` references the DSL by absolute path (`/Users/lazar/dev/declarative-requests-swift`), so the e2e test is machine-local. Derive it from `packageRoot.appendingPathComponent("../declarative-requests-swift")` instead so any machine with the sibling checkout can run the suite.
-
 ## Optional-query codegen simplification (blocked on DSL decision)
 
 If the DSL adopts omit-on-nil for nil-valued `Query` (see `../declarative-requests-swift/TODO.md`), the generator can pass typed optionals straight through (`Query("limit", limit)`) and drop the `if let` wrapping entirely.
