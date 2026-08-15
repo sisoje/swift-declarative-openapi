@@ -160,7 +160,7 @@ final class RefreshHarness: @unchecked Sendable {
                 h.accessToken = "fresh"
             }
         },
-        isError401: { ($0 as? SupabaseAuthRESTAPI.ResponseError)?.status == 401 },
+        isUnauthorized: { $0.status == 401 },
         needsAuth: SupabaseAuthRESTAPI.Security.needsUserAuth
     )
 
@@ -190,7 +190,7 @@ final class RefreshHarness: @unchecked Sendable {
             )
         },
         refresh: { Task { h.refreshes += 1 } },   // refresh runs but tokens unchanged
-        isError401: { ($0 as? SupabaseAuthRESTAPI.ResponseError)?.status == 401 },
+        isUnauthorized: { $0.status == 401 },
         needsAuth: SupabaseAuthRESTAPI.Security.needsUserAuth
     )
     await #expect(throws: SupabaseAuthRESTAPI.ResponseError.self) {
@@ -215,7 +215,7 @@ final class RefreshHarness: @unchecked Sendable {
             )
         },
         refresh: { Task { h.refreshes += 1 } },
-        isError401: { ($0 as? SupabaseAuthRESTAPI.ResponseError)?.status == 401 },
+        isUnauthorized: { $0.status == 401 },
         needsAuth: SupabaseAuthRESTAPI.Security.needsUserAuth
     )
     // postToken is public (no UserAuth): even a 401 must not touch the

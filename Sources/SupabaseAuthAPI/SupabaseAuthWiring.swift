@@ -73,7 +73,7 @@ struct SupabaseAuthClient {
             accessToken: $accessToken,
             executeOnce: executeOnce,
             refresh: makeRefreshTask,
-            isError401: { ($0 as? SupabaseAuthRESTAPI.ResponseError)?.status == 401 },
+            isUnauthorized: { $0.status == 401 },
             needsAuth: SupabaseAuthRESTAPI.Security.needsUserAuth
         )
         return .wired(execute: refreshed.executeRefreshed, decoder: plainDecoder)
