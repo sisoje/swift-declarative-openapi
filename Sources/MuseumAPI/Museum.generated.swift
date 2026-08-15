@@ -175,23 +175,12 @@ enum RedoclyMuseumAPI {
             }
         }
 
-        /// Gates a transport result through the spec: payload on an expected
-        /// status, `ResponseError` otherwise. Operations with no declared
-        /// success status fall back to the 2xx range.
+        /// Gate a transport result through this backend's declared statuses.
         static func evaluate(
             _ operation: Operation,
             _ output: (data: Data, response: URLResponse)
         ) throws -> Data {
-            guard let http = output.response as? HTTPURLResponse else {
-                throw ResponseError(operation: operation, data: output.data, response: output.response)
-            }
-            let declared = successStatuses(operation)
-            let status = http.statusCode
-            let expected = declared.isEmpty ? (200 ..< 300).contains(status) : declared.contains(status)
-            guard expected else {
-                throw ResponseError(operation: operation, data: output.data, response: http)
-            }
-            return output.data
+            try DeclarativeOpenAPIRuntime.evaluate(operation, output, successStatuses: successStatuses(operation))
         }
     }
 

@@ -19,3 +19,23 @@ public struct ResponseError<Operation>: Error {
         self.response = response
     }
 }
+
+/// Gates a transport result through the spec: payload on an expected status,
+/// `ResponseError` otherwise (non-HTTP responses throw too). An empty
+/// declared set falls back to the 2xx range.
+public func evaluate<Operation>(
+    _ operation: Operation,
+    _ output: (data: Data, response: URLResponse),
+    successStatuses: Set<Int>
+) throws -> Data {
+    guard let http = output.response as? HTTPURLResponse else {
+        throw ResponseError(operation: operation, data: output.data, response: output.response)
+    }
+    let expected = successStatuses.isEmpty
+        ? (200 ..< 300).contains(http.statusCode)
+        : successStatuses.contains(http.statusCode)
+    guard expected else {
+        throw ResponseError(operation: operation, data: output.data, response: http)
+    }
+    return output.data
+}
