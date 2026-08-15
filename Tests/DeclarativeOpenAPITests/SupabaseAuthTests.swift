@@ -198,3 +198,31 @@ final class RefreshHarness: @unchecked Sendable {
     }
     #expect(h.refreshes == 1)
 }
+
+@Test func executorBypassesRefreshMachineryForPublicOperations() async {
+    let h = RefreshHarness()
+    let executor = RefreshingExecutor<SupabaseAuthRESTAPI.Operation>(
+        refreshTask: Binding(get: { h.refreshTask }, set: { h.refreshTask = $0 }),
+        accessToken: Binding(get: { h.accessToken }, set: { h.accessToken = $0 }),
+        executeOnce: { operation in
+            h.executions += 1
+            throw SupabaseAuthRESTAPI.ResponseError(
+                operation: operation,
+                data: Data(),
+                response: HTTPURLResponse(
+                    url: projectBaseURL, statusCode: 401, httpVersion: nil, headerFields: nil
+                )!
+            )
+        },
+        refresh: { Task { h.refreshes += 1 } },
+        isError401: { ($0 as? SupabaseAuthRESTAPI.ResponseError)?.status == 401 },
+        needsAuth: SupabaseAuthRESTAPI.Security.needsUserAuth
+    )
+    // postToken is public (no UserAuth): even a 401 must not touch the
+    // refresh machinery — this is what makes refresh-through-api recursion-free.
+    await #expect(throws: SupabaseAuthRESTAPI.ResponseError.self) {
+        try await executor.executeRefreshed(.postToken(grantType: .refreshToken, body: .init()))
+    }
+    #expect(h.executions == 1)
+    #expect(h.refreshes == 0)
+}

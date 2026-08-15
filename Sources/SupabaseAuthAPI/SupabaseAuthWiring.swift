@@ -43,14 +43,15 @@ struct SupabaseAuthClient {
     }
 
     /// The refresh work as a Task — spends the stored refresh token through
-    /// `apiOnce` (never the refreshed pipeline: no recursion) and writes both
-    /// rotated tokens back. A definitive rejection nils the tokens — in
+    /// `api` itself: postToken doesn't need user auth, so the executor's
+    /// needsAuth guard routes it straight to the bare seam — no recursion,
+    /// no self-join. Writes both rotated tokens back. A definitive rejection nils the tokens — in
     /// reactive SwiftUI the nil binding IS the logout. Transient failure
     /// leaves tokens unchanged, so RefreshingExecutor throws the original error.
     private func makeRefreshTask() -> Task<Void, Never> {
         Task { @MainActor in
             do {
-                let session = try await apiOnce.postToken(.refreshToken, .init(refreshToken: refreshToken))
+                let session = try await api.postToken(.refreshToken, .init(refreshToken: refreshToken))
                 accessToken = session.accessToken
                 refreshToken = session.refreshToken ?? refreshToken
             } catch {
@@ -64,11 +65,6 @@ struct SupabaseAuthClient {
         }
     }
     
-    /// Fully typed surface over the bare seam — no middleware.
-    var apiOnce: SupabaseAuthRESTAPI.Client {
-        return .wired(execute: executeOnce, decoder: plainDecoder)
-    }
-
     /// Fully typed surface: every field rides the refresh middleware —
     /// 401 → single-flight refresh → one retry.
     var api: SupabaseAuthRESTAPI.Client {

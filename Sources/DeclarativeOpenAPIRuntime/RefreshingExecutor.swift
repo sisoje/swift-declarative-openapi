@@ -40,6 +40,9 @@ public struct RefreshingExecutor<Operation> {
     }
 
     public func executeRefreshed(_ operation: Operation) async throws -> Data {
+        guard needsAuth(operation) else {
+            return try await executeOnce(operation)
+        }
         let oldToken = accessToken
         var alreadyRefreshing = false
         if let refreshTask {
