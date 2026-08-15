@@ -156,7 +156,7 @@ final class RefreshHarness: @unchecked Sendable {
                 )!
             )
         },
-        refresh: {
+        makeRefreshTask: {
             Task {
                 h.refreshes += 1
                 h.accessToken = "fresh"
@@ -166,13 +166,13 @@ final class RefreshHarness: @unchecked Sendable {
         needsAuth: SupabaseAuthRESTAPI.Security.needsUserAuth
     )
 
-    let data = try await executor.executeRefreshed(.getUser)
+    let data = try await executor.executeWithRefresh(.getUser)
     #expect(String(decoding: data, as: UTF8.self) == "ok")
     #expect(h.executions == 2)   // failed attempt + one retry
     #expect(h.refreshes == 1)    // single-flight
 
     // second call: token already fresh — no refresh, one execution
-    _ = try await executor.executeRefreshed(.getUser)
+    _ = try await executor.executeWithRefresh(.getUser)
     #expect(h.executions == 3)
     #expect(h.refreshes == 1)
 }
@@ -190,12 +190,12 @@ final class RefreshHarness: @unchecked Sendable {
                 )!
             )
         },
-        refresh: { Task { h.refreshes += 1 } },   // refresh runs but tokens unchanged
+        makeRefreshTask: { Task { h.refreshes += 1 } },   // refresh runs but tokens unchanged
         isUnauthorized: { $0.status == 401 },
         needsAuth: SupabaseAuthRESTAPI.Security.needsUserAuth
     )
     await #expect(throws: ResponseError.self) {
-        try await executor.executeRefreshed(.getUser)
+        try await executor.executeWithRefresh(.getUser)
     }
     #expect(h.refreshes == 1)
 }
@@ -214,14 +214,14 @@ final class RefreshHarness: @unchecked Sendable {
                 )!
             )
         },
-        refresh: { Task { h.refreshes += 1 } },
+        makeRefreshTask: { Task { h.refreshes += 1 } },
         isUnauthorized: { $0.status == 401 },
         needsAuth: SupabaseAuthRESTAPI.Security.needsUserAuth
     )
     // postToken is public (no UserAuth): even a 401 must not touch the
     // refresh machinery — this is what makes refresh-through-api recursion-free.
     await #expect(throws: ResponseError.self) {
-        try await executor.executeRefreshed(.postToken(grantType: .refreshToken, body: .init()))
+        try await executor.executeWithRefresh(.postToken(grantType: .refreshToken, body: .init()))
     }
     #expect(h.executions == 1)
     #expect(h.refreshes == 0)

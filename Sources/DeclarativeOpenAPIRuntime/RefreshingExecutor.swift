@@ -19,7 +19,7 @@ public struct RefreshingExecutor<Operation> {
     @Binding var accessToken: String?
 
     let executeOnce: (Operation) async throws -> Data
-    let refresh: () -> Task<Void, Never> // it will update access token
+    let makeRefreshTask: () -> Task<Void, Never> // it will update access token
     let isUnauthorized: (ResponseError) -> Bool
     let needsAuth: (Operation) -> Bool
 
@@ -27,19 +27,19 @@ public struct RefreshingExecutor<Operation> {
         refreshTask: Binding<Task<Void, Never>?>,
         accessToken: Binding<String?>,
         executeOnce: @escaping (Operation) async throws -> Data,
-        refresh: @escaping () -> Task<Void, Never>,
+        makeRefreshTask: @escaping () -> Task<Void, Never>,
         isUnauthorized: @escaping (ResponseError) -> Bool,
         needsAuth: @escaping (Operation) -> Bool
     ) {
         self._refreshTask = refreshTask
         self._accessToken = accessToken
         self.executeOnce = executeOnce
-        self.refresh = refresh
+        self.makeRefreshTask = makeRefreshTask
         self.isUnauthorized = isUnauthorized
         self.needsAuth = needsAuth
     }
 
-    public func executeRefreshed(_ operation: Operation) async throws -> Data {
+    public func executeWithRefresh(_ operation: Operation) async throws -> Data {
         guard needsAuth(operation) else {
             return try await executeOnce(operation)
         }
@@ -54,8 +54,7 @@ public struct RefreshingExecutor<Operation> {
         } catch {
             guard !alreadyRefreshing,
                   let responseError = error as? ResponseError,
-                  isUnauthorized(responseError),
-                  needsAuth(operation)
+                  isUnauthorized(responseError)
             else {
                 throw error
             }
@@ -63,7 +62,7 @@ public struct RefreshingExecutor<Operation> {
             if let refreshTask {
                 await refreshTask.value
             } else if oldToken == accessToken {
-                refreshTask = refresh()
+                refreshTask = makeRefreshTask()
                 await refreshTask?.value
                 refreshTask = nil
             }
