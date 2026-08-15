@@ -124,8 +124,7 @@ mock.showPetById = { _ in .init(id: 1, name: "Stub") }   // per-field mocking, n
 Every spec also gets a **Responses section** — the modular third layer. The generated `evaluate` gates a transport result on the operation's spec-declared statuses (`deleteSpecialEvent` expects 204, `createPets` 201, …) and throws one lossless error; the layer that cares decodes the spec's typed error model from `error.data`:
 
 ```swift
-struct ResponseError: Error {
-    let operation: Operation
+struct ResponseError: Error {                  // universal, non-generic — from the runtime
     let data: Data                     // decode APIError/ErrorSchema from this when you need it
     let response: URLResponse          // everything, once — even a non-HTTP transport result
     var status: Int? { get }           // projection: nil when the transport didn't speak HTTP
@@ -186,7 +185,7 @@ Settled over the project's evolution, enforced across every generated file:
 1. **The authority ladder.** The spec decides everything it states — shapes, statuses, schemes, attachment mechanics — and all of it is generated. The wiring decides bindings and policy — credentials, transport, decoder — and all of it is hand-written. The caller materializes. Nothing lives below its authority: `URLSession`/`JSONDecoder` never appear in generated code, and spec knowledge is never hand-maintained.
 2. **Sections mirror the document; absence mirrors absence.** No `security:` → no Security section, no `authorized` builder. No text responses → no `text` helper. What the spec doesn't say, the output doesn't contain.
 3. **No parameter defaults on the seams.** `wired` and `authorized` demand every dependency explicitly; standard bindings are named options the caller passes, never silent choices. Nil is never the spelling for "not needed" — absence of the block is.
-4. **One lossless error per boundary; store each fact once.** `ResponseError` carries operation + data + raw response; `status` is a projection, not a field. The next layer decodes the spec's error model from `data` only when it wants it.
+4. **One lossless error per boundary; store each fact once.** `ResponseError` carries data + raw response; `status` is a projection, not a field. The next layer decodes the spec's error model from `data` only when it wants it.
 5. **Facts as tables, mechanics once.** `wired` is a one-line-per-operation fact table over the runtime's pack-generic `ClientBuilder`; `schemes(_:)` is a grouped switch. Cleverness is quarantined in mechanics; generated facts stay boring.
 6. **The operation→type problem is solved at generation time**, in a table — never with phantoms, `Any`, or mirrored payload enums. Closures take the case's payload and construct the case inside, making wrong pairings unrepresentable.
 7. **Every ladder rung stays public.** The typed Client is sugar, not a gate: `request`/`authorized`/`evaluate`/raw `Data` all remain directly usable — decode-later end to end.

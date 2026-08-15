@@ -1080,7 +1080,7 @@ enum SupabaseAuthRESTAPI {
             _ operation: Operation,
             _ output: (data: Data, response: URLResponse)
         ) throws -> Data {
-            try DeclarativeOpenAPIRuntime.evaluate(operation, output, successStatuses: successStatuses(operation))
+            try DeclarativeOpenAPIRuntime.evaluate(output, successStatuses: successStatuses(operation))
         }
     }
 

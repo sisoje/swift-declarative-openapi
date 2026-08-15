@@ -111,7 +111,7 @@ private let client = SupabaseAuthClient(
     do {
         _ = try SupabaseAuthRESTAPI.Responses.evaluate(.getUser, (Data(), limited))
         Issue.record("expected ResponseError")
-    } catch let error as ResponseError<SupabaseAuthRESTAPI.Operation> {
+    } catch let error as ResponseError {
         #expect(error.status == 429)
     }
 }
@@ -147,7 +147,6 @@ final class RefreshHarness: @unchecked Sendable {
             h.executions += 1
             if h.accessToken == "fresh" { return Data("ok".utf8) }
             throw ResponseError(
-                operation: operation,
                 data: Data(),
                 response: HTTPURLResponse(
                     url: projectBaseURL, statusCode: 401, httpVersion: nil, headerFields: nil
@@ -182,7 +181,6 @@ final class RefreshHarness: @unchecked Sendable {
         accessToken: Binding(get: { h.accessToken }, set: { h.accessToken = $0 }),
         executeOnce: { operation in
             throw ResponseError(
-                operation: operation,
                 data: Data(),
                 response: HTTPURLResponse(
                     url: projectBaseURL, statusCode: 401, httpVersion: nil, headerFields: nil
@@ -193,7 +191,7 @@ final class RefreshHarness: @unchecked Sendable {
         isUnauthorized: { $0.status == 401 },
         needsAuth: SupabaseAuthRESTAPI.Security.needsUserAuth
     )
-    await #expect(throws: ResponseError<SupabaseAuthRESTAPI.Operation>.self) {
+    await #expect(throws: ResponseError.self) {
         try await executor.executeRefreshed(.getUser)
     }
     #expect(h.refreshes == 1)
@@ -207,7 +205,6 @@ final class RefreshHarness: @unchecked Sendable {
         executeOnce: { operation in
             h.executions += 1
             throw ResponseError(
-                operation: operation,
                 data: Data(),
                 response: HTTPURLResponse(
                     url: projectBaseURL, statusCode: 401, httpVersion: nil, headerFields: nil
@@ -220,7 +217,7 @@ final class RefreshHarness: @unchecked Sendable {
     )
     // postToken is public (no UserAuth): even a 401 must not touch the
     // refresh machinery — this is what makes refresh-through-api recursion-free.
-    await #expect(throws: ResponseError<SupabaseAuthRESTAPI.Operation>.self) {
+    await #expect(throws: ResponseError.self) {
         try await executor.executeRefreshed(.postToken(grantType: .refreshToken, body: .init()))
     }
     #expect(h.executions == 1)

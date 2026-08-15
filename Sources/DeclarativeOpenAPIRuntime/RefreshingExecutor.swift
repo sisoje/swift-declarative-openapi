@@ -20,7 +20,7 @@ public struct RefreshingExecutor<Operation> {
 
     let executeOnce: (Operation) async throws -> Data
     let refresh: () -> Task<Void, Never> // it will update access token
-    let isUnauthorized: (ResponseError<Operation>) -> Bool
+    let isUnauthorized: (ResponseError) -> Bool
     let needsAuth: (Operation) -> Bool
 
     public init(
@@ -28,7 +28,7 @@ public struct RefreshingExecutor<Operation> {
         accessToken: Binding<String?>,
         executeOnce: @escaping (Operation) async throws -> Data,
         refresh: @escaping () -> Task<Void, Never>,
-        isUnauthorized: @escaping (ResponseError<Operation>) -> Bool,
+        isUnauthorized: @escaping (ResponseError) -> Bool,
         needsAuth: @escaping (Operation) -> Bool
     ) {
         self._refreshTask = refreshTask
@@ -53,7 +53,7 @@ public struct RefreshingExecutor<Operation> {
             return try await executeOnce(operation)
         } catch {
             guard !alreadyRefreshing,
-                  let responseError = error as? ResponseError<Operation>,
+                  let responseError = error as? ResponseError,
                   isUnauthorized(responseError),
                   needsAuth(operation)
             else {

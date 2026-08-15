@@ -85,7 +85,7 @@ private let museumBaseURL = URL(string: "https://redocly.com/_mock/docs/openapi/
     let response = try #require(HTTPURLResponse(
         url: museumBaseURL, statusCode: 200, httpVersion: nil, headerFields: nil
     ))
-    #expect(throws: ResponseError<RedoclyMuseumAPI.Operation>.self) {
+    #expect(throws: ResponseError.self) {
         try RedoclyMuseumAPI.Responses.evaluate(.deleteSpecialEvent(eventId: "e1"), (Data(), response))
     }
 }
@@ -100,7 +100,7 @@ private let museumBaseURL = URL(string: "https://redocly.com/_mock/docs/openapi/
     do {
         _ = try RedoclyMuseumAPI.Responses.evaluate(.getSpecialEvent(eventId: "bad"), (errorBody, response))
         Issue.record("expected ResponseError")
-    } catch let error as ResponseError<RedoclyMuseumAPI.Operation> {
+    } catch let error as ResponseError {
         #expect(error.status == 400)
         let typed = try JSONDecoder().decode(RedoclyMuseumAPI.APIError.self, from: error.data)
         #expect(typed.title == "Validation failed")
@@ -132,7 +132,7 @@ private let museumBaseURL = URL(string: "https://redocly.com/_mock/docs/openapi/
         }),
         decoder: { _ in JSONDecoder() }
     )
-    await #expect(throws: ResponseError<RedoclyMuseumAPI.Operation>.self) {
+    await #expect(throws: ResponseError.self) {
         try await api.deleteSpecialEvent("e1")
     }
 }
@@ -141,7 +141,7 @@ private let museumBaseURL = URL(string: "https://redocly.com/_mock/docs/openapi/
     let plain = URLResponse(
         url: museumBaseURL, mimeType: nil, expectedContentLength: 0, textEncodingName: nil
     )
-    #expect(throws: ResponseError<RedoclyMuseumAPI.Operation>.self) {
+    #expect(throws: ResponseError.self) {
         try RedoclyMuseumAPI.Responses.evaluate(.getSpecialEvent(eventId: "e1"), (Data("x".utf8), plain))
     }
 }
