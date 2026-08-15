@@ -18,21 +18,23 @@ public struct ResponseError: Error {
     }
 }
 
-/// Gates a transport result through the spec: payload on an expected status,
-/// `ResponseError` otherwise (non-HTTP responses throw too). An empty
-/// declared set falls back to the 2xx range.
-public func evaluate(
-    _ output: (data: Data, response: URLResponse),
-    successStatuses: Set<Int>
-) throws -> Data {
-    guard let http = output.response as? HTTPURLResponse else {
-        throw ResponseError(data: output.data, response: output.response)
+public enum Responses {
+    /// Gates a transport result through the spec: payload on an expected
+    /// status, `ResponseError` otherwise (non-HTTP responses throw too). An
+    /// empty declared set falls back to the 2xx range.
+    public static func evaluate(
+        _ output: (data: Data, response: URLResponse),
+        successStatuses: Set<Int>
+    ) throws(ResponseError) -> Data {
+        guard let http = output.response as? HTTPURLResponse else {
+            throw ResponseError(data: output.data, response: output.response)
+        }
+        let expected = successStatuses.isEmpty
+            ? (200 ..< 300).contains(http.statusCode)
+            : successStatuses.contains(http.statusCode)
+        guard expected else {
+            throw ResponseError(data: output.data, response: http)
+        }
+        return output.data
     }
-    let expected = successStatuses.isEmpty
-        ? (200 ..< 300).contains(http.statusCode)
-        : successStatuses.contains(http.statusCode)
-    guard expected else {
-        throw ResponseError(data: output.data, response: http)
-    }
-    return output.data
 }

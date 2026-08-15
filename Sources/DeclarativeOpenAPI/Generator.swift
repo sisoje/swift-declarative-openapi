@@ -600,8 +600,8 @@ extension SpecGenerator {
         output += "        static func evaluate(\n"
         output += "            _ operation: Operation,\n"
         output += "            _ output: (data: Data, response: URLResponse)\n"
-        output += "        ) throws -> Data {\n"
-        output += "            try DeclarativeOpenAPIRuntime.evaluate(output, successStatuses: successStatuses(operation))\n"
+        output += "        ) throws(ResponseError) -> Data {\n"
+        output += "            try DeclarativeOpenAPIRuntime.Responses.evaluate(output, successStatuses: successStatuses(operation))\n"
         output += "        }\n"
         output += "    }\n"
         return output

@@ -1079,8 +1079,8 @@ enum SupabaseAuthRESTAPI {
         static func evaluate(
             _ operation: Operation,
             _ output: (data: Data, response: URLResponse)
-        ) throws -> Data {
-            try DeclarativeOpenAPIRuntime.evaluate(output, successStatuses: successStatuses(operation))
+        ) throws(ResponseError) -> Data {
+            try DeclarativeOpenAPIRuntime.Responses.evaluate(output, successStatuses: successStatuses(operation))
         }
     }
 
