@@ -113,7 +113,7 @@ enum SwaggerPetstore {
             request: @escaping (Operation) throws -> URLRequest,
             transport: @escaping (URLRequest) async throws -> (Data, URLResponse)
         ) -> (Operation) async throws -> Data {
-            Execution(request: request, transport: transport, evaluate: Responses.evaluate).execute
+            NetworkExecution(request: request, transport: transport, evaluate: Responses.evaluate).execute
         }
     }
 

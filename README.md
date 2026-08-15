@@ -15,7 +15,7 @@ No `URLSession`. No `URLRequest`. No `JSONDecoder`. No status codes, no headers,
 | networking concept | its only home |
 |---|---|
 | `URLSession` | the app's transport closure (`(URLRequest) async throws -> (Data, URLResponse)`) |
-| `URLRequest` composition | the DSL blocks + the `Execution` seam |
+| `URLRequest` composition | the DSL blocks + the `NetworkExecution` seam |
 | status codes | `Responses.evaluate` |
 | `JSONDecoder` | the `ClientBuilder` decode step |
 | tokens, refresh, auth headers | the wiring + `RefreshingExecutor` |

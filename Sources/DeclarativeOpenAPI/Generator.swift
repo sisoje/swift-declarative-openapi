@@ -750,7 +750,7 @@ extension SpecGenerator {
         output += "            request: @escaping (Operation) throws -> URLRequest,\n"
         output += "            transport: @escaping (URLRequest) async throws -> (Data, URLResponse)\n"
         output += "        ) -> (Operation) async throws -> Data {\n"
-        output += "            Execution(request: request, transport: transport, evaluate: Responses.evaluate).execute\n"
+        output += "            NetworkExecution(request: request, transport: transport, evaluate: Responses.evaluate).execute\n"
         output += "        }\n"
         output += "    }\n"
         return output
