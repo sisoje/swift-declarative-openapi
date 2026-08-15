@@ -1,5 +1,9 @@
 # swift-declarative-openapi
 
+[![Build](https://github.com/sisoje/swift-declarative-openapi/actions/workflows/swift.yml/badge.svg)](https://github.com/sisoje/swift-declarative-openapi/actions/workflows/swift.yml)
+[![Swift Versions](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fsisoje%2Fswift-declarative-openapi%2Fbadge%3Ftype%3Dswift-versions)](https://swiftpackageindex.com/sisoje/swift-declarative-openapi)
+[![Platforms](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fsisoje%2Fswift-declarative-openapi%2Fbadge%3Ftype%3Dplatforms)](https://swiftpackageindex.com/sisoje/swift-declarative-openapi)
+
 Turns an OpenAPI document into a compile-checked **BackendSpec** for [swift-declarative-requests](../declarative-requests-swift): the whole backend as one closed Swift type — typed operations, models, and security gates.
 
 ## Why
