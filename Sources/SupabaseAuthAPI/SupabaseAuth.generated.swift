@@ -1074,14 +1074,6 @@ enum SupabaseAuthRESTAPI {
                 [200, 303]
             }
         }
-
-        /// Gate a transport result through this backend's declared statuses.
-        static func evaluate(
-            _ operation: Operation,
-            _ output: (data: Data, response: URLResponse)
-        ) throws(ResponseError) -> Data {
-            try ResponseError.evaluate(output, successStatuses: successStatuses(operation))
-        }
     }
 
     // MARK: - Security (securitySchemes)

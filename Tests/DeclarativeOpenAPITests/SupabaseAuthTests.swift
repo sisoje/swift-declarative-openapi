@@ -105,11 +105,11 @@ private let client = SupabaseAuthClient(
     let url = projectBaseURL
     let ok = try #require(HTTPURLResponse(url: url, statusCode: 200, httpVersion: nil, headerFields: nil))
     let tokens = Data(#"{"access_token":"t"}"#.utf8)
-    #expect(try SupabaseAuthRESTAPI.Responses.evaluate(.getUser, (tokens, ok)) == tokens)
+    #expect(try ResponseError.evaluate((tokens, ok), successStatuses: SupabaseAuthRESTAPI.Responses.successStatuses(.getUser)) == tokens)
 
     let limited = try #require(HTTPURLResponse(url: url, statusCode: 429, httpVersion: nil, headerFields: nil))
     do {
-        _ = try SupabaseAuthRESTAPI.Responses.evaluate(.getUser, (Data(), limited))
+        _ = try ResponseError.evaluate((Data(), limited), successStatuses: SupabaseAuthRESTAPI.Responses.successStatuses(.getUser))
         Issue.record("expected ResponseError")
     } catch let error as ResponseError {
         #expect(error.status == 429)
@@ -125,7 +125,7 @@ private let client = SupabaseAuthClient(
                 return (Data(#"{"access_token":"new-jwt","refresh_token":"new-r"}"#.utf8),
                         HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: nil)!)
             },
-            evaluate: SupabaseAuthRESTAPI.Responses.evaluate
+            successStatuses: SupabaseAuthRESTAPI.Responses.successStatuses
         ).execute,
         decoder: { _ in JSONDecoder() }
     )

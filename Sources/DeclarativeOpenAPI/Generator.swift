@@ -595,13 +595,6 @@ extension SpecGenerator {
             }
             output += "            }\n"
         }
-        output += "        }\n\n"
-        output += "        /// Gate a transport result through this backend's declared statuses.\n"
-        output += "        static func evaluate(\n"
-        output += "            _ operation: Operation,\n"
-        output += "            _ output: (data: Data, response: URLResponse)\n"
-        output += "        ) throws(ResponseError) -> Data {\n"
-        output += "            try ResponseError.evaluate(output, successStatuses: successStatuses(operation))\n"
         output += "        }\n"
         output += "    }\n"
         return output

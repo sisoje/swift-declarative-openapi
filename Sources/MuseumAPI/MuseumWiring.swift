@@ -34,7 +34,7 @@ struct MuseumClient {
 
     var api: RedoclyMuseumAPI.Client {
         .wired(
-            execute: NetworkExecution(request: request, transport: urlSessionTransport, evaluate: RedoclyMuseumAPI.Responses.evaluate).execute,
+            execute: NetworkExecution(request: request, transport: urlSessionTransport, successStatuses: RedoclyMuseumAPI.Responses.successStatuses).execute,
             decoder: plainDecoder
         )
     }

@@ -60,7 +60,7 @@ private let baseURL = URL(string: "http://petstore.swagger.io/v1")!
                 (Data(#"{"id":7,"name":"Rex"}"#.utf8),
                  HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: nil)!)
             },
-            evaluate: SwaggerPetstore.Responses.evaluate
+            successStatuses: SwaggerPetstore.Responses.successStatuses
         ).execute,
         decoder: { _ in JSONDecoder() }
     )
@@ -72,7 +72,7 @@ private let baseURL = URL(string: "http://petstore.swagger.io/v1")!
 @Test func typedClientFieldsAreStubbable() async throws {
     var api = SwaggerPetstore.Client.wired(
         execute: NetworkExecution(request: PetstoreClient(baseURL: baseURL).request,
-        transport: { try await URLSession.shared.data(for: $0) }, evaluate: SwaggerPetstore.Responses.evaluate).execute,
+        transport: { try await URLSession.shared.data(for: $0) }, successStatuses: SwaggerPetstore.Responses.successStatuses).execute,
         decoder: { _ in JSONDecoder() }
     )
     api.showPetById = { _ in SwaggerPetstore.Pet(id: 1, name: "Stub") }
