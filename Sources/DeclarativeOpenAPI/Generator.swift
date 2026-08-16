@@ -192,7 +192,18 @@ extension SpecGenerator {
         }
         absorb(schema)
 
-        return properties.keys.sorted().map { rawName in
+        // Raw names can collide once camelized — Binance's aggTrade has both
+        // "m" and "M". Colliding names keep their exact raw spelling instead:
+        // raw keys are unique by construction and Swift identifiers are
+        // case-sensitive, so this resolves every group without inventing
+        // names (and CodingKeys still map whenever raw ≠ swift).
+        let rawNames = properties.keys.sorted()
+        var camelizedCounts: [String: Int] = [:]
+        for rawName in rawNames {
+            camelizedCounts[propertyName(rawName), default: 0] += 1
+        }
+
+        return rawNames.map { rawName in
             let propertySchema = properties[rawName]
             var type = swiftType(for: propertySchema)
             var enumCases: [String]?
@@ -202,9 +213,10 @@ extension SpecGenerator {
                 enumCases = values
                 type = modelTypeName(rawName)
             }
+            let camelized = propertyName(rawName)
             return ModelProperty(
                 rawName: rawName,
-                swiftName: propertyName(rawName),
+                swiftName: camelizedCounts[camelized]! > 1 ? rawName : camelized,
                 type: type,
                 isOptional: !required.contains(rawName),
                 enumCases: enumCases

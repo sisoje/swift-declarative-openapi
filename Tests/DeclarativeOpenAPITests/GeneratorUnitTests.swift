@@ -794,3 +794,32 @@ import Testing
     #expect(!generated.contains("static func authorized("))
     #expect(!generated.contains("RequestFailure"))
 }
+
+@Test func caseCollidingPropertyNamesKeepTheirRawSpelling() throws {
+    // Binance's aggTrade has both "m" and "M" — identical once camelized.
+    // Colliding names keep their exact raw spelling (raw keys are unique,
+    // Swift identifiers are case-sensitive); untouched names still camelize.
+    let yaml = """
+    openapi: "3.0.0"
+    info:
+      title: Unit Fixture
+      version: 1.0.0
+    paths: {}
+    components:
+      schemas:
+        Trade:
+          type: object
+          properties:
+            m:
+              type: boolean
+            M:
+              type: boolean
+            best_match:
+              type: boolean
+    """
+    let generated = try SpecGenerator().generate(yaml: yaml)
+    #expect(generated.contains("var m: Bool"))
+    #expect(generated.contains("var M: Bool"))
+    #expect(generated.contains("var bestMatch: Bool"))
+    #expect(generated.contains("case bestMatch = \"best_match\""))
+}

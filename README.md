@@ -152,6 +152,52 @@ enum Security {
 }
 ```
 
+Some credentials can't be values. Binance's `signature` is an HMAC digest of the final query string and its `timestamp` is the send instant — OpenAPI can't model that as a securityScheme, so the spec declares both as required query parameters. Read those as **slots**: their values are unknowable at the call site, so the wiring — which owns the clock and the key — fills them with a DSL block composed after the operation like any other:
+
+```swift
+struct HMACSignature: RequestBuildable {
+    let secretKey: String?
+    let now: () -> Date
+
+    var body: some RequestBuildable {
+        RequestBlock { state in
+            guard state.queryItems.contains(where: { $0.name == "signature" }) else { return }
+            guard let secretKey else { throw MissingSecretKey() }
+
+            let stamped = state.queryItems
+                .filter { $0.name != "signature" }
+                .map { $0.name == "timestamp" ? URLQueryItem(name: "timestamp", value: String(Int(now().timeIntervalSince1970 * 1000))) : $0 }
+
+            var wire = URLComponents()
+            wire.queryItems = stamped
+            let digest = HMAC<SHA256>.authenticationCode(
+                for: Data((wire.percentEncodedQuery ?? "").utf8),
+                using: SymmetricKey(data: Data(secretKey.utf8))
+            ).map { String(format: "%02x", $0) }.joined()
+
+            state.queryItems = stamped + [URLQueryItem(name: "signature", value: digest)]
+        }
+    }
+}
+```
+
+`RequestBlock { state in … }` is the DSL's own state-reading primitive, so signing is one more block in the chain — no slot → untouched, slot without a key → the build fails like any credential gate:
+
+```swift
+try RequestBlock {
+    BinanceSpotAPI.authorized(operation, apiKeyAuth: apiKey)
+    HMACSignature(secretKey: secretKey, now: now)
+}
+.base(baseURL)
+.request()
+```
+
+Call sites pass placeholders and never think about signing again — a test proves the slot values are dead:
+
+```swift
+let account = try await binance.api.getSapiV1AccountInfo(nil, 0, "")   // timestamp/signature: dead values, the wiring owns them
+```
+
 ## Usage
 
 ```sh
@@ -164,11 +210,12 @@ Flags: `-o`/`--output <file>`, `--enum-name <Name>` (overrides the namespace nam
 
 ## Reference specs
 
-Three reference specs are checked in, byte-exact canonical files from their upstream repositories, each with its generated output compiled on every build:
+Four reference specs are checked in — canonical upstream files (binance scoped to a subset, noted below), each with its generated output compiled on every build:
 
 - `Specs/petstore.yaml` — the classic [petstore](https://learn.openapis.org/examples/v3.0/petstore.html) example (OpenAPI 3.0). `PetstoreWiring.swift` is the degenerate client: no security in the spec, so the client carries only the base URL.
 - `Specs/museum.yaml` — the [Redocly Museum API](https://github.com/Redocly/museum-openapi-example) (OpenAPI 3.1): `$ref` parameters, scalar/enum component schemas, `allOf`, nested paths, and a `webhooks` section (ignored — webhooks aren't client-callable endpoints). `MuseumWiring.swift` is the minimal client: document-wide basic auth, gated once through the generated `Security.museumPlaceholderAuth(username:password:)` factory.
-- `Specs/supabase-auth.yaml` — the [Supabase Auth REST API](https://github.com/supabase/auth) (OpenAPI 3.0.3, ~60 operations): no-`operationId` fallback naming, templated server URLs, and three security schemes. Generated **client-only** (`--exclude-scheme AdminAuth`). `SupabaseAuthWiring.swift` shows the hand-written layer: `SupabaseAuthClient(baseURL:apikey:accessToken:)` wires session + environment once — `request(_ operation:)` composes one flat `RequestBlock` gated on the generated `Security` section (`RequestFailure` with the client's own errors when a required credential is nil),.
+- `Specs/supabase-auth.yaml` — the [Supabase Auth REST API](https://github.com/supabase/auth) (OpenAPI 3.0.3, ~60 operations): no-`operationId` fallback naming, templated server URLs, and three security schemes. Generated **client-only** (`--exclude-scheme AdminAuth`). `SupabaseAuthWiring.swift` shows the hand-written layer: `SupabaseAuthClient(baseURL:apikey:accessToken:)` wires session + environment once — `request(_ operation:)` composes one flat `RequestBlock` gated on the generated `Security` section, and `RefreshingExecutor` wraps the seam for 401 → single-flight refresh → one retry.
+- `Specs/binance.yaml` — the official [binance/binance-api-swagger](https://github.com/binance/binance-api-swagger) spot API, scoped to the Market + Wallet tags (49 of ~340 operations, transitively `$ref`-complete, every kept definition byte-identical to upstream). It exists for HMAC request signing — the slot-filling `HMACSignature` block shown above lives in `BinanceWiring.swift`, with its own test suite (`BinanceSigningTests`). The API-key header, a real `securityScheme`, rides the generated `Security` gates like every other spec.
 
 ### Generation rules
 
@@ -204,11 +251,11 @@ Settled over the project's evolution, enforced across every generated file:
 - `Sources/DeclarativeOpenAPI` — all parsing (via [Yams](https://github.com/jpsim/Yams)) and codegen; `SpecGenerator(enumNameOverride:).generate(yaml:) -> String`.
 - `Sources/DeclarativeOpenAPIRuntime` — the small shared runtime generated code imports, four witness structs (dependencies as properties, behavior as the output function): the universal non-generic `ResponseError` with its `evaluate` gate (typed throws), `NetworkExecution<Operation>` (the `(Operation) → Data` seam: request → transport → gate over the injected `successStatuses` table), `ClientBuilder<Operation>` (the pack-generic typed-closure mechanics `wired` tables build over), and `RefreshingExecutor<Operation>` (401 → single-flight refresh → one retry), ready to slap onto any backend's seam.
 - `Sources/DeclarativeOpenAPICLI` — the `swift-declarative-openapi` executable (plain `CommandLine.arguments`, no argument-parser dependency).
-- `Sources/PetstoreAPI`, `Sources/MuseumAPI`, and `Sources/SupabaseAuthAPI` — the **checked-in generated outputs** (plus the hand-written Supabase wiring), compiled against DeclarativeRequests on every `swift build`, so compilability of generated code is proven by the build itself.
+- `Sources/PetstoreAPI`, `Sources/MuseumAPI`, `Sources/SupabaseAuthAPI`, and `Sources/BinanceAPI` — the **checked-in generated outputs** (plus each backend's hand-written wiring), compiled against DeclarativeRequests on every `swift build`, so compilability of generated code is proven by the build itself.
 - `Specs/` — the canonical spec files.
-- `Tests/DeclarativeOpenAPITests` — 64 tests:
-  - **E2E generate-then-compile** (parameterized over all three specs): generates from the spec, writes a fresh temp SwiftPM package depending on DeclarativeRequests, runs a real `swift build` there, and asserts exit 0 (compiler output is surfaced on failure).
-  - **Golden** (parameterized over all three specs): generator output must equal the checked-in `*.generated.swift` byte-for-byte.
+- `Tests/DeclarativeOpenAPITests` — 83 tests:
+  - **E2E generate-then-compile** (parameterized over all four specs): generates from the spec, writes a fresh temp SwiftPM package depending on DeclarativeRequests, runs a real `swift build` there, and asserts exit 0 (compiler output is surfaced on failure).
+  - **Golden** (parameterized over all four specs): generator output must equal the checked-in `*.generated.swift` byte-for-byte.
   - **Request shape**: builds actual `URLRequest`s from the generated enums and asserts URLs, methods, query items, headers, and JSON bodies — including the Supabase refresh flow (`POST …/token?grant_type=refresh_token` with the real refresh-token payload and `apikey` header).
   - **Unit**: name sanitization, type mapping, slash stripping, required/optional/array query params, operationId fallback, enum-name override, header-param TODOs, invalid-YAML errors.
 

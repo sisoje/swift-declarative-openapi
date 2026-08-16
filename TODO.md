@@ -45,3 +45,7 @@ Handled: string-enum parameters (nested in the endpoint enum), named string-enum
 ## Model-generation hard tail
 
 Model generation covers the easy tier (properties/required, `allOf` flattening, CodingKeys). Deliberately skipped, in rough order of likely need: inline object properties (currently fall back to `String` via the tolerant type mapper — should at least emit a TODO comment), `format` refinements (`uuid` → `UUID`, `date-time` → `Date`), `additionalProperties` → dictionaries, `oneOf`/`anyOf` with discriminators, recursive schemas (need boxing), merge-patch three-state optionality.
+
+## Signing-slot parameters leak into the typed Client
+
+Binance's `timestamp`/`signature` slots are spec facts, so they rightly appear as case parameters — but that means the generated Client field signatures carry them too (`getSapiV1AccountInfo(_ recvWindow:, _ timestamp:, _ signature:)`), and callers pass dead placeholders the wiring overwrites. Lifting them out would need the generator to be told which parameters are wiring-filled slots (there's no structural OpenAPI marker — a `--slot-param <name>` flag per spec is the plausible shape: drop the parameter from the case and Client signature, emit the query key with an empty value so the wiring's structural detection still fires). Worth it only if a second signing-style spec shows up.

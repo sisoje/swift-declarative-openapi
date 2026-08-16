@@ -17,6 +17,7 @@ let package = Package(
         .library(name: "PetstoreAPI", targets: ["PetstoreAPI"]),
         .library(name: "MuseumAPI", targets: ["MuseumAPI"]),
         .library(name: "SupabaseAuthAPI", targets: ["SupabaseAuthAPI"]),
+        .library(name: "BinanceAPI", targets: ["BinanceAPI"]),
     ],
     dependencies: [
         .package(url: "https://github.com/jpsim/Yams.git", from: "5.0.0"),
@@ -57,6 +58,13 @@ let package = Package(
                 .product(name: "DeclarativeRequests", package: "declarative-requests-swift"),
             ]
         ),
+        .target(
+            name: "BinanceAPI",
+            dependencies: [
+                "DeclarativeOpenAPIRuntime",
+                .product(name: "DeclarativeRequests", package: "declarative-requests-swift"),
+            ]
+        ),
         .testTarget(
             name: "DeclarativeOpenAPITests",
             dependencies: [
@@ -64,6 +72,7 @@ let package = Package(
                 "PetstoreAPI",
                 "MuseumAPI",
                 "SupabaseAuthAPI",
+                "BinanceAPI",
                 "DeclarativeOpenAPIRuntime",
                 .product(name: "DeclarativeRequests", package: "declarative-requests-swift"),
             ]

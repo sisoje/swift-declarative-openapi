@@ -15,6 +15,7 @@ let museumSpecURL = packageRoot.appendingPathComponent("Specs/museum.yaml")
     ("Specs/petstore.yaml", "Sources/PetstoreAPI/Petstore.generated.swift", []),
     ("Specs/museum.yaml", "Sources/MuseumAPI/Museum.generated.swift", []),
     ("Specs/supabase-auth.yaml", "Sources/SupabaseAuthAPI/SupabaseAuth.generated.swift", ["AdminAuth"]),
+    ("Specs/binance.yaml", "Sources/BinanceAPI/Binance.generated.swift", []),
 ]) func generatorOutputMatchesCheckedInGoldenFile(spec: String, golden: String, excluded: [String]) throws {
     let yaml = try String(contentsOf: packageRoot.appendingPathComponent(spec), encoding: .utf8)
     let generated = try SpecGenerator(excludedSchemes: Set(excluded)).generate(yaml: yaml)

@@ -1,0 +1,4173 @@
+openapi: 3.0.2
+info:
+  title: Binance Spot API
+  description: "OpenAPI Specifications for the Binance Public Spot API\n\nAPI documents:\n  - [https://github.com/binance/binance-spot-api-docs](https://github.com/binance/binance-spot-api-docs)\n  - [https://binance-docs.github.io/apidocs/spot/en](https://binance-docs.github.io/apidocs/spot/en)\n\nThis file is a curated subset of the official binance/binance-api-swagger spot_api.yaml, scoped to the Market and Wallet tags only (byte-identical operation/schema/parameter definitions, reduced scope for a right-sized reference spec)."
+  version: '1.0'
+servers:
+- url: https://api.binance.com
+- url: https://testnet.binance.vision
+security: []
+tags:
+- name: Market
+  description: Market Data
+- name: Wallet
+  description: Wallet Endpoints
+paths:
+  /api/v3/ping:
+    get:
+      summary: Test Connectivity
+      description: 'Test connectivity to the Rest API.
+
+
+        Weight(IP): 1'
+      tags:
+      - Market
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+  /api/v3/time:
+    get:
+      summary: Check Server Time
+      description: 'Test connectivity to the Rest API and get the current server time.
+
+
+        Weight(IP): 1'
+      tags:
+      - Market
+      responses:
+        '200':
+          description: Binance server UTC timestamp
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  serverTime:
+                    type: integer
+                    format: int64
+                    example: 1499827319559
+                required:
+                - serverTime
+  /api/v3/exchangeInfo:
+    get:
+      summary: Exchange Information
+      description: "Current exchange trading rules and symbol information\n\n- If any symbol provided in either symbol or symbols do not exist, the endpoint will throw an error.\n- All parameters are optional.\n- permissions can support single or multiple values (e.g. SPOT, [\"MARGIN\",\"LEVERAGED\"])\n- If permissions parameter not provided, the default values will be [\"SPOT\",\"MARGIN\",\"LEVERAGED\"].\n  - To display all permissions you need to specify them explicitly. (e.g. SPOT, MARGIN,...)\n\nExamples of Symbol Permissions Interpretation from the Response:\n- [[\"A\",\"B\"]] means you may place an order if your account has either permission \"A\" or permission \"B\".\n- [[\"A\"],[\"B\"]] means you can place an order if your account has permission \"A\" and permission \"B\".\n- [[\"A\"],[\"B\",\"C\"]] means you can place an order if your account has permission \"A\" and permission \"B\" or permission \"C\". (Inclusive or is applied here, not exclusive or, so your account may have both permission \"B\" and permission \"C\".)\n\nWeight(IP): 10"
+      tags:
+      - Market
+      parameters:
+      - $ref: '#/components/parameters/optionalSymbol'
+      - $ref: '#/components/parameters/arraySymbols'
+      - $ref: '#/components/parameters/permissions'
+      responses:
+        '200':
+          description: Current exchange trading rules and symbol information
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  timezone:
+                    type: string
+                    example: UTC
+                  serverTime:
+                    type: integer
+                    format: int64
+                    example: 1592882214236
+                  rateLimits:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        rateLimitType:
+                          type: string
+                          example: REQUEST_WEIGHT
+                        interval:
+                          type: string
+                          example: MINUTE
+                        intervalNum:
+                          type: integer
+                          format: int32
+                          example: 1
+                        limit:
+                          type: integer
+                          format: int32
+                          example: 1200
+                      required:
+                      - rateLimitType
+                      - interval
+                      - intervalNum
+                      - limit
+                  exchangeFilters:
+                    type: array
+                    items:
+                      type: object
+                  symbols:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        symbol:
+                          type: string
+                          example: ETHBTC
+                        status:
+                          type: string
+                          example: TRADING
+                        baseAsset:
+                          type: string
+                          example: ETH
+                        baseAssetPrecision:
+                          type: integer
+                          format: int32
+                          example: 8
+                        quoteAsset:
+                          type: string
+                          example: BTC
+                        quoteAssetPrecision:
+                          type: integer
+                          format: int32
+                          example: 8
+                        baseCommissionPrecision:
+                          type: integer
+                          format: int32
+                          example: 8
+                        quoteCommissionPrecision:
+                          type: integer
+                          format: int32
+                          example: 8
+                        orderTypes:
+                          type: array
+                          items:
+                            type: string
+                            example: LIMIT
+                        icebergAllowed:
+                          type: boolean
+                          example: true
+                        ocoAllowed:
+                          type: boolean
+                          example: true
+                        otoAllowed:
+                          type: boolean
+                          example: false
+                        quoteOrderQtyMarketAllowed:
+                          type: boolean
+                          example: true
+                        allowTrailingStop:
+                          type: boolean
+                          example: false
+                        cancelReplaceAllowed:
+                          type: boolean
+                          example: true
+                        isSpotTradingAllowed:
+                          type: boolean
+                          example: true
+                        isMarginTradingAllowed:
+                          type: boolean
+                          example: true
+                        filters:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              filterType:
+                                type: string
+                                example: PRICE_FILTER
+                              minPrice:
+                                type: string
+                                example: '0.00000100'
+                              maxPrice:
+                                type: string
+                                example: '100000.00000000'
+                              tickSize:
+                                type: string
+                                example: '0.00000100'
+                            required:
+                            - filterType
+                            - minPrice
+                            - maxPrice
+                            - tickSize
+                        permissions:
+                          type: array
+                          items:
+                            type: string
+                            example: SPOT
+                        permissionSets:
+                          type: array
+                          items:
+                            type: array
+                            items:
+                              type: string
+                              example:
+                              - SPOT
+                              - MARGIN
+                        defaultSelfTradePreventionMode:
+                          type: string
+                          example: NONE
+                        allowedSelfTradePreventionModes:
+                          type: array
+                          items:
+                            type: string
+                            example: NONE
+                      required:
+                      - symbol
+                      - status
+                      - baseAsset
+                      - baseAssetPrecision
+                      - quoteAsset
+                      - quoteAssetPrecision
+                      - baseCommissionPrecision
+                      - quoteCommissionPrecision
+                      - orderTypes
+                      - icebergAllowed
+                      - ocoAllowed
+                      - otoAllowed
+                      - quoteOrderQtyMarketAllowed
+                      - allowTrailingStop
+                      - cancelReplaceAllowed
+                      - isSpotTradingAllowed
+                      - isMarginTradingAllowed
+                      - filters
+                      - permissions
+                      - permissionSets
+                      - defaultSelfTradePreventionMode
+                      - allowedSelfTradePreventionModes
+                required:
+                - timezone
+                - serverTime
+                - rateLimits
+                - exchangeFilters
+                - symbols
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+  /api/v3/depth:
+    get:
+      summary: Order Book
+      description: '| Limit               | Weight(IP)  |
+
+        |---------------------|-------------|
+
+        | 1-100               | 5           |
+
+        | 101-500             | 25          |
+
+        | 501-1000            | 50          |
+
+        | 1001-5000           | 250         |'
+      tags:
+      - Market
+      parameters:
+      - $ref: '#/components/parameters/symbol'
+      - name: limit
+        in: query
+        description: If limit > 5000, then the response will truncate to 5000
+        schema:
+          type: integer
+          format: int32
+          default: 100
+          maximum: 5000
+          example: 100
+      responses:
+        '200':
+          description: Order book
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  lastUpdateId:
+                    type: integer
+                    format: int64
+                  bids:
+                    type: array
+                    items:
+                      type: array
+                      items:
+                        type: string
+                        minItems: 2
+                        maxItems: 2
+                  asks:
+                    type: array
+                    items:
+                      type: array
+                      items:
+                        type: string
+                        minItems: 2
+                        maxItems: 2
+                required:
+                - lastUpdateId
+                - bids
+                - asks
+              example:
+                lastUpdateId: 1027024
+                bids:
+                - - '4.00000000'
+                  - '431.00000000'
+                asks:
+                - - '4.00000200'
+                  - '12.00000000'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+  /api/v3/trades:
+    get:
+      summary: Recent Trades List
+      description: 'Get recent trades.
+
+
+        Weight(IP): 10'
+      tags:
+      - Market
+      parameters:
+      - $ref: '#/components/parameters/symbol'
+      - $ref: '#/components/parameters/limit'
+      responses:
+        '200':
+          description: Trade list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/trade'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+  /api/v3/historicalTrades:
+    get:
+      summary: Old Trade Lookup
+      description: 'Get older market trades.
+
+
+        Weight(IP): 10'
+      tags:
+      - Market
+      parameters:
+      - $ref: '#/components/parameters/symbol'
+      - $ref: '#/components/parameters/limit'
+      - $ref: '#/components/parameters/fromId'
+      responses:
+        '200':
+          description: Trade list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/trade'
+  /api/v3/aggTrades:
+    get:
+      summary: Compressed/Aggregate Trades List
+      description: "Get compressed, aggregate trades. Trades that fill at the time, from the same order, with the same price will have the quantity aggregated.\n- If `fromId`, `startTime`, and `endTime` are not sent, the most recent aggregate trades will be returned.\n- Note that if a trade has the following values, this was a duplicate aggregate trade and marked as invalid:\n\n  p = '0' // price\n\n  q = '0' // qty\n\n  f = -1 // ﬁrst_trade_id\n\n  l = -1 // last_trade_id\n\nWeight(IP): 2"
+      tags:
+      - Market
+      parameters:
+      - $ref: '#/components/parameters/symbol'
+      - $ref: '#/components/parameters/fromId'
+      - $ref: '#/components/parameters/startTime'
+      - $ref: '#/components/parameters/endTime'
+      - $ref: '#/components/parameters/limit'
+      responses:
+        '200':
+          description: Trade list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/aggTrade'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+  /api/v3/klines:
+    get:
+      summary: Kline/Candlestick Data
+      description: 'Kline/candlestick bars for a symbol.
+
+        Klines are uniquely identified by their open time.
+
+
+        - If `startTime` and `endTime` are not sent, the most recent klines are returned.
+
+
+        Weight(IP): 2'
+      tags:
+      - Market
+      parameters:
+      - $ref: '#/components/parameters/symbol'
+      - name: interval
+        in: query
+        required: true
+        description: kline intervals
+        schema:
+          type: string
+          enum:
+          - 1s
+          - 1m
+          - 3m
+          - 5m
+          - 15m
+          - 30m
+          - 1h
+          - 2h
+          - 4h
+          - 6h
+          - 8h
+          - 12h
+          - 1d
+          - 3d
+          - 1w
+          - 1M
+          example: '"1m"'
+      - $ref: '#/components/parameters/startTime'
+      - $ref: '#/components/parameters/endTime'
+      - name: timeZone
+        in: query
+        required: false
+        description: 'Default: 0 (UTC)'
+        schema:
+          type: string
+      - $ref: '#/components/parameters/limit'
+      responses:
+        '200':
+          description: Kline data
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: array
+                  items:
+                    oneOf:
+                    - type: integer
+                      format: int64
+                    - type: string
+                    minItems: 12
+                    maxItems: 12
+                  example:
+                  - 1499040000000
+                  - '0.01634790'
+                  - '0.80000000'
+                  - '0.01575800'
+                  - '0.01577100'
+                  - '148976.11427815'
+                  - 1499644799999
+                  - '2434.19055334'
+                  - 308
+                  - '1756.87402397'
+                  - '28.46694368'
+                  - '17928899.62484339'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+  /api/v3/uiKlines:
+    get:
+      summary: UIKlines
+      description: 'The request is similar to klines having the same parameters and response.
+
+
+        uiKlines return modified kline data, optimized for presentation of candlestick charts.
+
+
+        Weight(IP): 2'
+      tags:
+      - Market
+      parameters:
+      - $ref: '#/components/parameters/symbol'
+      - name: interval
+        in: query
+        required: true
+        description: kline intervals
+        schema:
+          type: string
+          enum:
+          - 1s
+          - 1m
+          - 3m
+          - 5m
+          - 15m
+          - 30m
+          - 1h
+          - 2h
+          - 4h
+          - 6h
+          - 8h
+          - 12h
+          - 1d
+          - 3d
+          - 1w
+          - 1M
+          example: '"1m"'
+      - $ref: '#/components/parameters/startTime'
+      - $ref: '#/components/parameters/endTime'
+      - name: timeZone
+        in: query
+        required: false
+        description: 'Default: 0 (UTC)'
+        schema:
+          type: string
+      - $ref: '#/components/parameters/limit'
+      responses:
+        '200':
+          description: UIKline data
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: array
+                  items:
+                    oneOf:
+                    - type: integer
+                      format: int64
+                    - type: string
+                    minItems: 12
+                    maxItems: 12
+                  example:
+                  - 1499040000000
+                  - '0.01634790'
+                  - '0.80000000'
+                  - '0.01575800'
+                  - '0.01577100'
+                  - '148976.11427815'
+                  - 1499644799999
+                  - '2434.19055334'
+                  - 308
+                  - '1756.87402397'
+                  - '28.46694368'
+                  - '0'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+  /api/v3/avgPrice:
+    get:
+      summary: Current Average Price
+      description: 'Current average price for a symbol.
+
+
+        Weight(IP): 2'
+      tags:
+      - Market
+      parameters:
+      - $ref: '#/components/parameters/symbol'
+      responses:
+        '200':
+          description: Average price
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  mins:
+                    type: integer
+                    format: int64
+                    example: 5
+                    description: Average price interval (in minutes)
+                  price:
+                    type: string
+                    example: '9.35751834'
+                    description: Average price
+                  closeTime:
+                    type: integer
+                    format: int64
+                    example: 1694061154503
+                    description: Last trade time
+                required:
+                - mins
+                - price
+                - closeTime
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+  /api/v3/ticker/24hr:
+    get:
+      summary: 24hr Ticker Price Change Statistics
+      description: '24 hour rolling window price change statistics. Careful when accessing this with no symbol.
+
+
+        - If the symbol is not sent, tickers for all symbols will be returned in an array.
+
+
+        Weight(IP):
+
+        - `2` for a single symbol;
+
+        - `80` when the symbol parameter is omitted;'
+      tags:
+      - Market
+      parameters:
+      - $ref: '#/components/parameters/optionalSymbol'
+      - $ref: '#/components/parameters/arraySymbols'
+      - $ref: '#/components/parameters/tickerType'
+      responses:
+        '200':
+          description: 24hr ticker
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/ticker'
+                - $ref: '#/components/schemas/tickerList'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+  /api/v3/ticker/tradingDay:
+    get:
+      summary: Trading Day Ticker
+      description: "Price change statistics for a trading day.\n\nNotes:\n- Supported values for timeZone:\n  - Hours and minutes (e.g. -1:00, 05:45)\n  - Only hours (e.g. 0, 8, 4)\n\nWeight:\n- `4` for each requested symbol.\n- The weight for this request will cap at `200` once the number of symbols in the request is more than `50`."
+      tags:
+      - Market
+      parameters:
+      - $ref: '#/components/parameters/optionalSymbol'
+      - $ref: '#/components/parameters/arraySymbols'
+      - name: timeZone
+        in: query
+        required: false
+        description: 'Default: 0 (UTC)'
+        schema:
+          type: string
+      - $ref: '#/components/parameters/tickerType'
+      responses:
+        '200':
+          description: Trading day ticker
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/dayTicker'
+                - $ref: '#/components/schemas/dayTickerList'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+  /api/v3/ticker/price:
+    get:
+      summary: Symbol Price Ticker
+      description: 'Latest price for a symbol or symbols.
+
+
+        - If the symbol is not sent, prices for all symbols will be returned in an array.
+
+
+        Weight(IP):
+
+        - `2` for a single symbol;
+
+        - `4` when the symbol parameter is omitted;'
+      tags:
+      - Market
+      parameters:
+      - $ref: '#/components/parameters/optionalSymbol'
+      - $ref: '#/components/parameters/arraySymbols'
+      responses:
+        '200':
+          description: Price ticker
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/priceTicker'
+                - $ref: '#/components/schemas/priceTickerList'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+  /api/v3/ticker/bookTicker:
+    get:
+      summary: Symbol Order Book Ticker
+      description: 'Best price/qty on the order book for a symbol or symbols.
+
+
+        - If the symbol is not sent, bookTickers for all symbols will be returned in an array.
+
+
+        Weight(IP):
+
+        - `2` for a single symbol;
+
+        - `4` when the symbol parameter is omitted;'
+      tags:
+      - Market
+      parameters:
+      - $ref: '#/components/parameters/optionalSymbol'
+      - $ref: '#/components/parameters/arraySymbols'
+      responses:
+        '200':
+          description: Order book ticker
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/bookTicker'
+                - $ref: '#/components/schemas/bookTickerList'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+  /api/v3/ticker:
+    get:
+      summary: Rolling window price change statistics
+      description: 'The window used to compute statistics is typically slightly wider than requested windowSize.
+
+
+        openTime for /api/v3/ticker always starts on a minute, while the closeTime is the current time of the request. As such, the effective window might be up to 1 minute wider than requested.
+
+
+        E.g. If the closeTime is 1641287867099 (January 04, 2022 09:17:47:099 UTC) , and the windowSize is 1d. the openTime will be: 1641201420000 (January 3, 2022, 09:17:00 UTC)
+
+
+        Weight(IP): 4 for each requested symbol regardless of windowSize.
+
+
+        The weight for this request will cap at 200 once the number of symbols in the request is more than 50.'
+      tags:
+      - Market
+      parameters:
+      - $ref: '#/components/parameters/optionalSymbol'
+      - $ref: '#/components/parameters/arraySymbols'
+      - name: windowSize
+        in: query
+        description: 'Defaults to 1d if no parameter provided.
+
+          Supported windowSize values:
+
+          1m,2m....59m for minutes
+
+          1h, 2h....23h - for hours
+
+          1d...7d - for days.
+
+
+          Units cannot be combined (e.g. 1d2h is not allowed)'
+        schema:
+          type: string
+      - name: type
+        in: query
+        description: 'Supported values: FULL or MINI.
+
+          If none provided, the default is FULL'
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Rolling price ticker
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  symbol:
+                    type: string
+                    example: BNBBTC
+                  priceChange:
+                    type: string
+                    example: '-8.00000000'
+                  priceChangePercent:
+                    type: string
+                    example: '-88.889'
+                  weightedAvgPrice:
+                    type: string
+                    example: '2.60427807'
+                  openPrice:
+                    type: string
+                    example: '9.00000000'
+                  highPrice:
+                    type: string
+                    example: '9.00000000'
+                  lowPrice:
+                    type: string
+                    example: '1.00000000'
+                  lastPrice:
+                    type: string
+                    example: '1.00000000'
+                  volume:
+                    type: string
+                    example: '187.00000000'
+                  quoteVolume:
+                    type: string
+                    example: '487.00000000'
+                  openTime:
+                    type: integer
+                    format: int64
+                    example: 1641859200000
+                  closeTime:
+                    type: integer
+                    format: int64
+                    example: 1642031999999
+                  firstId:
+                    type: integer
+                    format: int64
+                    example: 0
+                  lastId:
+                    type: integer
+                    format: int64
+                    example: 60
+                  count:
+                    type: integer
+                    format: int64
+                    example: 61
+                required:
+                - symbol
+                - priceChange
+                - priceChangePercent
+                - weightedAvgPrice
+                - openPrice
+                - highPrice
+                - lowPrice
+                - lastPrice
+                - volume
+                - quoteVolume
+                - openTime
+                - closeTime
+                - firstId
+                - lastId
+                - count
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+  /sapi/v1/system/status:
+    get:
+      summary: System Status (System)
+      description: 'Fetch system status.
+
+
+        Weight(IP): 1'
+      tags:
+      - Wallet
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: integer
+                    format: int32
+                    example: 0
+                    description: '0: normal, 1：system maintenance'
+                  msg:
+                    type: string
+                    example: normal
+                    description: '"normal", "system_maintenance"'
+                required:
+                - status
+                - msg
+  /sapi/v1/capital/config/getall:
+    get:
+      summary: All Coins' Information (USER_DATA)
+      description: 'Get information of coins (available for deposit and withdraw) for user.
+
+
+        Weight(IP): 10'
+      tags:
+      - Wallet
+      parameters:
+      - $ref: '#/components/parameters/recvWindow'
+      - $ref: '#/components/parameters/timestamp'
+      - $ref: '#/components/parameters/signature'
+      security:
+      - ApiKeyAuth: []
+      responses:
+        '200':
+          description: All coins details information
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    coin:
+                      type: string
+                      example: BTC
+                    depositAllEnable:
+                      type: boolean
+                    free:
+                      type: string
+                      example: '0.00000000'
+                    freeze:
+                      type: string
+                      example: '0.00000000'
+                    ipoable:
+                      type: string
+                      example: '0.00000000'
+                    ipoing:
+                      type: string
+                      example: '0.00000000'
+                    isLegalMoney:
+                      type: boolean
+                      example: false
+                    locked:
+                      type: string
+                      example: '0.00000000'
+                    name:
+                      type: string
+                      example: Bitcoin
+                    networkList:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          addressRegex:
+                            type: string
+                            example: ^(bnb1)[0-9a-z]{38}$
+                          coin:
+                            type: string
+                            example: BTC
+                          depositDesc:
+                            type: string
+                            example: Wallet Maintenance, Deposit Suspended
+                            description: shown only when "depositEnable" is false.
+                          depositEnable:
+                            type: boolean
+                            example: false
+                          isDefault:
+                            type: boolean
+                            example: false
+                          memoRegex:
+                            type: string
+                            example: ^[0-9A-Za-z\-_]{1,120}$
+                          minConfirm:
+                            type: integer
+                            format: int64
+                            example: 1
+                            description: min number for balance confirmation.
+                          name:
+                            type: string
+                            example: BEP2
+                          network:
+                            type: string
+                            example: ETH
+                          specialTips:
+                            type: string
+                            example: Both a MEMO and an Address are required to successfully deposit your BEP2-BTCB tokens to Binance.
+                          unLockConfirm:
+                            type: integer
+                            format: int64
+                            example: 0
+                            description: confirmation number for balance unlock.
+                          withdrawDesc:
+                            type: string
+                            example: Wallet Maintenance, Withdrawal Suspended
+                            description: shown only when "withdrawEnable" is false
+                          withdrawEnable:
+                            type: boolean
+                            example: false
+                          withdrawFee:
+                            type: string
+                            example: '0.00000220'
+                          withdrawIntegerMultiple:
+                            type: string
+                            example: '0.00000001'
+                          withdrawMax:
+                            type: string
+                            example: '9999999999.99999999'
+                          withdrawMin:
+                            type: string
+                            example: '0.00000440'
+                          sameAddress:
+                            type: boolean
+                        required:
+                        - addressRegex
+                        - coin
+                        - depositDesc
+                        - depositEnable
+                        - isDefault
+                        - memoRegex
+                        - minConfirm
+                        - name
+                        - network
+                        - specialTips
+                        - unLockConfirm
+                        - withdrawDesc
+                        - withdrawEnable
+                        - withdrawFee
+                        - withdrawIntegerMultiple
+                        - withdrawMax
+                        - withdrawMin
+                        - sameAddress
+                    storage:
+                      type: string
+                      example: '0.00000000'
+                    trading:
+                      type: boolean
+                    withdrawAllEnable:
+                      type: boolean
+                    withdrawing:
+                      type: string
+                      example: '0.00000000'
+                  required:
+                  - coin
+                  - depositAllEnable
+                  - free
+                  - freeze
+                  - ipoable
+                  - ipoing
+                  - isLegalMoney
+                  - locked
+                  - name
+                  - networkList
+                  - storage
+                  - trading
+                  - withdrawAllEnable
+                  - withdrawing
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+        '401':
+          description: Unauthorized Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+  /sapi/v1/accountSnapshot:
+    get:
+      summary: Daily Account Snapshot (USER_DATA)
+      description: '- The query time period must be less than 30 days
+
+        - Support query within the last one month only
+
+        - If startTimeand endTime not sent, return records of the last 7 days by default
+
+
+        Weight(IP): 2400'
+      tags:
+      - Wallet
+      parameters:
+      - name: type
+        in: query
+        required: true
+        schema:
+          type: string
+          enum:
+          - SPOT
+          - MARGIN
+          - FUTURES
+      - $ref: '#/components/parameters/startTime'
+      - $ref: '#/components/parameters/endTime'
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 7
+          minimum: 7
+          maximum: 30
+      - $ref: '#/components/parameters/recvWindow'
+      - $ref: '#/components/parameters/timestamp'
+      - $ref: '#/components/parameters/signature'
+      security:
+      - ApiKeyAuth: []
+      responses:
+        '200':
+          description: Account Snapshot
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/snapshotSpot'
+                - $ref: '#/components/schemas/snapshotMargin'
+                - $ref: '#/components/schemas/snapshotFutures'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+        '401':
+          description: Unauthorized Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+  /sapi/v1/account/disableFastWithdrawSwitch:
+    post:
+      summary: Disable Fast Withdraw Switch (USER_DATA)
+      description: '- This request will disable fastwithdraw switch under your account.
+
+        - You need to enable "trade" option for the api key which requests this endpoint.
+
+
+        Weight(IP): 1'
+      tags:
+      - Wallet
+      parameters:
+      - $ref: '#/components/parameters/recvWindow'
+      - $ref: '#/components/parameters/timestamp'
+      - $ref: '#/components/parameters/signature'
+      security:
+      - ApiKeyAuth: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+        '401':
+          description: Unauthorized Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+  /sapi/v1/account/enableFastWithdrawSwitch:
+    post:
+      summary: Enable Fast Withdraw Switch (USER_DATA)
+      description: '- This request will enable fastwithdraw switch under your account. You need to enable "trade" option for the api key which requests this endpoint.
+
+        - When Fast Withdraw Switch is on, transferring funds to a Binance account will be done instantly. There is no on-chain transaction, no transaction ID and no withdrawal fee.
+
+
+        Weight(IP): 1'
+      tags:
+      - Wallet
+      parameters:
+      - $ref: '#/components/parameters/recvWindow'
+      - $ref: '#/components/parameters/timestamp'
+      - $ref: '#/components/parameters/signature'
+      security:
+      - ApiKeyAuth: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+        '401':
+          description: Unauthorized Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+  /sapi/v1/capital/withdraw/apply:
+    post:
+      summary: Withdraw (USER_DATA)
+      description: 'Submit a withdraw request.
+
+
+        - If `network` not send, return with default network of the coin.
+
+        - You can get `network` and `isDefault` in `networkList` of a coin in the response of `Get /sapi/v1/capital/config/getall (HMAC SHA256)`.
+
+
+        Weight(IP): 1'
+      tags:
+      - Wallet
+      parameters:
+      - $ref: '#/components/parameters/coin'
+      - name: withdrawOrderId
+        in: query
+        description: Client id for withdraw
+        schema:
+          type: string
+      - $ref: '#/components/parameters/network'
+      - name: address
+        in: query
+        required: true
+        schema:
+          type: string
+      - name: addressTag
+        in: query
+        description: Secondary address identifier for coins like XRP,XMR etc.
+        schema:
+          type: string
+      - $ref: '#/components/parameters/amount'
+      - name: transactionFeeFlag
+        in: query
+        description: 'When making internal transfer
+
+          - `true` ->  returning the fee to the destination account;
+
+          - `false` -> returning the fee back to the departure account.'
+        schema:
+          type: boolean
+          default: false
+      - name: name
+        in: query
+        schema:
+          type: string
+      - name: walletType
+        in: query
+        description: The wallet type for withdraw，0-Spot wallet, 1- Funding wallet. Default is Spot wallet
+        schema:
+          type: integer
+          format: int32
+      - $ref: '#/components/parameters/recvWindow'
+      - $ref: '#/components/parameters/timestamp'
+      - $ref: '#/components/parameters/signature'
+      security:
+      - ApiKeyAuth: []
+      responses:
+        '200':
+          description: Transafer Id
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    example: 7213fea8e94b4a5593d507237e5a555b
+                required:
+                - id
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+        '401':
+          description: Unauthorized Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+  /sapi/v1/capital/deposit/hisrec:
+    get:
+      summary: Deposit History(supporting network) (USER_DATA)
+      description: 'Fetch deposit history.
+
+
+        - Please notice the default `startTime` and `endTime` to make sure that time interval is within 0-90 days.
+
+        - If both `startTime` and `endTime` are sent, time between `startTime` and `endTime` must be less than 90 days.
+
+
+        Weight(IP): 1'
+      tags:
+      - Wallet
+      parameters:
+      - $ref: '#/components/parameters/optionalCoin'
+      - name: status
+        in: query
+        description: '* `0` - pending
+
+          * `6` - credited but cannot withdraw
+
+          * `1` - success'
+        schema:
+          type: integer
+          format: int32
+      - $ref: '#/components/parameters/startTime'
+      - $ref: '#/components/parameters/endTime'
+      - $ref: '#/components/parameters/offset'
+      - $ref: '#/components/parameters/limit'
+      - $ref: '#/components/parameters/recvWindow'
+      - $ref: '#/components/parameters/timestamp'
+      - $ref: '#/components/parameters/signature'
+      security:
+      - ApiKeyAuth: []
+      responses:
+        '200':
+          description: List of deposits
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    amount:
+                      type: string
+                      example: '0.00999800'
+                    coin:
+                      type: string
+                      example: PAXG
+                    network:
+                      type: string
+                      example: ETH
+                    status:
+                      type: integer
+                      format: int32
+                      example: 1
+                    address:
+                      type: string
+                      example: '0x788cabe9236ce061e5a892e1a59395a81fc8d62c'
+                    addressTag:
+                      type: string
+                      example: ''
+                    txId:
+                      type: string
+                      example: '0xaad4654a3234aa6118af9b4b335f5ae81c360b2394721c019b5d1e75328b09f3'
+                    insertTime:
+                      type: integer
+                      format: int64
+                      example: 1599621997000
+                    transferType:
+                      type: integer
+                      format: int32
+                      example: 0
+                    unlockConfirm:
+                      type: string
+                      example: 12/12
+                      description: confirm times for unlocking
+                    confirmTimes:
+                      type: string
+                      example: 12/12
+                  required:
+                  - amount
+                  - coin
+                  - network
+                  - status
+                  - address
+                  - addressTag
+                  - txId
+                  - insertTime
+                  - transferType
+                  - unlockConfirm
+                  - confirmTimes
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+        '401':
+          description: Unauthorized Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+  /sapi/v1/capital/withdraw/history:
+    get:
+      summary: Withdraw History (supporting network) (USER_DATA)
+      description: 'Fetch withdraw history.
+
+
+        This endpoint specifically uses per second UID rate limit, user''s total second level IP rate limit is 180000/second. Response from the endpoint contains header key X-SAPI-USED-UID-WEIGHT-1S, which defines weight used by the current IP.
+
+
+        - `network` may not be in the response for old withdraw.
+
+        - Please notice the default `startTime` and `endTime` to make sure that time interval is within 0-90 days.
+
+        - If both `startTime` and `endTime` are sent, time between `startTime` and `endTime` must be less than 90 days
+
+        - If withdrawOrderId is sent, time between startTime and endTime must be less than 7 days.
+
+        - If withdrawOrderId is sent, startTime and endTime are not sent, will return last 7 days records by default.
+
+
+        Weight(UID): 18000
+
+        Request Limit: 10 requests per second'
+      tags:
+      - Wallet
+      parameters:
+      - $ref: '#/components/parameters/optionalCoin'
+      - name: withdrawOrderId
+        in: query
+        schema:
+          type: string
+      - name: status
+        in: query
+        description: '* `0` - Email Sent
+
+          * `1` - Cancelled
+
+          * `2` - Awaiting Approval
+
+          * `3` - Rejected
+
+          * `4` - Processing
+
+          * `5` - Failure
+
+          * `6` - Completed'
+        schema:
+          type: integer
+          format: int32
+          minimum: 0
+          maximum: 6
+      - $ref: '#/components/parameters/startTime'
+      - $ref: '#/components/parameters/endTime'
+      - $ref: '#/components/parameters/offset'
+      - $ref: '#/components/parameters/limit'
+      - $ref: '#/components/parameters/recvWindow'
+      - $ref: '#/components/parameters/timestamp'
+      - $ref: '#/components/parameters/signature'
+      security:
+      - ApiKeyAuth: []
+      responses:
+        '200':
+          description: List of withdraw history
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    address:
+                      type: string
+                      example: '0x94df8b352de7f46f64b01d3666bf6e936e44ce60'
+                    amount:
+                      type: string
+                      example: '8.91000000'
+                    applyTime:
+                      type: string
+                      example: '2019-10-12 11:12:02'
+                    coin:
+                      type: string
+                      example: USDT
+                    id:
+                      type: string
+                      example: b6ae22b3aa844210a7041aee7589627c
+                    withdrawOrderId:
+                      type: string
+                      example: WITHDRAWtest123
+                      description: will not be returned if there's no withdrawOrderId for this withdraw.
+                    network:
+                      type: string
+                      example: ETH
+                    transferType:
+                      type: integer
+                      format: int32
+                      example: 0
+                      description: 1 for internal transfer, 0 for external transfer
+                    status:
+                      type: integer
+                      format: int32
+                      example: 6
+                    transactionFee:
+                      type: string
+                      example: '0.004'
+                    confirmNo:
+                      type: integer
+                      format: int32
+                      example: 3
+                    info:
+                      type: string
+                      example: The address is not valid. Please confirm with the recipient
+                      description: Reason for withdrawal failure
+                    txId:
+                      type: string
+                      example: '0xb5ef8c13b968a406cc62a93a8bd80f9e9a906ef1b3fcf20a2e48573c17659268'
+                  required:
+                  - address
+                  - amount
+                  - applyTime
+                  - coin
+                  - id
+                  - withdrawOrderId
+                  - network
+                  - transferType
+                  - status
+                  - transactionFee
+                  - txId
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+        '401':
+          description: Unauthorized Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+  /sapi/v1/capital/deposit/address:
+    get:
+      summary: Deposit Address (supporting network) (USER_DATA)
+      description: 'Fetch deposit address with network.
+
+
+        - If network is not send, return with default network of the coin.
+
+        - You can get network and isDefault in networkList in the response of Get /sapi/v1/capital/config/getall (HMAC SHA256).
+
+
+        Weight(IP): 10'
+      tags:
+      - Wallet
+      parameters:
+      - $ref: '#/components/parameters/coin'
+      - $ref: '#/components/parameters/network'
+      - $ref: '#/components/parameters/recvWindow'
+      - $ref: '#/components/parameters/timestamp'
+      - $ref: '#/components/parameters/signature'
+      security:
+      - ApiKeyAuth: []
+      responses:
+        '200':
+          description: Deposit address info
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  address:
+                    type: string
+                    example: 1HPn8Rx2y6nNSfagQBKy27GB99Vbzg89wv
+                  coin:
+                    type: string
+                    example: BTC
+                  tag:
+                    type: string
+                    example: ''
+                  url:
+                    type: string
+                    example: https://btc.com/1HPn8Rx2y6nNSfagQBKy27GB99Vbzg89wv
+                required:
+                - address
+                - coin
+                - tag
+                - url
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+        '401':
+          description: Unauthorized Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+  /sapi/v1/account/status:
+    get:
+      summary: Account Status (USER_DATA)
+      description: 'Fetch account status detail.
+
+
+        Weight(IP): 1'
+      tags:
+      - Wallet
+      parameters:
+      - $ref: '#/components/parameters/recvWindow'
+      - $ref: '#/components/parameters/timestamp'
+      - $ref: '#/components/parameters/signature'
+      security:
+      - ApiKeyAuth: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: string
+                    example: Normal
+                required:
+                - data
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+        '401':
+          description: Unauthorized Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+  /sapi/v1/account/apiTradingStatus:
+    get:
+      summary: Account API Trading Status (USER_DATA)
+      description: 'Fetch account API trading status with details.
+
+
+        Weight(IP): 1'
+      tags:
+      - Wallet
+      parameters:
+      - $ref: '#/components/parameters/recvWindow'
+      - $ref: '#/components/parameters/timestamp'
+      - $ref: '#/components/parameters/signature'
+      security:
+      - ApiKeyAuth: []
+      responses:
+        '200':
+          description: Account API trading status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      isLocked:
+                        type: boolean
+                        example: false
+                        description: API trading function is locked or not
+                      plannedRecoverTime:
+                        type: integer
+                        format: int64
+                        example: 0
+                        description: If API trading function is locked, this is the planned recover time
+                      triggerCondition:
+                        type: object
+                        properties:
+                          GCR:
+                            type: integer
+                            format: int64
+                            example: 150
+                            description: Number of GTC orders
+                          IFER:
+                            type: integer
+                            format: int64
+                            example: 150
+                            description: Number of FOK/IOC orders
+                          UFR:
+                            type: integer
+                            format: int64
+                            example: 300
+                            description: Number of orders
+                        required:
+                        - GCR
+                        - IFER
+                        - UFR
+                      indicators:
+                        description: The indicators updated every 30 seconds
+                        type: object
+                        properties:
+                          BTCUSDT:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                i:
+                                  type: string
+                                  example: UFR
+                                  description: Unfilled Ratio (UFR)
+                                c:
+                                  type: integer
+                                  format: int64
+                                  example: 20
+                                  description: Count of all orders
+                                v:
+                                  type: number
+                                  format: float
+                                  example: 0.05
+                                  description: Current UFR value
+                                t:
+                                  type: number
+                                  format: float
+                                  example: 0.99
+                                  description: Trigger UFR value
+                              required:
+                              - i
+                              - c
+                              - v
+                              - t
+                        required:
+                        - BTCUSDT
+                      updateTime:
+                        type: integer
+                        format: int64
+                        example: 1547630471725
+                    required:
+                    - isLocked
+                    - plannedRecoverTime
+                    - triggerCondition
+                    - indicators
+                    - updateTime
+                required:
+                - data
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+        '401':
+          description: Unauthorized Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+  /sapi/v1/asset/dribblet:
+    get:
+      summary: DustLog(USER_DATA)
+      description: 'Weight(IP): 1'
+      tags:
+      - Wallet
+      parameters:
+      - name: accountType
+        in: query
+        required: false
+        description: SPOT or MARGIN, default SPOT
+        schema:
+          type: string
+          enum:
+          - SPOT
+          - MARGIN
+      - $ref: '#/components/parameters/startTime'
+      - $ref: '#/components/parameters/endTime'
+      - $ref: '#/components/parameters/recvWindow'
+      - $ref: '#/components/parameters/timestamp'
+      - $ref: '#/components/parameters/signature'
+      security:
+      - ApiKeyAuth: []
+      responses:
+        '200':
+          description: Dust log records
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total:
+                    description: Total counts of exchange
+                    type: integer
+                    format: int64
+                    example: 8
+                  userAssetDribblets:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        operateTime:
+                          type: integer
+                          format: int64
+                          example: 1615985535000
+                        totalTransferedAmount:
+                          type: string
+                          example: '0.00132256'
+                          description: Total transfered BNB amount for this exchange.
+                        totalServiceChargeAmount:
+                          type: string
+                          example: '0.00002699'
+                          description: Total service charge amount for this exchange.
+                        transId:
+                          type: integer
+                          format: int64
+                          example: 45178372831
+                        userAssetDribbletDetails:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              transId:
+                                type: integer
+                                format: int64
+                                example: 4359321
+                              serviceChargeAmount:
+                                type: string
+                                example: '0.000009'
+                              amount:
+                                type: string
+                                example: '0.0009'
+                              operateTime:
+                                type: integer
+                                format: int64
+                                example: 1615985535000
+                              transferedAmount:
+                                type: string
+                                example: '0.000441'
+                              fromAsset:
+                                type: string
+                                example: USDT
+                            required:
+                            - transId
+                            - serviceChargeAmount
+                            - amount
+                            - operateTime
+                            - transferedAmount
+                            - fromAsset
+                      required:
+                      - operateTime
+                      - totalTransferedAmount
+                      - totalServiceChargeAmount
+                      - transId
+                      - userAssetDribbletDetails
+                required:
+                - total
+                - userAssetDribblets
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+        '401':
+          description: Unauthorized Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+  /sapi/v1/asset/dust-btc:
+    post:
+      summary: Get Assets That Can Be Converted Into BNB (USER_DATA)
+      description: 'Weight(IP): 1'
+      tags:
+      - Wallet
+      parameters:
+      - name: accountType
+        in: query
+        required: false
+        description: SPOT or MARGIN, default SPOT
+        schema:
+          type: string
+          enum:
+          - SPOT
+          - MARGIN
+      - $ref: '#/components/parameters/recvWindow'
+      - $ref: '#/components/parameters/timestamp'
+      - $ref: '#/components/parameters/signature'
+      security:
+      - ApiKeyAuth: []
+      responses:
+        '200':
+          description: Account assets available to be converted to BNB
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  details:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        asset:
+                          type: string
+                          example: ADA
+                        assetFullName:
+                          type: string
+                          example: ADA
+                        amountFree:
+                          type: string
+                          example: '6.21'
+                          description: Convertible amount
+                        toBTC:
+                          type: string
+                          example: '0.00016848'
+                          description: BTC amount
+                        toBNB:
+                          type: string
+                          example: '0.01777302'
+                          description: BNB amount(Not deducted commission fee
+                        toBNBOffExchange:
+                          type: string
+                          example: '0.01741756'
+                          description: BNB amount(Deducted commission fee
+                        exchange:
+                          type: string
+                          example: '0.00035546'
+                          description: Commission fee
+                      required:
+                      - asset
+                      - assetFullName
+                      - amountFree
+                      - toBTC
+                      - toBNB
+                      - toBNBOffExchange
+                      - exchange
+                  totalTransferBtc:
+                    type: string
+                    example: '0.00016848'
+                  totalTransferBNB:
+                    type: string
+                    example: '0.01777302'
+                  dribbletPercentage:
+                    type: string
+                    example: '0.02'
+                    description: Commission fee
+                required:
+                - details
+                - totalTransferBtc
+                - totalTransferBNB
+                - dribbletPercentage
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+        '401':
+          description: Unauthorized Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+  /sapi/v1/asset/dust:
+    post:
+      summary: Dust Transfer (USER_DATA)
+      description: 'Convert dust assets to BNB.
+
+
+        Weight(UID): 10'
+      tags:
+      - Wallet
+      parameters:
+      - name: asset
+        in: query
+        required: true
+        description: The asset being converted. For example, asset=BTC&asset=USDT
+        schema:
+          type: array
+          items:
+            type: string
+      - name: accountType
+        in: query
+        required: false
+        description: SPOT or MARGIN, default SPOT
+        schema:
+          type: string
+          enum:
+          - SPOT
+          - MARGIN
+      - $ref: '#/components/parameters/recvWindow'
+      - $ref: '#/components/parameters/timestamp'
+      - $ref: '#/components/parameters/signature'
+      security:
+      - ApiKeyAuth: []
+      responses:
+        '200':
+          description: Dust log records
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  totalServiceCharge:
+                    type: string
+                    example: '0.02102542'
+                  totalTransfered:
+                    type: string
+                    example: '1.05127099'
+                  transferResult:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        amount:
+                          type: string
+                          example: '0.03000000'
+                        fromAsset:
+                          type: string
+                          example: ETH
+                        operateTime:
+                          type: integer
+                          format: int64
+                          example: 1563368549307
+                        serviceChargeAmount:
+                          type: string
+                          example: '0.00500000'
+                        tranId:
+                          type: integer
+                          format: int64
+                          example: 2970932918
+                        transferedAmount:
+                          type: string
+                          example: '0.25000000'
+                      required:
+                      - amount
+                      - fromAsset
+                      - operateTime
+                      - serviceChargeAmount
+                      - tranId
+                      - transferedAmount
+                required:
+                - totalServiceCharge
+                - totalTransfered
+                - transferResult
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+        '401':
+          description: Unauthorized Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+  /sapi/v1/asset/assetDividend:
+    get:
+      summary: Asset Dividend Record (USER_DATA)
+      description: 'Query asset Dividend Record
+
+
+        Weight(IP): 10'
+      tags:
+      - Wallet
+      parameters:
+      - $ref: '#/components/parameters/optionalAsset'
+      - $ref: '#/components/parameters/startTime'
+      - $ref: '#/components/parameters/endTime'
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          format: int32
+          default: 20
+          maximum: 500
+      - $ref: '#/components/parameters/recvWindow'
+      - $ref: '#/components/parameters/timestamp'
+      - $ref: '#/components/parameters/signature'
+      security:
+      - ApiKeyAuth: []
+      responses:
+        '200':
+          description: Records of asset devidend
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  rows:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          format: int64
+                          example: 242006910
+                        amount:
+                          type: string
+                          example: '10.00000000'
+                        asset:
+                          type: string
+                          example: BHFT
+                        divTime:
+                          type: integer
+                          format: int64
+                          example: 1563189166000
+                        enInfo:
+                          type: string
+                          example: BHFT distribution
+                        tranId:
+                          type: integer
+                          format: int64
+                          example: 2968885920
+                      required:
+                      - id
+                      - amount
+                      - asset
+                      - divTime
+                      - enInfo
+                      - tranId
+                  total:
+                    type: integer
+                    format: int32
+                    example: 1
+                required:
+                - rows
+                - total
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+        '401':
+          description: Unauthorized Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+  /sapi/v1/asset/assetDetail:
+    get:
+      summary: Asset Detail (USER_DATA)
+      description: 'Fetch details of assets supported on Binance.
+
+
+        - Please get network and other deposit or withdraw details from `GET /sapi/v1/capital/config/getall`.
+
+
+        Weight(IP): 1'
+      tags:
+      - Wallet
+      parameters:
+      - $ref: '#/components/parameters/optionalAsset'
+      - $ref: '#/components/parameters/recvWindow'
+      - $ref: '#/components/parameters/timestamp'
+      - $ref: '#/components/parameters/signature'
+      security:
+      - ApiKeyAuth: []
+      responses:
+        '200':
+          description: Asset detail
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  CTR:
+                    type: object
+                    properties:
+                      minWithdrawAmount:
+                        type: string
+                        example: '70.00000000'
+                      depositStatus:
+                        type: boolean
+                        example: false
+                        description: deposit status (false if ALL of networks' are false)
+                      withdrawFee:
+                        type: integer
+                        format: int64
+                        example: 35
+                      withdrawStatus:
+                        type: boolean
+                        description: withdrawStatus status (false if ALL of networks' are false)
+                      depositTip:
+                        type: string
+                        example: Delisted, Deposit Suspended
+                    required:
+                    - minWithdrawAmount
+                    - depositStatus
+                    - withdrawFee
+                    - withdrawStatus
+                    - depositTip
+                required:
+                - CTR
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+        '401':
+          description: Unauthorized Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+  /sapi/v1/asset/tradeFee:
+    get:
+      summary: Trade Fee (USER_DATA)
+      description: 'Fetch trade fee
+
+
+        Weight(IP): 1'
+      tags:
+      - Wallet
+      parameters:
+      - $ref: '#/components/parameters/optionalSymbol'
+      - $ref: '#/components/parameters/recvWindow'
+      - $ref: '#/components/parameters/timestamp'
+      - $ref: '#/components/parameters/signature'
+      security:
+      - ApiKeyAuth: []
+      responses:
+        '200':
+          description: Trade fee info per symbol
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    symbol:
+                      type: string
+                      example: ADABNB
+                    makerCommission:
+                      type: string
+                      example: '0.001'
+                    takerCommission:
+                      type: string
+                      example: '0.001'
+                  required:
+                  - symbol
+                  - makerCommission
+                  - takerCommission
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+        '401':
+          description: Unauthorized Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+  /sapi/v1/asset/transfer:
+    get:
+      summary: Query User Universal Transfer History (USER_DATA)
+      description: '- `fromSymbol` must be sent when type are ISOLATEDMARGIN_MARGIN and ISOLATEDMARGIN_ISOLATEDMARGIN
+
+        - `toSymbol` must be sent when type are MARGIN_ISOLATEDMARGIN and ISOLATEDMARGIN_ISOLATEDMARGIN
+
+        - Support query within the last 6 months only
+
+        - If `startTime` and `endTime` not sent, return records of the last 7 days by default
+
+
+        Weight(IP): 1'
+      tags:
+      - Wallet
+      parameters:
+      - $ref: '#/components/parameters/univTransferType'
+      - $ref: '#/components/parameters/startTime'
+      - $ref: '#/components/parameters/endTime'
+      - $ref: '#/components/parameters/current'
+      - $ref: '#/components/parameters/size'
+      - $ref: '#/components/parameters/fromSymbol'
+      - $ref: '#/components/parameters/toSymbol'
+      - $ref: '#/components/parameters/recvWindow'
+      - $ref: '#/components/parameters/timestamp'
+      - $ref: '#/components/parameters/signature'
+      security:
+      - ApiKeyAuth: []
+      responses:
+        '200':
+          description: Universal transfer history
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total:
+                    type: integer
+                    format: int32
+                    example: 1
+                  rows:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        asset:
+                          type: string
+                          example: USDT
+                        amount:
+                          type: string
+                          example: '1'
+                        type:
+                          type: string
+                          example: MAIN_UMFUTUR
+                        status:
+                          type: string
+                          example: CONFIRMED
+                        tranId:
+                          type: integer
+                          format: int64
+                          example: 11415955596
+                        timestamp:
+                          type: integer
+                          format: int64
+                          example: 1544433328000
+                      required:
+                      - asset
+                      - amount
+                      - type
+                      - status
+                      - tranId
+                      - timestamp
+                required:
+                - total
+                - rows
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+        '401':
+          description: Unauthorized Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+    post:
+      summary: User Universal Transfer (USER_DATA)
+      description: "You need to enable `Permits Universal Transfer` option for the api key which requests this endpoint.\n\n- `fromSymbol` must be sent when type are ISOLATEDMARGIN_MARGIN and ISOLATEDMARGIN_ISOLATEDMARGIN\n- `toSymbol` must be sent when type are MARGIN_ISOLATEDMARGIN and ISOLATEDMARGIN_ISOLATEDMARGIN\n\nENUM of transfer types:\n  - MAIN_UMFUTURE Spot account transfer to USDⓈ-M Futures account\n  - MAIN_CMFUTURE Spot account transfer to COIN-M Futures account\n  - MAIN_MARGIN Spot account transfer to Margin(cross)account\n  - UMFUTURE_MAIN USDⓈ-M Futures account transfer to Spot account\n  - UMFUTURE_MARGIN USDⓈ-M Futures account transfer to Margin(cross)account\n  - CMFUTURE_MAIN COIN-M Futures account transfer to Spot account\n  - CMFUTURE_MARGIN COIN-M Futures account transfer to Margin(cross) account\n  - MARGIN_MAIN Margin(cross)account transfer to Spot account\n  - MARGIN_UMFUTURE Margin(cross)account transfer to USDⓈ-M Futures\n  - MARGIN_CMFUTURE Margin(cross)account transfer to COIN-M Futures\n  - ISOLATEDMARGIN_MARGIN Isolated margin account transfer to Margin(cross) account\n  - MARGIN_ISOLATEDMARGIN Margin(cross) account transfer to Isolated margin account\n  - ISOLATEDMARGIN_ISOLATEDMARGIN Isolated margin account transfer to Isolated margin account\n  - MAIN_FUNDING Spot account transfer to Funding account\n  - FUNDING_MAIN Funding account transfer to Spot account\n  - FUNDING_UMFUTURE Funding account transfer to UMFUTURE account\n  - UMFUTURE_FUNDING UMFUTURE account transfer to Funding account\n  - MARGIN_FUNDING MARGIN account transfer to Funding account\n  - FUNDING_MARGIN Funding account transfer to Margin account\n  - FUNDING_CMFUTURE Funding account transfer to CMFUTURE account\n  - CMFUTURE_FUNDING CMFUTURE account transfer to Funding account\n  - MAIN_OPTION Spot account transfer to Options account\n  - OPTION_MAIN Options account transfer to Spot account\n  - UMFUTURE_OPTION USDⓈ-M Futures account transfer to Options account\n  - OPTION_UMFUTURE Options account transfer to USDⓈ-M Futures account\n  - MARGIN_OPTION Margin(cross)account transfer to Options account\n  - OPTION_MARGIN Options account transfer to Margin(cross)account\n  - FUNDING_OPTION Funding account transfer to Options account\n  - OPTION_FUNDING Options account transfer to Funding account\n  - MAIN_PORTFOLIO_MARGIN Spot account transfer to Portfolio Margin account\n  - PORTFOLIO_MARGIN_MAIN Portfolio Margin account transfer to Spot account\n  - MAIN_ISOLATED_MARGIN Spot account transfer to Isolated margin account\n  - ISOLATED_MARGIN_MAIN Isolated margin account transfer to Spot account\n\nWeight(IP): 1"
+      tags:
+      - Wallet
+      parameters:
+      - $ref: '#/components/parameters/univTransferType'
+      - $ref: '#/components/parameters/asset'
+      - $ref: '#/components/parameters/amount'
+      - $ref: '#/components/parameters/fromSymbol'
+      - $ref: '#/components/parameters/toSymbol'
+      - $ref: '#/components/parameters/recvWindow'
+      - $ref: '#/components/parameters/timestamp'
+      - $ref: '#/components/parameters/signature'
+      security:
+      - ApiKeyAuth: []
+      responses:
+        '200':
+          description: Transfer id
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tranId:
+                    type: integer
+                    format: int64
+                    example: 13526853623
+                required:
+                - tranId
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+        '401':
+          description: Unauthorized Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+  /sapi/v1/asset/get-funding-asset:
+    post:
+      summary: Funding Wallet (USER_DATA)
+      description: '- Currently supports querying the following business assets：Binance Pay, Binance Card, Binance Gift Card, Stock Token
+
+
+        Weight(IP): 1'
+      tags:
+      - Wallet
+      parameters:
+      - $ref: '#/components/parameters/optionalAsset'
+      - $ref: '#/components/parameters/needBtcValuation'
+      - $ref: '#/components/parameters/recvWindow'
+      - $ref: '#/components/parameters/timestamp'
+      - $ref: '#/components/parameters/signature'
+      security:
+      - ApiKeyAuth: []
+      responses:
+        '200':
+          description: Funding asset detail
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    asset:
+                      type: string
+                      example: USDT
+                    free:
+                      type: string
+                      example: '1'
+                    locked:
+                      type: string
+                      example: '0'
+                    freeze:
+                      type: string
+                      example: '0'
+                    withdrawing:
+                      type: string
+                      example: '0'
+                    btcValuation:
+                      type: string
+                      example: '0.00000091'
+                  required:
+                  - asset
+                  - free
+                  - locked
+                  - freeze
+                  - withdrawing
+                  - btcValuation
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+        '401':
+          description: Unauthorized Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+  /sapi/v3/asset/getUserAsset:
+    post:
+      summary: User Asset (USER_DATA)
+      description: 'Get user assets, just for positive data.
+
+
+        Weight(IP): 5'
+      tags:
+      - Wallet
+      parameters:
+      - $ref: '#/components/parameters/optionalAsset'
+      - $ref: '#/components/parameters/needBtcValuation'
+      - $ref: '#/components/parameters/recvWindow'
+      - $ref: '#/components/parameters/timestamp'
+      - $ref: '#/components/parameters/signature'
+      security:
+      - ApiKeyAuth: []
+      responses:
+        '200':
+          description: User assets
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    asset:
+                      type: string
+                      example: AVAX
+                    free:
+                      type: string
+                      example: '1'
+                    locked:
+                      type: string
+                      example: '0'
+                    freeze:
+                      type: string
+                      example: '0'
+                    withdrawing:
+                      type: string
+                      example: '0'
+                    ipoable:
+                      type: string
+                      example: '0'
+                    btcValuation:
+                      type: string
+                      example: '0'
+                  required:
+                  - asset
+                  - free
+                  - locked
+                  - freeze
+                  - withdrawing
+                  - ipoable
+                  - btcValuation
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+        '401':
+          description: Unauthorized Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+  /sapi/v1/asset/convert-transfer:
+    post:
+      summary: Convert Transfer (USER_DATA)
+      description: 'Convert transfer, convert between BUSD and stablecoins.
+
+        If the clientId has been used before, will not do the convert transfer, the original transfer will be returned.
+
+
+        Weight(UID): 5'
+      tags:
+      - Wallet
+      parameters:
+      - name: clientTranId
+        in: query
+        description: The unique flag, the min length is 20
+        required: true
+        schema:
+          type: string
+      - $ref: '#/components/parameters/asset'
+      - $ref: '#/components/parameters/amount'
+      - name: targetAsset
+        in: query
+        description: Target asset you want to convert
+        required: true
+        schema:
+          type: string
+          example: BNB
+      - $ref: '#/components/parameters/recvWindow'
+      - $ref: '#/components/parameters/timestamp'
+      - $ref: '#/components/parameters/signature'
+      security:
+      - ApiKeyAuth: []
+      responses:
+        '200':
+          description: Conversion Information
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tranId:
+                    type: integer
+                    format: int64
+                    example: 118263407119
+                  status:
+                    type: string
+                    example: S
+                required:
+                - tranId
+                - status
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+        '401':
+          description: Unauthorized Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+  /sapi/v1/asset/convert-transfer/queryByPage:
+    get:
+      summary: Query Convert Transfer (USER_DATA)
+      description: 'Weight(UID): 5'
+      tags:
+      - Wallet
+      parameters:
+      - name: tranId
+        in: query
+        description: The transaction id
+        required: false
+        schema:
+          type: integer
+          format: int64
+          example: 118263615991
+      - name: asset
+        in: query
+        required: false
+        description: If it is blank, we will match deducted asset and target asset.
+        schema:
+          type: string
+          example: BTC
+      - name: startTime
+        in: query
+        description: UTC timestamp in ms
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: endTime
+        in: query
+        description: UTC timestamp in ms
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: accountType
+        in: query
+        description: 'MAIN: main account. CARD: funding account. If it is blank, we will query spot and card wallet, otherwise, we just query the corresponding wallet'
+        schema:
+          type: string
+          enum:
+          - MAIN
+          - CARD
+      - $ref: '#/components/parameters/current'
+      - $ref: '#/components/parameters/size'
+      - $ref: '#/components/parameters/recvWindow'
+      - $ref: '#/components/parameters/timestamp'
+      - $ref: '#/components/parameters/signature'
+      security:
+      - ApiKeyAuth: []
+      responses:
+        '200':
+          description: Query Convert Transfer
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total:
+                    type: integer
+                    format: int32
+                    example: 1
+                  rows:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        tranId:
+                          type: integer
+                          format: int64
+                          example: 118263407119
+                        type:
+                          type: integer
+                          format: int64
+                          example: 244
+                        time:
+                          type: integer
+                          format: int64
+                          example: 1664442078000
+                        deductedAsset:
+                          type: string
+                          example: BUSD
+                        deductedAmount:
+                          type: string
+                          example: '1'
+                        targetAsset:
+                          type: string
+                          example: USDC
+                        targetAmount:
+                          type: string
+                          example: '1'
+                        status:
+                          type: string
+                          example: S
+                        accountType:
+                          type: string
+                          example: MAIN
+                      required:
+                      - tranId
+                      - type
+                      - time
+                      - deductedAsset
+                      - deductedAmount
+                      - targetAsset
+                      - targetAmount
+                      - status
+                      - accountType
+                required:
+                - total
+                - rows
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+        '401':
+          description: Unauthorized Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+  /sapi/v1/asset/ledger-transfer/cloud-mining/queryByPage:
+    get:
+      summary: Get Cloud-Mining payment and refund history (USER_DATA)
+      description: 'The query of Cloud-Mining payment and refund history
+
+
+        Weight(UID): 600'
+      tags:
+      - Wallet
+      parameters:
+      - name: tranId
+        in: query
+        description: The transaction id
+        required: false
+        schema:
+          type: integer
+          format: int64
+          example: 118263615991
+      - name: clientTranId
+        in: query
+        description: The unique flag
+        required: false
+        schema:
+          type: string
+      - name: asset
+        in: query
+        required: false
+        description: If it is blank, we will query all assets
+        schema:
+          type: string
+          example: BTC
+      - name: startTime
+        in: query
+        description: UTC timestamp in ms
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: endTime
+        in: query
+        description: UTC timestamp in ms
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - $ref: '#/components/parameters/current'
+      - $ref: '#/components/parameters/size'
+      - $ref: '#/components/parameters/recvWindow'
+      - $ref: '#/components/parameters/timestamp'
+      - $ref: '#/components/parameters/signature'
+      security:
+      - ApiKeyAuth: []
+      responses:
+        '200':
+          description: Cloud Mining Payment and Refund History
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total:
+                    type: integer
+                    format: int32
+                    example: 1
+                  rows:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        createTime:
+                          type: integer
+                          format: int64
+                          example: 1667880112000
+                        tranId:
+                          type: integer
+                          format: int64
+                          example: 121230610120
+                        type:
+                          type: integer
+                          format: int64
+                          example: 248
+                        asset:
+                          type: string
+                          example: USDT
+                        amount:
+                          type: string
+                          example: '1'
+                        status:
+                          type: string
+                          example: S
+                      required:
+                      - createTime
+                      - tranId
+                      - type
+                      - asset
+                      - amount
+                      - status
+                required:
+                - total
+                - rows
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+        '401':
+          description: Unauthorized Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+  /sapi/v1/account/apiRestrictions:
+    get:
+      summary: Get API Key Permission (USER_DATA)
+      description: 'Weight(IP): 1'
+      tags:
+      - Wallet
+      parameters:
+      - $ref: '#/components/parameters/recvWindow'
+      - $ref: '#/components/parameters/timestamp'
+      - $ref: '#/components/parameters/signature'
+      security:
+      - ApiKeyAuth: []
+      responses:
+        '200':
+          description: API Key permissions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ipRestrict:
+                    type: boolean
+                    example: false
+                  createTime:
+                    type: integer
+                    format: int64
+                    example: 1623840271000
+                  enableInternalTransfer:
+                    type: boolean
+                    description: This option authorizes this key to transfer funds between your master account and your sub account instantly
+                  enableFutures:
+                    type: boolean
+                    example: false
+                    description: API Key created before your futures account opened does not support futures API service
+                  enablePortfolioMarginTrading:
+                    type: boolean
+                    example: false
+                    description: API Key created before your activate portfolio margin does not support portfolio margin API service
+                  enableVanillaOptions:
+                    type: boolean
+                    example: false
+                    description: Authorizes this key to Vanilla options trading
+                  permitsUniversalTransfer:
+                    type: boolean
+                    description: Authorizes this key to be used for a dedicated universal transfer API to transfer multiple supported currencies. Each business's own transfer API rights are not affected by this authorization
+                  enableReading:
+                    type: boolean
+                    example: true
+                  enableSpotAndMarginTrading:
+                    type: boolean
+                    example: false
+                  enableWithdrawals:
+                    type: boolean
+                    example: false
+                    description: This option allows you to withdraw via API. You must apply the IP Access Restriction filter in order to enable withdrawals
+                  enableMargin:
+                    type: boolean
+                    example: false
+                    description: This option can be adjusted after the Cross Margin account transfer is completed
+                  tradingAuthorityExpirationTime:
+                    type: integer
+                    format: int64
+                    example: 1628985600000
+                    description: Expiration time for spot and margin trading permission
+                required:
+                - ipRestrict
+                - createTime
+                - enableWithdrawals
+                - enableInternalTransfer
+                - permitsUniversalTransfer
+                - enableVanillaOptions
+                - enableReading
+                - enableFutures
+                - enableMargin
+                - enableSpotAndMarginTrading
+                - tradingAuthorityExpirationTime
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+        '401':
+          description: Unauthorized Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+  /sapi/v1/capital/contract/convertible-coins:
+    get:
+      summary: Query auto-converting stable coins (USER_DATA)
+      description: 'Get a user''s auto-conversion settings in deposit/withdrawal
+
+
+        Weight(UID): 600'''
+      tags:
+      - Wallet
+      security:
+      - ApiKeyAuth: []
+      responses:
+        '200':
+          description: User's auto-conversion settings i
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  convertEnabled:
+                    type: boolean
+                  coins:
+                    type: array
+                    items:
+                      type: string
+                      example: USDC
+                  exchangeRates:
+                    type: object
+                    properties:
+                      USDC:
+                        type: string
+                        example: '1'
+                      TUSD:
+                        type: string
+                        example: '1'
+                      USDP:
+                        type: string
+                        example: '1'
+                    required:
+                    - USDC
+                    - TUSD
+                    - USDP
+                required:
+                - convertEnabled
+                - coins
+                - exchangeRates
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+        '401':
+          description: Unauthorized Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+    post:
+      summary: Switch on/off BUSD and stable coins conversion (USER_DATA) (USER_DATA)
+      description: 'User can use it to turn on or turn off the BUSD auto-conversion from/to a specific stable coin.
+
+
+        Weight(UID): 600'''
+      tags:
+      - Wallet
+      parameters:
+      - name: coin
+        in: query
+        required: true
+        description: Must be USDC, USDP or TUSD
+        schema:
+          type: string
+      - name: enable
+        in: query
+        required: true
+        description: 'true: turn on the auto-conversion. false: turn off the auto-conversion'
+        schema:
+          type: boolean
+      security:
+      - ApiKeyAuth: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+        '401':
+          description: Unauthorized Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+  /sapi/v1/capital/deposit/credit-apply:
+    post:
+      summary: One click arrival deposit apply (USER_DATA)
+      description: 'Apply deposit credit for expired address (One click arrival)
+
+
+        Weight(IP): 1'
+      tags:
+      - Wallet
+      parameters:
+      - name: depositId
+        in: query
+        description: Deposit record Id, priority use
+        schema:
+          type: integer
+          format: int64
+      - name: txId
+        in: query
+        description: Deposit txId, used when depositId is not specified
+        schema:
+          type: string
+      - name: subAccountId
+        in: query
+        schema:
+          type: integer
+          format: int64
+      - name: subUserId
+        in: query
+        schema:
+          type: integer
+          format: int64
+      - $ref: '#/components/parameters/recvWindow'
+      - $ref: '#/components/parameters/timestamp'
+      - $ref: '#/components/parameters/signature'
+      security:
+      - ApiKeyAuth: []
+      responses:
+        '200':
+          description: deposit result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                    example: '000000'
+                  message:
+                    type: string
+                    example: success
+                  data:
+                    type: boolean
+                    example: true
+                  success:
+                    type: boolean
+                    example: true
+                required:
+                - code
+                - message
+                - data
+                - success
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+        '401':
+          description: Unauthorized Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+  /sapi/v1/asset/wallet/balance:
+    get:
+      summary: Query User Wallet Balance (USER_DATA)
+      description: 'Query User Wallet Balance
+
+
+        Weight(IP): 60'
+      tags:
+      - Wallet
+      parameters:
+      - $ref: '#/components/parameters/recvWindow'
+      - $ref: '#/components/parameters/timestamp'
+      - $ref: '#/components/parameters/signature'
+      security:
+      - ApiKeyAuth: []
+      responses:
+        '200':
+          description: wallet balance
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    activate:
+                      type: boolean
+                      example: true
+                    balance:
+                      type: string
+                      example: '0'
+                    walletName:
+                      type: string
+                      example: Spot
+                  required:
+                  - activate
+                  - balance
+                  - walletName
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+        '401':
+          description: Unauthorized Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+  /sapi/v1/asset/custody/transfer-history:
+    get:
+      summary: Query User Delegation History(For Master Account) (USER_DATA)
+      description: 'Query User Delegation History
+
+
+        Weight(IP): 60'
+      tags:
+      - Wallet
+      parameters:
+      - name: email
+        in: query
+        required: true
+        schema:
+          type: string
+          example: alice@test.com
+      - name: startTime
+        in: query
+        required: true
+        schema:
+          type: integer
+          format: int64
+          example: 1695205406000
+      - name: endTime
+        in: query
+        required: true
+        schema:
+          type: integer
+          format: int64
+          example: 1695205396000
+      - name: type
+        in: query
+        schema:
+          type: string
+          example: Delegate
+      - $ref: '#/components/parameters/asset'
+      - $ref: '#/components/parameters/current'
+      - $ref: '#/components/parameters/size'
+      - $ref: '#/components/parameters/recvWindow'
+      - $ref: '#/components/parameters/timestamp'
+      - $ref: '#/components/parameters/signature'
+      security:
+      - ApiKeyAuth: []
+      responses:
+        '200':
+          description: Delegation History
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total:
+                    type: integer
+                    example: 3316
+                  rows:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        clientTranId:
+                          type: string
+                          example: '293915932290879488'
+                        transferType:
+                          type: string
+                          example: Undelegate
+                        asset:
+                          type: string
+                          example: ETH
+                        amount:
+                          type: string
+                          example: '1'
+                        time:
+                          type: integer
+                          format: int64
+                          example: 1695205406000
+                      required:
+                      - clientTranId
+                      - transferType
+                      - asset
+                      - amount
+                      - time
+                required:
+                - total
+                - rows
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+        '401':
+          description: Unauthorized Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+  /sapi/v1/capital/deposit/address/list:
+    get:
+      summary: Fetch deposit address list with network (USER_DATA)
+      description: 'Fetch deposit address list with network.
+
+
+        Weight(IP): 10'
+      tags:
+      - Wallet
+      parameters:
+      - name: coin
+        in: query
+        required: true
+        schema:
+          type: string
+          example: BTC
+      - name: network
+        in: query
+        schema:
+          type: string
+          example: BTC
+      - $ref: '#/components/parameters/recvWindow'
+      - $ref: '#/components/parameters/timestamp'
+      - $ref: '#/components/parameters/signature'
+      security:
+      - ApiKeyAuth: []
+      responses:
+        '200':
+          description: Coin address
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    coin:
+                      type: string
+                      example: ETH
+                    address:
+                      type: string
+                      example: '0xD316E95Fd9E8E237Cb11f8200Babbc5D8D177BA4'
+                    isDefault:
+                      type: integer
+                      format: int32
+                      example: 1
+                  required:
+                  - coin
+                  - address
+                  - isDefault
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+        '401':
+          description: Unauthorized Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+  /sapi/v1/spot/delist-schedule:
+    get:
+      summary: Get symbols delist schedule for spot (MARKET_DATA)
+      description: 'Get symbols delist schedule for spot
+
+
+        Weight(IP): 100'
+      tags:
+      - Wallet
+      parameters:
+      - $ref: '#/components/parameters/recvWindow'
+      - $ref: '#/components/parameters/timestamp'
+      - $ref: '#/components/parameters/signature'
+      security:
+      - ApiKeyAuth: []
+      responses:
+        '200':
+          description: Symbols delist schedule
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    delistTime:
+                      type: integer
+                      format: int64
+                      example: 1686161202000
+                    symbol:
+                      type: array
+                      items:
+                        type: string
+                      example:
+                      - ADAUSDT
+                      - BNBUSDT
+                  required:
+                  - delistTime
+                  - symbol
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+        '401':
+          description: Unauthorized Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+  /sapi/v1/capital/withdraw/address/list:
+    get:
+      summary: Fetch withdraw address list (USER_DATA)
+      description: 'Fetch withdraw address list
+
+
+        Weight(IP): 10'
+      tags:
+      - Wallet
+      security:
+      - ApiKeyAuth: []
+      responses:
+        '200':
+          description: Withdraw address list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    address:
+                      type: string
+                      example: '0xD316E95Fd9E8E237Cb11f8200Babbc5D8D177BA4'
+                    addressTag:
+                      type: string
+                      example: '101764890'
+                    coin:
+                      type: string
+                      example: BNB
+                    name:
+                      type: string
+                      example: ''
+                    network:
+                      type: string
+                      example: BNB
+                    origin:
+                      type: string
+                      example: ''
+                    originType:
+                      type: string
+                      example: ''
+                    whiteStatus:
+                      type: boolean
+                      example: true
+                  required:
+                  - address
+                  - addressTag
+                  - coin
+                  - name
+                  - network
+                  - origin
+                  - originType
+                  - whiteStatus
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+        '401':
+          description: Unauthorized Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+  /sapi/v1/account/info:
+    get:
+      summary: Account info (USER_DATA)
+      description: 'Fetch account info detail.
+
+
+        Weight(IP): 1'
+      tags:
+      - Wallet
+      parameters:
+      - $ref: '#/components/parameters/recvWindow'
+      - $ref: '#/components/parameters/timestamp'
+      - $ref: '#/components/parameters/signature'
+      security:
+      - ApiKeyAuth: []
+      responses:
+        '200':
+          description: Account info detail
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  vipLevel:
+                    type: integer
+                    format: int32
+                    example: 0
+                  isMarginEnabled:
+                    type: boolean
+                    description: true or false for margin.
+                    example: true
+                  isFutureEnabled:
+                    type: boolean
+                    description: true or false for futures.
+                    example: true
+                required:
+                - vipLevel
+                - isMarginEnabled
+                - isFutureEnabled
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+        '401':
+          description: Unauthorized Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+components:
+  parameters:
+    asset:
+      name: asset
+      in: query
+      required: true
+      schema:
+        type: string
+        example: BTC
+    amount:
+      name: amount
+      in: query
+      required: true
+      schema:
+        type: number
+        format: double
+        example: '1.01'
+    current:
+      name: current
+      in: query
+      description: Current querying page. Start from 1. Default:1
+      schema:
+        type: integer
+        format: int32
+        example: 1
+    optionalCoin:
+      name: coin
+      in: query
+      description: Coin name
+      schema:
+        type: string
+        example: BNB
+    coin:
+      name: coin
+      in: query
+      required: true
+      description: Coin name
+      schema:
+        type: string
+        example: BNB
+    size:
+      name: size
+      in: query
+      description: Default:10 Max:100
+      schema:
+        type: integer
+        format: int32
+        example: 100
+    symbol:
+      name: symbol
+      in: query
+      required: true
+      description: Trading symbol, e.g. BNBUSDT
+      schema:
+        type: string
+        example: BNBUSDT
+    optionalSymbol:
+      name: symbol
+      in: query
+      description: Trading symbol, e.g. BNBUSDT
+      schema:
+        type: string
+        example: BNBUSDT
+    optionalAsset:
+      name: asset
+      in: query
+      schema:
+        type: string
+        example: BNB
+    limit:
+      name: limit
+      in: query
+      description: Default 500; max 1000.
+      schema:
+        type: integer
+        format: int32
+        example: 5
+    fromId:
+      name: fromId
+      in: query
+      description: Trade id to fetch from. Default gets most recent trades.
+      schema:
+        type: integer
+        format: int64
+    offset:
+      name: offset
+      in: query
+      schema:
+        type: integer
+        format: int32
+    startTime:
+      name: startTime
+      in: query
+      description: UTC timestamp in ms
+      schema:
+        type: integer
+        format: int64
+    endTime:
+      name: endTime
+      in: query
+      description: UTC timestamp in ms
+      schema:
+        type: integer
+        format: int64
+    recvWindow:
+      name: recvWindow
+      in: query
+      description: The value cannot be greater than 60000
+      schema:
+        type: integer
+        format: int64
+        example: 5000
+    timestamp:
+      name: timestamp
+      in: query
+      required: true
+      description: UTC timestamp in ms
+      schema:
+        type: integer
+        format: int64
+    univTransferType:
+      name: type
+      in: query
+      required: true
+      description: Universal transfer type
+      schema:
+        type: string
+        enum:
+        - MAIN_C2C
+        - MAIN_UMFUTURE
+        - MAIN_CMFUTURE
+        - MAIN_MARGIN
+        - MAIN_MINING
+        - C2C_MAIN
+        - C2C_UMFUTURE
+        - C2C_MINING
+        - C2C_MARGIN
+        - UMFUTURE_MAIN
+        - UMFUTURE_C2C
+        - UMFUTURE_MARGIN
+        - CMFUTURE_MAIN
+        - CMFUTURE_MARGIN
+        - MARGIN_MAIN
+        - MARGIN_UMFUTURE
+        - MARGIN_CMFUTURE
+        - MARGIN_MINING
+        - MARGIN_C2C
+        - MINING_MAIN
+        - MINING_UMFUTURE
+        - MINING_C2C
+        - MINING_MARGIN
+        - MAIN_PAY
+        - PAY_MAIN
+        - ISOLATEDMARGIN_MARGIN
+        - MARGIN_ISOLATEDMARGIN
+        - ISOLATEDMARGIN_ISOLATEDMARGIN
+        example: MAIN_C2C
+    signature:
+      name: signature
+      in: query
+      required: true
+      description: Signature
+      schema:
+        type: string
+    arraySymbols:
+      name: symbols
+      in: query
+      schema:
+        type: string
+        example: '["BTCUSDT","BNBBTC"]'
+    tickerType:
+      name: type
+      in: query
+      description: 'Supported values: FULL or MINI.
+
+        If none provided, the default is FULL'
+      schema:
+        type: string
+        enum:
+        - FULL
+        - MINI
+        example: FULL
+    permissions:
+      name: permissions
+      in: query
+      schema:
+        type: string
+        example: '''SPOT'' or [''MARGIN'',''LEVERAGED'']'
+    needBtcValuation:
+      name: needBtcValuation
+      in: query
+      schema:
+        type: string
+        enum:
+        - 'true'
+        - 'false'
+    fromSymbol:
+      name: fromSymbol
+      in: query
+      description: Must be sent when type are ISOLATEDMARGIN_MARGIN and ISOLATEDMARGIN_ISOLATEDMARGIN
+      schema:
+        type: string
+        example: BNBUSDT
+    toSymbol:
+      name: toSymbol
+      in: query
+      description: Must be sent when type are MARGIN_ISOLATEDMARGIN and ISOLATEDMARGIN_ISOLATEDMARGIN
+      schema:
+        type: string
+        example: BNBUSDT
+    network:
+      name: network
+      in: query
+      required: false
+      schema:
+        type: string
+        example: BTC
+  schemas:
+    bookTickerList:
+      type: array
+      items:
+        $ref: '#/components/schemas/bookTicker'
+    bookTicker:
+      type: object
+      properties:
+        symbol:
+          type: string
+          example: BNBBTC
+        bidPrice:
+          type: string
+          example: '16.36240000'
+        bidQty:
+          type: string
+          example: '256.78000000'
+        askPrice:
+          type: string
+          example: '16.36450000'
+        askQty:
+          type: string
+          example: '12.56000000'
+      required:
+      - symbol
+      - bidPrice
+      - bidQty
+      - askPrice
+      - askQty
+    priceTickerList:
+      type: array
+      items:
+        $ref: '#/components/schemas/priceTicker'
+    priceTicker:
+      type: object
+      properties:
+        symbol:
+          type: string
+          example: BNBBTC
+        price:
+          type: string
+          example: '0.17160000'
+      required:
+      - symbol
+      - price
+    tickerList:
+      type: array
+      items:
+        $ref: '#/components/schemas/ticker'
+    ticker:
+      type: object
+      properties:
+        symbol:
+          type: string
+          example: BNBBTC
+        priceChange:
+          type: string
+          example: '0.17160000'
+        priceChangePercent:
+          type: string
+          example: '1.060'
+        prevClosePrice:
+          type: string
+          example: '16.35920000'
+        lastPrice:
+          type: string
+          example: '27.84000000'
+        bidPrice:
+          type: string
+          example: '16.34488284'
+        bidQty:
+          type: string
+          example: '16.34488284'
+        askPrice:
+          type: string
+          example: '16.35920000'
+        askQty:
+          type: string
+          example: '25.06000000'
+        openPrice:
+          type: string
+          example: '16.18760000'
+        highPrice:
+          type: string
+          example: '16.55000000'
+        lowPrice:
+          type: string
+          example: '16.16940000'
+        volume:
+          type: string
+          example: '1678279.95000000'
+        quoteVolume:
+          type: string
+          example: '27431289.14792300'
+        openTime:
+          type: integer
+          format: int64
+          example: 1592808788637
+        closeTime:
+          type: integer
+          format: int64
+          example: 1592895188637
+        firstId:
+          type: integer
+          format: int64
+          example: 62683296
+        lastId:
+          type: integer
+          format: int64
+          example: 62739253
+        count:
+          type: integer
+          format: int64
+          example: 55958
+      required:
+      - symbol
+      - priceChange
+      - priceChangePercent
+      - prevClosePrice
+      - lastPrice
+      - bidPrice
+      - bidQty
+      - askPrice
+      - askQty
+      - openPrice
+      - highPrice
+      - lowPrice
+      - volume
+      - quoteVolume
+      - openTime
+      - closeTime
+      - firstId
+      - lastId
+      - count
+    dayTickerList:
+      type: array
+      items:
+        $ref: '#/components/schemas/dayTicker'
+    dayTicker:
+      type: object
+      properties:
+        symbol:
+          type: string
+          example: BTCUSDT
+        priceChange:
+          type: string
+          example: '-83.13000000'
+          description: Absolute price change
+        priceChangePercent:
+          type: string
+          example: '-0.317'
+          description: Relative price change in percent
+        weightedAvgPrice:
+          type: string
+          example: '26234.58803036'
+          description: quoteVolume / volume
+        openPrice:
+          type: string
+          example: '26304.80000000'
+        highPrice:
+          type: string
+          example: '26397.46000000'
+        lowPrice:
+          type: string
+          example: '26088.34000000'
+        lastPrice:
+          type: string
+          example: '26221.67000000'
+        volume:
+          type: string
+          description: Volume in base asset
+          example: '18495.35066000'
+        quoteVolume:
+          type: string
+          example: '485217905.04210480'
+          description: Volume in quote asset
+        openTime:
+          type: integer
+          format: int64
+          example: 1695686400000
+        closeTime:
+          type: integer
+          format: int64
+          example: 1695772799999
+        firstId:
+          type: integer
+          format: int64
+          example: 3220151555
+          description: Trade ID of the first trade in the interval
+        lastId:
+          type: integer
+          format: int64
+          example: 3220849281
+          description: Trade ID of the last trade in the interval
+        count:
+          type: integer
+          format: int64
+          example: 697727
+          description: Number of trades in the interval
+      required:
+      - symbol
+      - priceChange
+      - priceChangePercent
+      - weightedAvgPrice
+      - openPrice
+      - highPrice
+      - lowPrice
+      - lastPrice
+      - volume
+      - quoteVolume
+      - openTime
+      - closeTime
+      - firstId
+      - lastId
+      - count
+    trade:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: trade id
+          example: 345196462
+        price:
+          type: string
+          description: price
+          example: '9638.99000000'
+        qty:
+          type: string
+          description: amount of base asset
+          example: '0.02077200'
+        quoteQty:
+          type: string
+          description: amount of quote asset
+          example: '0.02077200'
+        time:
+          type: integer
+          format: int64
+          description: Trade executed timestamp, as same as `T` in the stream
+          example: 1592887772684
+        isBuyerMaker:
+          type: boolean
+        isBestMatch:
+          type: boolean
+      required:
+      - id
+      - price
+      - qty
+      - quoteQty
+      - time
+      - isBuyerMaker
+      - isBestMatch
+    aggTrade:
+      type: object
+      properties:
+        a:
+          type: integer
+          format: int64
+          description: Aggregate tradeId
+          example: 26129
+        p:
+          type: string
+          description: Price
+          example: '0.01633102'
+        q:
+          type: string
+          description: Quantity
+          example: '4.70443515'
+        f:
+          type: integer
+          format: int64
+          description: First tradeId
+          example: 27781
+        l:
+          type: integer
+          format: int64
+          description: Last tradeId
+          example: 27781
+        T:
+          type: boolean
+          description: Timestamp
+          example: 1498793709153
+        m:
+          type: boolean
+          description: Was the buyer the maker?
+        M:
+          type: boolean
+          description: Was the trade the best price match?
+      required:
+      - a
+      - p
+      - q
+      - f
+      - l
+      - T
+      - m
+      - M
+    snapshotSpot:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int64
+          example: 200
+        msg:
+          type: string
+          example: ''
+        snapshotVos:
+          type: array
+          items:
+            type: object
+            properties:
+              data:
+                type: object
+                properties:
+                  balances:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        asset:
+                          type: string
+                          example: BTC
+                        free:
+                          type: string
+                          example: '0.2'
+                        locked:
+                          type: string
+                          example: '0.001'
+                      required:
+                      - asset
+                      - free
+                      - locked
+                  totalAssetOfBtc:
+                    type: string
+                    example: '0.09905021'
+                required:
+                - balances
+                - totalAssetOfBtc
+              type:
+                type: string
+                example: spot
+              updateTime:
+                type: integer
+                format: int64
+                example: 1576281599000
+            required:
+            - data
+            - type
+            - updateTime
+      required:
+      - code
+      - msg
+      - snapshotVos
+    snapshotMargin:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int64
+          example: 200
+        msg:
+          type: string
+          example: ''
+        snapshotVos:
+          type: array
+          items:
+            type: object
+            properties:
+              data:
+                type: object
+                properties:
+                  marginLevel:
+                    type: string
+                    example: '2748.02909813'
+                  totalAssetOfBtc:
+                    type: string
+                    example: '0.00274803'
+                  totalLiabilityOfBtc:
+                    type: string
+                    example: '0.00000100'
+                  totalNetAssetOfBtc:
+                    type: string
+                    example: '0.00274750'
+                  userAssets:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        asset:
+                          type: string
+                          example: XRP
+                        borrowed:
+                          type: string
+                          example: '0.00000000'
+                        free:
+                          type: string
+                          example: '1.00000000'
+                        interest:
+                          type: string
+                          example: '0.00000000'
+                        locked:
+                          type: string
+                          example: '0.00000000'
+                        netAsset:
+                          type: string
+                          example: '1.00000000'
+                      required:
+                      - asset
+                      - borrowed
+                      - free
+                      - interest
+                      - locked
+                      - netAsset
+                required:
+                - marginLevel
+                - totalAssetOfBtc
+                - totalLiabilityOfBtc
+                - totalNetAssetOfBtc
+                - userAssets
+              type:
+                type: string
+                example: margin
+              updateTime:
+                type: integer
+                format: int64
+                example: 1576281599000
+            required:
+            - data
+            - type
+            - updateTime
+      required:
+      - code
+      - msg
+      - snapshotVos
+    snapshotFutures:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int64
+          example: 200
+        msg:
+          type: string
+          example: ''
+        snapshotVos:
+          type: array
+          items:
+            type: object
+            properties:
+              data:
+                type: object
+                properties:
+                  assets:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        asset:
+                          type: string
+                          example: USDT
+                        marginBalance:
+                          type: string
+                          example: '118.99782335'
+                        walletBalance:
+                          type: string
+                          example: '120.23811389'
+                      required:
+                      - asset
+                      - marginBalance
+                      - walletBalance
+                  position:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        entryPrice:
+                          type: string
+                          example: '7130.41000000'
+                        markPrice:
+                          type: string
+                          example: '7257.66239673'
+                        positionAmt:
+                          type: string
+                          example: '0.01000000'
+                        symbol:
+                          type: string
+                          example: BTCUSDT
+                        unRealizedProfit:
+                          type: string
+                          example: '1.24029054'
+                      required:
+                      - entryPrice
+                      - markPrice
+                      - positionAmt
+                      - symbol
+                      - unRealizedProfit
+                required:
+                - assets
+                - position
+              type:
+                type: string
+                example: futures
+              updateTime:
+                type: integer
+                format: int64
+                example: 1576281599000
+            required:
+            - data
+            - type
+            - updateTime
+      required:
+      - code
+      - msg
+      - snapshotVos
+  securitySchemes:
+    ApiKeyAuth:
+      name: X-MBX-APIKEY
+      in: header
+      description: Binance Public API Key
+      type: apiKey

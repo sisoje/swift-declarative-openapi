@@ -8,7 +8,7 @@ private let declarativeRequestsPath = packageRoot
     .deletingLastPathComponent()
     .appendingPathComponent("declarative-requests-swift").path
 
-@Test(arguments: ["petstore.yaml", "museum.yaml", "supabase-auth.yaml"])
+@Test(arguments: ["petstore.yaml", "museum.yaml", "supabase-auth.yaml", "binance.yaml"])
 func generatedCodeCompilesAgainstDeclarativeRequests(spec: String) throws {
     let specURL = packageRoot.appendingPathComponent("Specs/\(spec)")
     let yaml = try String(contentsOf: specURL, encoding: .utf8)
