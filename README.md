@@ -4,23 +4,22 @@
 [![Swift Versions](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fsisoje%2Fswift-declarative-openapi%2Fbadge%3Ftype%3Dswift-versions)](https://swiftpackageindex.com/sisoje/swift-declarative-openapi)
 [![Platforms](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fsisoje%2Fswift-declarative-openapi%2Fbadge%3Ftype%3Dplatforms)](https://swiftpackageindex.com/sisoje/swift-declarative-openapi)
 
-Turns an OpenAPI document into a compile-checked **BackendSpec** for [swift-declarative-requests](https://github.com/sisoje/swift-declarative-requests): the whole backend as one closed Swift type — typed operations, models, and security gates.
+Turns an OpenAPI document into a compile-checked **BackendSpec** for [swift-declarative-requests](https://github.com/sisoje/swift-declarative-requests): the whole backend as one closed Swift type with typed operations, models, and security gates. A small runtime ships alongside the generator to handle what a spec can't fully express (status-gated error handling, token refresh), so those stay as generated facts wired into shared mechanics rather than hand-rolled per app.
 
-- 🎭 **Mocking is field assignment** — the client is a struct of typed closures, no protocols anywhere ([Why](#why))
-- 🔄 **Token refresh is per operation, not per session** — only operations whose `security:` demands auth ride the 401 → single-flight refresh → retry machinery ([Security](#security))
-- 💎 **One lossless error** — `ResponseError` carries payload + raw response; decode the typed error model only where you care ([Why](#why))
-- 📋 **Spec facts are generated tables** — statuses, schemes, gates; nothing spec-shaped is hand-maintained ([Design conclusions](#design-conclusions))
-- ✍️ **Even HMAC signing is one more block** — Binance's signing slots filled by the wiring, dead values at call sites ([HMAC signing](#hmac-signing-as-a-dsl-block))
+- 🚫 **Networking disappears from app code**: no `URLSession`, `URLRequest`, `JSONDecoder`, or status codes at the call site; the whole backend is one struct of typed closures ([Why](#why))
+- 🔄 **Token refresh is per operation, not per session**: only operations whose `security:` demands auth ride the 401 → single-flight refresh → retry machinery ([Security](#security))
+- 📋 **Spec facts are generated tables**: statuses, schemes, gates; nothing spec-shaped is hand-maintained ([Design conclusions](#design-conclusions))
+- ✍️ **Even HMAC signing is one more composable block**: Binance's signing slots filled by the wiring, dead values at call sites ([HMAC signing](#hmac-signing-as-a-dsl-block))
 
 ## Why
 
-**To erase networking from app code.** The endgame client is pure data — a struct of typed closures:
+**To erase networking from app code.** The endgame client is pure data, a struct of typed closures:
 
 ```swift
 let pet = try await api.showPetById("42")   // petId in, Pet out. That is the whole API.
 ```
 
-No `URLSession`. No `URLRequest`. No `JSONDecoder`. No status codes, no headers, no protocols. The client needs none of it — those concepts are real, but each one lives in exactly one layer below, and never leaks up:
+No `URLSession`. No `URLRequest`. No `JSONDecoder`. No status codes, no headers, no protocols. The client needs none of it. Those concepts are real, but each one lives in exactly one layer below, and never leaks up:
 
 | networking concept | its only home |
 |---|---|
@@ -30,7 +29,7 @@ No `URLSession`. No `URLRequest`. No `JSONDecoder`. No status codes, no headers,
 | `JSONDecoder` | the `ClientBuilder` decode step |
 | tokens, refresh, auth headers | the wiring + `RefreshingExecutor` |
 
-Expand that one line and it is always the same chain, input to model — every step mechanical, every step derivable from the spec, so not one of them is a decision app code should be making per call:
+Expand that one line and it is always the same chain, input to model. Every step is mechanical, every step derivable from the spec, so not one of them is a decision app code should be making per call:
 
 ```swift
 // input → operation → request → transport → evaluate → decode, each step separable
@@ -42,14 +41,14 @@ let data = try ResponseError.evaluate(response, successStatuses: SwaggerPetstore
 let pet = try JSONDecoder().decode(Pet.self, from: data)
 ```
 
-Generating every step is what collapses that chain back down to the one line. And because the client is a value made of closures, everything downstream gets simple: **middleware is closure composition** — wrap the `(Operation) → Data` seam, hand it back — the entire networking stack is a construction-time detail the app can swap without a single call site noticing, and **mocking is plain field assignment**:
+Generating every step is what collapses that chain back down to the one line. And because the client is a value made of closures, everything downstream gets simple: **middleware is closure composition** (wrap the `(Operation) → Data` seam, hand it back), the entire networking stack is a construction-time detail the app can swap without a single call site noticing, and **mocking is plain field assignment**:
 
 ```swift
 var mock = api
 mock.showPetById = { _ in .init(id: 1, name: "Stub") }   // no protocols
 ```
 
-The generator and runtime exist to manufacture that pure client from the spec — nothing more:
+The generator and runtime exist to manufacture that pure client from the spec, nothing more:
 
 ```sh
 swift run declarative-openapi petstore.yaml
@@ -108,9 +107,9 @@ enum SwaggerPetstore {
 }
 ```
 
-That is the shape of `Sources/PetstoreAPI/Petstore.generated.swift` — README snippets are lightly abridged; the checked-in files are the golden-tested source of truth.
+That is the shape of `Sources/PetstoreAPI/Petstore.generated.swift`. README snippets are lightly abridged; the checked-in files are the golden-tested source of truth.
 
-Consuming it is a small hand-written wiring stating environment and policy — essentially petstore's entire hand-written layer:
+Consuming it is a small hand-written wiring stating environment and policy, essentially petstore's entire hand-written layer:
 
 ```swift
 struct PetstoreClient {
@@ -135,7 +134,7 @@ struct PetstoreClient {
 
 Each operation is itself a `RequestBuildable` block, so the bare chain works too: `try SwaggerPetstore.Operation.showPetById(petId: "42").base(url).request()`.
 
-The top of the ladder is the generated **Client** — the backend as one struct of typed closures, output types read from `responses:` (`204` → `Void`, `image/png` → `Data`, `text/*` → UTF-8 `String`, json `$ref` → the model). Field names carry the operation; wrong pairings are unrepresentable; any field swaps for a stub — the mock up top:
+The top of the ladder is the generated **Client**: the backend as one struct of typed closures, output types read from `responses:` (`204` → `Void`, `image/png` → `Data`, `text/*` → UTF-8 `String`, json `$ref` → the model). Field names carry the operation; wrong pairings are unrepresentable; any field swaps for a stub (the mock up top):
 
 ```swift
 let api = PetstoreClient(baseURL: url).api
@@ -144,7 +143,7 @@ let pet = try await api.showPetById("42")            // Pet — no type stated, 
 
 `Client.wired(execute:decoder:)` wires the typed surface over the `(Operation) async throws -> Data` seam, with no parameter defaults and no opinion about realness: build the seam with the runtime's `NetworkExecution(request:transport:successStatuses:)`, wrap it in middleware or replace it with a stub — the fields can't tell the difference.
 
-Every spec also gets a **Responses section** — a pure fact table of the operation's spec-declared statuses (`deleteSpecialEvent` expects 204, `createPets` 201, …). The runtime's `ResponseError.evaluate` is the evaluate step of the chain up top: it gates transport results through that table and throws one lossless error; the layer that cares decodes the spec's typed error model from `error.data`:
+Every spec also gets a **Responses section**: a pure fact table of the operation's spec-declared statuses (`deleteSpecialEvent` expects 204, `createPets` 201, …). The runtime's `ResponseError.evaluate` is the evaluate step of the chain up top: it gates transport results through that table and throws one lossless error; the layer that cares decodes the spec's typed error model from `error.data`:
 
 ```swift
 struct ResponseError: Error {
@@ -156,7 +155,7 @@ struct ResponseError: Error {
 
 ## Security
 
-Petstore declares no `security:`, so nothing above mentioned it — absence mirrors absence. Specs that do declare it get a **Security section** — gates and attachment factories generated from the spec, so a client wires everything once:
+Petstore declares no `security:`, so nothing above mentioned it — absence mirrors absence. Specs that do declare it get a **Security section**, gates and attachment factories generated from the spec, so a client wires everything once:
 
 ```swift
 enum Security {
@@ -167,7 +166,7 @@ enum Security {
 }
 ```
 
-Token refresh is the same seam wrapped once more: the runtime's `RefreshingExecutor` turns 401 into a single-flight refresh and one retry, and the wiring only states how to mint a new token — the generated gates decide which operations ride it:
+Token refresh is the same seam wrapped once more: the runtime's `RefreshingExecutor` turns 401 into a single-flight refresh and one retry, and the wiring only states how to mint a new token. The generated gates decide which operations ride it:
 
 ```swift
 let refreshing = RefreshingExecutor(
@@ -181,7 +180,7 @@ let refreshing = RefreshingExecutor(
 let data = try await refreshing.executeWithRefresh(operation)
 ```
 
-That `needsAuth` gate is the difference from transport-level refresh — URLSession's challenge delegate, or a blanket interceptor retrying every 401. Those hooks fire per request, blind to what the request is: every call pays the refresh machinery, and any stray 401 triggers a refresh nobody needed. Here whether an operation refreshes at all is a spec fact, generated from its `security:` declaration — a public operation doesn't join an in-flight refresh, doesn't retry, doesn't even read the token. A test pins the bypass.
+That `needsAuth` gate is the difference from transport-level refresh: URLSession's challenge delegate, or a blanket interceptor retrying every 401. Those hooks fire per request, blind to what the request is: every call pays the refresh machinery, and any stray 401 triggers a refresh nobody needed. Here whether an operation refreshes at all is a spec fact, generated from its `security:` declaration — a public operation doesn't join an in-flight refresh, doesn't retry, doesn't even read the token. A test pins the bypass.
 
 ## Usage
 
@@ -191,33 +190,33 @@ swift run declarative-openapi Specs/petstore.yaml -o Petstore.swift
 swift run declarative-openapi Specs/supabase-auth.yaml --exclude-scheme AdminAuth
 ```
 
-Flags: `-o`/`--output <file>`, `--enum-name <Name>` (overrides the namespace name derived from `info.title`), `--exclude-scheme <Scheme>` (repeatable — drops every operation whose security requires that scheme, e.g. a server-only admin scheme, keeping the output client-only; recorded in the header comment), `-h`/`--help`. Missing/unreadable input or invalid YAML produces a clear error on stderr and exit code 1.
+Flags: `-o`/`--output <file>`, `--enum-name <Name>` (overrides the namespace name derived from `info.title`), `--exclude-scheme <Scheme>` (repeatable, drops every operation whose security requires that scheme, e.g. a server-only admin scheme, keeping the output client-only; recorded in the header comment), `-h`/`--help`. Missing/unreadable input or invalid YAML produces a clear error on stderr and exit code 1.
 
 ## Reference specs
 
-Four reference specs are checked in — canonical upstream files (binance scoped to a subset, noted below), each with its generated output compiled on every build:
+Four reference specs are checked in: canonical upstream files (binance scoped to a subset, noted below), each with its generated output compiled on every build:
 
-- `Specs/petstore.yaml` — the classic [petstore](https://learn.openapis.org/examples/v3.0/petstore.html) example (OpenAPI 3.0). `PetstoreWiring.swift` is the degenerate client: no security in the spec, so the client carries only the base URL.
-- `Specs/museum.yaml` — the [Redocly Museum API](https://github.com/Redocly/museum-openapi-example) (OpenAPI 3.1): `$ref` parameters, scalar/enum component schemas, `allOf`, nested paths, and a `webhooks` section (ignored — webhooks aren't client-callable endpoints). `MuseumWiring.swift` is the minimal client: document-wide basic auth, gated once through the generated `Security.museumPlaceholderAuth(username:password:)` factory.
-- `Specs/supabase-auth.yaml` — the [Supabase Auth REST API](https://github.com/supabase/auth) (OpenAPI 3.0.3, ~60 operations): no-`operationId` fallback naming, templated server URLs, and three security schemes. Generated **client-only** (`--exclude-scheme AdminAuth`). `SupabaseAuthWiring.swift` shows the hand-written layer: `SupabaseAuthClient(baseURL:apikey:accessToken:)` wires session + environment once — `request(_ operation:)` composes one flat `RequestBlock` gated on the generated `Security` section, and `RefreshingExecutor` wraps the seam for 401 → single-flight refresh → one retry.
-- `Specs/binance.yaml` — the official [binance/binance-api-swagger](https://github.com/binance/binance-api-swagger) spot API, scoped to the Market + Wallet tags (49 of ~340 operations, transitively `$ref`-complete, every kept definition byte-identical to upstream). It exists for HMAC request signing — the slot-filling `HMACSignature` block shown below lives in `BinanceWiring.swift`, with its own test suite (`BinanceSigningTests`). The API-key header, a real `securityScheme`, rides the generated `Security` gates like every other spec.
+- `Specs/petstore.yaml`: the classic [petstore](https://learn.openapis.org/examples/v3.0/petstore.html) example (OpenAPI 3.0). `PetstoreWiring.swift` is the degenerate client: no security in the spec, so the client carries only the base URL.
+- `Specs/museum.yaml`: the [Redocly Museum API](https://github.com/Redocly/museum-openapi-example) (OpenAPI 3.1): `$ref` parameters, scalar/enum component schemas, `allOf`, nested paths, and a `webhooks` section (webhooks aren't client-callable endpoints, so they're ignored). `MuseumWiring.swift` is the minimal client: document-wide basic auth, gated once through the generated `Security.museumPlaceholderAuth(username:password:)` factory.
+- `Specs/supabase-auth.yaml`: the [Supabase Auth REST API](https://github.com/supabase/auth) (OpenAPI 3.0.3, ~60 operations): no-`operationId` fallback naming, templated server URLs, and three security schemes. Generated **client-only** (`--exclude-scheme AdminAuth`). `SupabaseAuthWiring.swift` shows the hand-written layer: `SupabaseAuthClient(baseURL:apikey:accessToken:)` wires session + environment once; `request(_ operation:)` composes one flat `RequestBlock` gated on the generated `Security` section, and `RefreshingExecutor` wraps the seam for 401 → single-flight refresh → one retry.
+- `Specs/binance.yaml`: the official [binance/binance-api-swagger](https://github.com/binance/binance-api-swagger) spot API, scoped to the Market + Wallet tags (49 of ~340 operations, transitively `$ref`-complete, every kept definition byte-identical to upstream). It exists for HMAC request signing: the slot-filling `HMACSignature` block shown below lives in `BinanceWiring.swift`, with its own test suite (`BinanceSigningTests`). The API-key header, a real `securityScheme`, rides the generated `Security` gates like every other spec.
 
 ### Generation rules
 
-- The output is one namespace enum (from `info.title`) whose sections mirror the OpenAPI document: schemas, `Operation` (a `RequestBuildable` enum — each operation IS a block), `Security`, and the server URL. One `Operation` case per operation, named from `operationId` (camelCase-sanitized); falls back to method + path (e.g. `getPetsPetId`) when `operationId` is missing.
+- The output is one namespace enum (from `info.title`) whose sections mirror the OpenAPI document: schemas, `Operation` (a `RequestBuildable` enum, each operation IS a block), `Security`, and the server URL. One `Operation` case per operation, named from `operationId` (camelCase-sanitized); falls back to method + path (e.g. `getPetsPetId`) when `operationId` is missing.
 - Path params are interpolated into `Endpoint(...)`; leading `/` is stripped because `Endpoint` paths are joined onto the base URL by `.base(url)`. Path-item-level `parameters` are merged into each operation (operation-level entries win by `(name, in)`).
 - Query params: required → `Query("name", value)`; optional → wrapped in `if let`; non-`String` types stringified via `String(...)`; array-typed params emit a `for` loop of repeated `Query` blocks (the DSL's `buildArray`).
 - `requestBody` (application/json): `$ref` → associated value of that model type + `RequestBody.json(body)`; inline schemas get a generated `<OperationId>Body` model with real properties.
 - Parameters written as `$ref: "#/components/parameters/X"` are resolved to their component definitions (unresolvable refs are dropped).
-- `security:` declarations generate the `Security` section (operation-level overrides the document default; `security: []` marks an operation public; OR-alternatives are flattened): `Security.schemes(_ operation:) -> Set<String>`, one `Security.needs<Scheme>(_ operation:)` gate per scheme, and one **attachment factory** per scheme derived from `components.securitySchemes` — `http bearer` → `Security.userAuth(token:)` wrapping `Authorization.bearer`, `apiKey in: header` → `Security.apiKeyAuth(_:)` wrapping `Header.custom(name)`, `http basic` → `Authorization.basic`. Omitted entirely when the spec declares no security. The composition itself is also generated — the `Authorized` section: `static func authorized(_ operation:apiKeyAuth:userAuth:)` takes one optional per used scheme (parameter types derived from the scheme definitions — bearer → `String`, basic → `(username:password:)` tuple, apiKey → `String`) and returns the operation + gated credentials as one block, throwing the generated per-scheme error (`MissingAPIKeyAuth`, `MissingUserAuth`) at materialization when a required credential is nil. Environment comes last, per the DSL contract: the wiring binds stored credentials and applies `.base(baseURL).request()`. The checked-in Supabase target is **client-only**: generated with `--exclude-scheme AdminAuth`, so server-side operations (user management, SSO provider management — those needing the service-role JWT) are not generated at all.
-- `components.schemas`: `object` (or `allOf`, flattened) → `struct X: Codable` with real properties, `array` → `typealias X = [Element]`, scalars → `typealias X = String/Int/Double/Bool` (`format: binary` → `Data`), string enums → `enum X: String, Codable`. Names are sanitized to valid Swift identifiers (`thing-request` → `ThingRequest`); names that would shadow stdlib types are prefixed (`Error` → `APIError`, `Date` → `APIDate`). The rename carries no semantics: `APIError` does **not** conform to `Swift.Error`, because OpenAPI has no way to mark a schema as an error model and we don't infer that from names — apps that want to throw it add `extension APIError: Swift.Error {}` in hand-written code.
-- Type mapping: `string`→`String`, `integer`→`Int`, `number`→`Double`, `boolean`→`Bool`, `array`→`[Element]`, `$ref`→model type. String schemas/parameters/properties with `enum:` values generate `enum X: String, Codable` (schemas at top level, parameters nested in the endpoint enum — `grant_type` → `GrantType`, used via `.rawValue` — and object properties nested in their struct, e.g. `PostTokenBody.Provider`); digit-leading values get a `_` prefix (`_1080p`); a parameter name reused with a different value set falls back to `String`.
+- `security:` declarations generate the `Security` section (operation-level overrides the document default; `security: []` marks an operation public; OR-alternatives are flattened): `Security.schemes(_ operation:) -> Set<String>`, one `Security.needs<Scheme>(_ operation:)` gate per scheme, and one **attachment factory** per scheme derived from `components.securitySchemes`: `http bearer` → `Security.userAuth(token:)` wrapping `Authorization.bearer`, `apiKey in: header` → `Security.apiKeyAuth(_:)` wrapping `Header.custom(name)`, `http basic` → `Authorization.basic`. Omitted entirely when the spec declares no security. The composition itself is also generated, as the `Authorized` section: `static func authorized(_ operation:apiKeyAuth:userAuth:)` takes one optional per used scheme (parameter types derived from the scheme definitions: bearer → `String`, basic → `(username:password:)` tuple, apiKey → `String`) and returns the operation + gated credentials as one block, throwing the generated per-scheme error (`MissingAPIKeyAuth`, `MissingUserAuth`) at materialization when a required credential is nil. Environment comes last, per the DSL contract: the wiring binds stored credentials and applies `.base(baseURL).request()`. The checked-in Supabase target is **client-only**: generated with `--exclude-scheme AdminAuth`, so server-side operations (user management, SSO provider management, those needing the service-role JWT) are not generated at all.
+- `components.schemas`: `object` (or `allOf`, flattened) → `struct X: Codable` with real properties, `array` → `typealias X = [Element]`, scalars → `typealias X = String/Int/Double/Bool` (`format: binary` → `Data`), string enums → `enum X: String, Codable`. Names are sanitized to valid Swift identifiers (`thing-request` → `ThingRequest`); names that would shadow stdlib types are prefixed (`Error` → `APIError`, `Date` → `APIDate`). The rename carries no semantics: `APIError` does **not** conform to `Swift.Error`, because OpenAPI has no way to mark a schema as an error model and we don't infer that from names. Apps that want to throw it add `extension APIError: Swift.Error {}` in hand-written code.
+- Type mapping: `string`→`String`, `integer`→`Int`, `number`→`Double`, `boolean`→`Bool`, `array`→`[Element]`, `$ref`→model type. String schemas/parameters/properties with `enum:` values generate `enum X: String, Codable` (schemas at top level, parameters nested in the endpoint enum (`grant_type` → `GrantType`, used via `.rawValue`), and object properties nested in their struct, e.g. `PostTokenBody.Provider`); digit-leading values get a `_` prefix (`_1080p`); a parameter name reused with a different value set falls back to `String`.
 - `servers[0].url` becomes `static let defaultBaseURL`. Header/cookie params are not generated (a `// TODO:` comment is emitted in the case instead). Specs with zero operations still produce compiling output (placeholder body instead of an illegal empty `switch`).
 - Output is deterministic (schemas alphabetical, paths sorted, fixed method order) so it's golden-testable.
 
 ## HMAC signing as a DSL block
 
-Some credentials can't be values. Binance's `signature` is an HMAC digest of the final query string and its `timestamp` is the send instant — OpenAPI can't model that as a securityScheme, so the spec declares both as required query parameters. Read those as **slots**: their values are unknowable at the call site, so the wiring — which owns the clock and the key — fills them with a DSL block composed after the operation like any other:
+Some credentials can't be values. Binance's `signature` is an HMAC digest of the final query string and its `timestamp` is the send instant. OpenAPI can't model that as a securityScheme, so the spec declares both as required query parameters. Read those as **slots**: their values are unknowable at the call site, so the wiring (which owns the clock and the key) fills them with a DSL block composed after the operation like any other:
 
 ```swift
 struct HMACSignature: RequestBuildable {
@@ -229,24 +228,16 @@ struct HMACSignature: RequestBuildable {
             guard state.queryItems.contains(where: { $0.name == "signature" }) else { return }
             guard let secretKey else { throw MissingSecretKey() }
 
-            let stamped = state.queryItems
-                .filter { $0.name != "signature" }
-                .map { $0.name == "timestamp" ? URLQueryItem(name: "timestamp", value: String(Int(now().timeIntervalSince1970 * 1000))) : $0 }
-
-            var wire = URLComponents()
-            wire.queryItems = stamped
-            let digest = HMAC<SHA256>.authenticationCode(
-                for: Data((wire.percentEncodedQuery ?? "").utf8),
-                using: SymmetricKey(data: Data(secretKey.utf8))
-            ).map { String(format: "%02x", $0) }.joined()
-
-            state.queryItems = stamped + [URLQueryItem(name: "signature", value: digest)]
+            let stamped = state.queryItems.map {
+                $0.name == "timestamp" ? .init(name: "timestamp", value: nowInMillis) : $0   // now(), epoch ms
+            }
+            state.queryItems = stamped + [.init(name: "signature", value: hexDigest)]   // HMAC-SHA256 of stamped's encoded query, keyed by secretKey
         }
     }
 }
 ```
 
-`RequestBlock { state in … }` is the DSL's own state-reading primitive, so signing is one more block in the chain — no slot → untouched, slot without a key → the build fails like any credential gate:
+`RequestBlock { state in … }` is the DSL's own state-reading primitive, so signing is one more composable block in the chain. No slot → untouched, slot without a key → the build fails like any credential gate:
 
 ```swift
 try RequestBlock {
@@ -257,7 +248,7 @@ try RequestBlock {
 .request()
 ```
 
-Call sites pass placeholders and never think about signing again — a test proves the slot values are dead:
+Call sites pass placeholders and never think about signing again; a test proves the slot values are dead:
 
 ```swift
 let account = try await binance.api.getSapiV1AccountInfo(nil, 0, "")   // timestamp/signature: dead values, the wiring owns them
@@ -267,35 +258,35 @@ let account = try await binance.api.getSapiV1AccountInfo(nil, 0, "")   // timest
 
 Settled over the project's evolution, enforced across every generated file:
 
-1. **The authority ladder.** The spec decides everything it states — shapes, statuses, schemes, attachment mechanics — and all of it is generated. The wiring decides bindings and policy — credentials, transport, decoder — and all of it is hand-written. The caller materializes. Nothing lives below its authority: `URLSession`/`JSONDecoder` never appear in generated code, and spec knowledge is never hand-maintained.
+1. **The authority ladder.** The spec decides everything it states: shapes, statuses, schemes, attachment mechanics, and all of it is generated. The wiring decides bindings and policy: credentials, transport, decoder, and all of it is hand-written. The caller materializes. Nothing lives below its authority: `URLSession`/`JSONDecoder` never appear in generated code, and spec knowledge is never hand-maintained.
 2. **Sections mirror the document; absence mirrors absence.** No `security:` → no Security section, no `authorized` builder. No text responses → no `text` helper. What the spec doesn't say, the output doesn't contain.
 3. **No parameter defaults on the seams.** `wired` and `authorized` demand every dependency explicitly; standard bindings are named options the caller passes, never silent choices. Nil is never the spelling for "not needed" — absence of the block is.
 4. **One lossless error per boundary; store each fact once.** `ResponseError` carries data + raw response; `status` is a projection, not a field. The next layer decodes the spec's error model from `data` only when it wants it.
 5. **Facts as tables, mechanics once.** `wired` is a one-line-per-operation fact table over the runtime's pack-generic `ClientBuilder`; `schemes(_:)` is a grouped switch. Cleverness is quarantined in mechanics; generated facts stay boring.
-6. **The operation→type problem is solved at generation time**, in a table — never with phantoms, `Any`, or mirrored payload enums. Closures take the case's payload and construct the case inside, making wrong pairings unrepresentable.
-7. **Every ladder rung stays public.** The typed Client is sugar, not a gate: `request`/`authorized`/`evaluate`/raw `Data` all remain directly usable — decode-later end to end.
+6. **The operation→type problem is solved at generation time**, in a table, never with phantoms, `Any`, or mirrored payload enums. Closures take the case's payload and construct the case inside, making wrong pairings unrepresentable.
+7. **Every ladder rung stays public.** The typed Client is sugar, not a gate: `request`/`authorized`/`evaluate`/raw `Data` all remain directly usable, decode-later end to end.
 8. **Base comes last.** Spec composes (`authorized` returns a block), wiring situates (`.base(url)`), caller materializes (`.request()`).
 9. **The client is pure data; networking concepts never leak up.** A struct of typed closures is the entire app-facing surface; `URLSession`/`URLRequest`/`JSONDecoder`/status codes each live in exactly one lower layer. Runtime types follow one shape: dependencies as stored closures, behavior as the output function.
 10. **Universal mechanics live once, in the runtime; generated files carry facts only.** Every generated one-liner was audited by one test — *does deleting it create a place where hand-written code could contradict the spec and still compile?* — and none survived: inject the generated fact (`successStatuses`, `schemes`) into runtime mechanics (`NetworkExecution`, `ResponseError.evaluate`, `ClientBuilder`) rather than generating pre-composed conveniences.
-11. **Names describe mechanics, not claims** (`wired`, not `live` or `real` — realness is decided by the closures passed), and sugar that duplicates an existing spelling gets deleted.
+11. **Names describe mechanics, not claims** (`wired`, not `live` or `real`; realness is decided by the closures passed), and sugar that duplicates an existing spelling gets deleted.
 
 ## Package layout
 
-- `Sources/DeclarativeOpenAPI` — all parsing (via [Yams](https://github.com/jpsim/Yams)) and codegen; `SpecGenerator(enumNameOverride:).generate(yaml:) -> String`.
-- `Sources/DeclarativeOpenAPIRuntime` — the small shared runtime generated code imports, four witness structs (dependencies as properties, behavior as the output function): the universal non-generic `ResponseError` with its `evaluate` gate (typed throws), `NetworkExecution<Operation>` (the `(Operation) → Data` seam: request → transport → gate over the injected `successStatuses` table), `ClientBuilder<Operation>` (the pack-generic typed-closure mechanics `wired` tables build over), and `RefreshingExecutor<Operation>` (401 → single-flight refresh → one retry), ready to slap onto any backend's seam.
-- `Sources/DeclarativeOpenAPICLI` — the `swift-declarative-openapi` executable (plain `CommandLine.arguments`, no argument-parser dependency).
-- `Sources/PetstoreAPI`, `Sources/MuseumAPI`, `Sources/SupabaseAuthAPI`, and `Sources/BinanceAPI` — the **checked-in generated outputs** (plus each backend's hand-written wiring), compiled against DeclarativeRequests on every `swift build`, so compilability of generated code is proven by the build itself.
-- `Specs/` — the canonical spec files.
-- `Tests/DeclarativeOpenAPITests` — 83 tests:
+- `Sources/DeclarativeOpenAPI`: all parsing (via [Yams](https://github.com/jpsim/Yams)) and codegen; `SpecGenerator(enumNameOverride:).generate(yaml:) -> String`.
+- `Sources/DeclarativeOpenAPIRuntime`: the small shared runtime generated code imports, four witness structs (dependencies as properties, behavior as the output function): the universal non-generic `ResponseError` with its `evaluate` gate (typed throws), `NetworkExecution<Operation>` (the `(Operation) → Data` seam: request → transport → gate over the injected `successStatuses` table), `ClientBuilder<Operation>` (the pack-generic typed-closure mechanics `wired` tables build over), and `RefreshingExecutor<Operation>` (401 → single-flight refresh → one retry), ready to slap onto any backend's seam.
+- `Sources/DeclarativeOpenAPICLI`: the `swift-declarative-openapi` executable (plain `CommandLine.arguments`, no argument-parser dependency).
+- `Sources/PetstoreAPI`, `Sources/MuseumAPI`, `Sources/SupabaseAuthAPI`, and `Sources/BinanceAPI`: the **checked-in generated outputs** (plus each backend's hand-written wiring), compiled against DeclarativeRequests on every `swift build`, so compilability of generated code is proven by the build itself.
+- `Specs/`: the canonical spec files.
+- `Tests/DeclarativeOpenAPITests`, 83 tests:
   - **E2E generate-then-compile** (parameterized over all four specs): generates from the spec, writes a fresh temp SwiftPM package depending on DeclarativeRequests, runs a real `swift build` there, and asserts exit 0 (compiler output is surfaced on failure).
   - **Golden** (parameterized over all four specs): generator output must equal the checked-in `*.generated.swift` byte-for-byte.
-  - **Request shape**: builds actual `URLRequest`s from the generated enums and asserts URLs, methods, query items, headers, and JSON bodies — including the Supabase refresh flow (`POST …/token?grant_type=refresh_token` with the real refresh-token payload and `apikey` header).
+  - **Request shape**: builds actual `URLRequest`s from the generated enums and asserts URLs, methods, query items, headers, and JSON bodies, including the Supabase refresh flow (`POST …/token?grant_type=refresh_token` with the real refresh-token payload and `apikey` header).
   - **Unit**: name sanitization, type mapping, slash stripping, required/optional/array query params, operationId fallback, enum-name override, header-param TODOs, invalid-YAML errors.
 
 ## Notes & caveats
 
-- Model generation covers the easy tier only — inline object properties, `oneOf`/`anyOf`, and recursion are out of scope and fall back to `String` via the tolerant type mapper (see TODO.md for the hard tail).
-- Declaring an error-model schema is bad API practice — one shape rarely fits every failure. The generator stays neutral: `ResponseError` is lossless, so callers who want the spec's error model decode it from `error.data`, and everyone else loses nothing.
+- Model generation covers the easy tier only: inline object properties, `oneOf`/`anyOf`, and recursion are out of scope and fall back to `String` via the tolerant type mapper (see TODO.md for the hard tail).
+- Declaring an error-model schema is bad API practice. One shape rarely fits every failure. The generator stays neutral: `ResponseError` is lossless, so callers who want the spec's error model decode it from `error.data`, and everyone else loses nothing.
 - Requires the sibling checkout `../swift-declarative-requests` (relative path dependency in `Package.swift`). The e2e test derives the same relative path from its own package root, so the test suite works on any machine (and CI) with the standard sibling-checkout layout.
 - Toolchain: swift-tools-version 6.3, macOS 14+ (matching the DSL package). First build fetches Yams from the network.
 - The initial implementation was hardened by an adversarial review pass that caught and fixed: ignored path-item-level `parameters` (literal `{petId}` left in URLs), unsanitized schema names, non-compiling `String([T])` for array params, empty-`switch` output for operation-less specs, and the `Error` schema shadowing `Swift.Error`.
