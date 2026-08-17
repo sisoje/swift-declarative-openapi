@@ -42,26 +42,33 @@ struct SupabaseAuthClient {
         NetworkExecution(request: request, transport: urlSessionTransport, successStatuses: SupabaseAuthRESTAPI.Responses.successStatuses).execute
     }
 
-    /// The refresh work as a Task — spends the stored refresh token through
-    /// `api` itself: postToken doesn't need user auth, so the executor's
-    /// needsAuth guard routes it straight to the bare seam — no recursion,
-    /// no self-join. Writes both rotated tokens back. A definitive rejection nils the tokens — in
-    /// reactive SwiftUI the nil binding IS the logout. Transient failure
-    /// leaves tokens unchanged, so RefreshingExecutor throws the original error.
+    /// The refresh work as a Task — `refresh()` wrapped in the single-flight
+    /// handle the executor joins on.
     private func makeRefreshTask() -> Task<Void, Never> {
-        Task { @MainActor in
-            do {
-                let session = try await api.postToken(.refreshToken, .init(refreshToken: refreshToken))
-                accessToken = session.accessToken
-                refreshToken = session.refreshToken ?? refreshToken
-            } catch {
-                if let status = (error as? ResponseError)?.status, (400 ..< 500).contains(status) {
-                    // The server rejected the refresh token — session dead, log out.
-                    accessToken = nil
-                    refreshToken = nil
-                }
-                // Otherwise transient (network, redirects, 5xx): keep tokens; a later call may retry.
+        Task { await refresh() }
+    }
+
+    /// Non-throwing by signature — no error can escape the refresh path.
+    /// Spends the stored refresh token through `api` itself: postToken
+    /// doesn't need user auth, so the executor's needsAuth guard routes it
+    /// straight to the bare seam — no recursion, no self-join. Success
+    /// writes both rotated tokens back. A definitive rejection nils the
+    /// tokens — in reactive SwiftUI the nil binding IS the logout.
+    /// Transient failure leaves tokens unchanged, so RefreshingExecutor
+    /// throws the original error.
+    @MainActor
+    private func refresh() async {
+        do {
+            let session = try await api.postToken(.refreshToken, .init(refreshToken: refreshToken))
+            accessToken = session.accessToken
+            refreshToken = session.refreshToken ?? refreshToken
+        } catch {
+            if let status = (error as? ResponseError)?.status, (400 ..< 500).contains(status) {
+                // The server rejected the refresh token — session dead, log out.
+                accessToken = nil
+                refreshToken = nil
             }
+            // Otherwise transient (network, redirects, 5xx): keep tokens; a later call may retry.
         }
     }
     
