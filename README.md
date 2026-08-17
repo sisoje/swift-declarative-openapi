@@ -131,11 +131,12 @@ struct ResponseError: Error {
     var status: Int? { computed from response }
 }
 
-// request → transport → evaluate, each layer separable:
-let op = RedoclyMuseumAPI.Operation.getSpecialEvent(eventId: id)
-let request = try client.request(op)
-let (data, response) = try await session.data(for: request)
-let payload = try ResponseError.evaluate((data, response), successStatuses: RedoclyMuseumAPI.Responses.successStatuses(op))
+// operation → request → transport → evaluate → decode, each layer separable:
+let operation = SwaggerPetstore.Operation.showPetById(petId: "42")
+let request = try client.request(operation)
+let response = try await session.data(for: request)
+let data = try ResponseError.evaluate(response, successStatuses: SwaggerPetstore.Responses.successStatuses(operation))
+let pet = try JSONDecoder().decode(Pet.self, from: data)
 ```
 
 Specs that declare `security:` also get a **Security section** — gates and attachment factories generated from the spec, so a client wires everything once:
