@@ -131,8 +131,9 @@ struct ResponseError: Error {
     var status: Int? { computed from response }
 }
 
-// operation → request → transport → evaluate → decode, each layer separable:
-let operation = SwaggerPetstore.Operation.showPetById(petId: "42")
+// input → operation → request → transport → evaluate → decode, each layer separable:
+let petId = "42"
+let operation = SwaggerPetstore.Operation.showPetById(petId: petId)
 let request = try client.request(operation)
 let response = try await session.data(for: request)
 let data = try ResponseError.evaluate(response, successStatuses: SwaggerPetstore.Responses.successStatuses(operation))
