@@ -6,7 +6,7 @@ import Testing
 /// location — works on any machine (and CI) with the standard layout.
 private let declarativeRequestsPath = packageRoot
     .deletingLastPathComponent()
-    .appendingPathComponent("declarative-requests-swift").path
+    .appendingPathComponent("swift-declarative-requests").path
 
 @Test(arguments: ["petstore.yaml", "museum.yaml", "supabase-auth.yaml", "binance.yaml"])
 func generatedCodeCompilesAgainstDeclarativeRequests(spec: String) throws {
@@ -36,7 +36,7 @@ func generatedCodeCompilesAgainstDeclarativeRequests(spec: String) throws {
             .target(
                 name: "GeneratedCheck",
                 dependencies: [
-                    .product(name: "DeclarativeRequests", package: "declarative-requests-swift"),
+                    .product(name: "DeclarativeRequests", package: "swift-declarative-requests"),
                     .product(name: "DeclarativeOpenAPIRuntime", package: "swift-declarative-openapi"),
                 ]
             ),

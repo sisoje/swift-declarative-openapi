@@ -21,7 +21,7 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/jpsim/Yams.git", from: "5.0.0"),
-        .package(path: "../declarative-requests-swift"),
+        .package(path: "../swift-declarative-requests"),
     ],
     targets: [
         .target(
@@ -41,28 +41,28 @@ let package = Package(
             name: "PetstoreAPI",
             dependencies: [
                 "DeclarativeOpenAPIRuntime",
-                .product(name: "DeclarativeRequests", package: "declarative-requests-swift"),
+                .product(name: "DeclarativeRequests", package: "swift-declarative-requests"),
             ]
         ),
         .target(
             name: "MuseumAPI",
             dependencies: [
                 "DeclarativeOpenAPIRuntime",
-                .product(name: "DeclarativeRequests", package: "declarative-requests-swift"),
+                .product(name: "DeclarativeRequests", package: "swift-declarative-requests"),
             ]
         ),
         .target(
             name: "SupabaseAuthAPI",
             dependencies: [
                 "DeclarativeOpenAPIRuntime",
-                .product(name: "DeclarativeRequests", package: "declarative-requests-swift"),
+                .product(name: "DeclarativeRequests", package: "swift-declarative-requests"),
             ]
         ),
         .target(
             name: "BinanceAPI",
             dependencies: [
                 "DeclarativeOpenAPIRuntime",
-                .product(name: "DeclarativeRequests", package: "declarative-requests-swift"),
+                .product(name: "DeclarativeRequests", package: "swift-declarative-requests"),
             ]
         ),
         .testTarget(
@@ -74,7 +74,7 @@ let package = Package(
                 "SupabaseAuthAPI",
                 "BinanceAPI",
                 "DeclarativeOpenAPIRuntime",
-                .product(name: "DeclarativeRequests", package: "declarative-requests-swift"),
+                .product(name: "DeclarativeRequests", package: "swift-declarative-requests"),
             ]
         ),
     ]

@@ -21,6 +21,6 @@ jobs:
     - uses: actions/checkout@v6
       with:
         repository: sisoje/swift-declarative-requests
-        path: declarative-requests-swift
+        path: swift-declarative-requests
     - name: Run tests
       run: swift test --package-path swift-declarative-openapi
