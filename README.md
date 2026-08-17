@@ -4,7 +4,7 @@
 [![Swift Versions](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fsisoje%2Fswift-declarative-openapi%2Fbadge%3Ftype%3Dswift-versions)](https://swiftpackageindex.com/sisoje/swift-declarative-openapi)
 [![Platforms](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fsisoje%2Fswift-declarative-openapi%2Fbadge%3Ftype%3Dplatforms)](https://swiftpackageindex.com/sisoje/swift-declarative-openapi)
 
-Turns an OpenAPI document into a compile-checked **BackendSpec** for [swift-declarative-requests](../swift-declarative-requests): the whole backend as one closed Swift type — typed operations, models, and security gates.
+Turns an OpenAPI document into a compile-checked **BackendSpec** for [swift-declarative-requests](https://github.com/sisoje/swift-declarative-requests): the whole backend as one closed Swift type — typed operations, models, and security gates.
 
 ## Why
 
@@ -83,9 +83,9 @@ enum SwaggerPetstore {
 }
 ```
 
-That is `Sources/PetstoreAPI/Petstore.generated.swift`, abridged only where a section gets its own example below — every snippet in this README is verbatim from the checked-in, golden-tested files.
+That is the shape of `Sources/PetstoreAPI/Petstore.generated.swift` — README snippets are lightly abridged; the checked-in files are the golden-tested source of truth.
 
-Consuming it is a small hand-written wiring stating environment and policy — this is petstore's **entire** hand-written layer:
+Consuming it is a small hand-written wiring stating environment and policy — this is essentially petstore's entire hand-written layer:
 
 ```swift
 struct PetstoreClient {
@@ -95,18 +95,15 @@ struct PetstoreClient {
         try operation.base(baseURL).request()
     }
 
-    /// URLSession as the transport closure — this app's transport policy.
-    private func urlSessionTransport(_ request: URLRequest) async throws -> (Data, URLResponse) {
-        try await URLSession.shared.data(for: request)
-    }
-
-    /// Every operation decodes with a plain `JSONDecoder` — this app's decoding policy.
-    private func plainDecoder(_: SwaggerPetstore.Operation) -> JSONDecoder {
-        JSONDecoder()
-    }
-
     var api: SwaggerPetstore.Client {
-        .wired(request: request, transport: urlSessionTransport, decoder: plainDecoder)
+        .wired(
+            execute: NetworkExecution(
+                request: request,
+                transport: { try await URLSession.shared.data(for: $0) },   // this app's transport policy
+                successStatuses: SwaggerPetstore.Responses.successStatuses  // generated fact table
+            ).execute,
+            decoder: { _ in JSONDecoder() }                                 // this app's decoding policy
+        )
     }
 }
 ```
@@ -125,22 +122,20 @@ mock.showPetById = { _ in .init(id: 1, name: "Stub") }   // per-field mocking, n
 
 `Client.wired(execute:decoder:)` wires the typed surface over the `(Operation) async throws -> Data` seam, with no parameter defaults and no opinion about realness: build the seam with the runtime's `NetworkExecution(request:transport:successStatuses:)`, wrap it in middleware or replace it with a stub — the fields can't tell the difference.
 
-Every spec also gets a **Responses section** — a pure fact table of the operation's spec-declared statuses (`deleteSpecialEvent` expects 204, `createPets` 201, …). `ResponseError` mirrors `URLSession`'s own `(data: Data, response: URLResponse)` result shape, so it constructs straight from a transport call; its `evaluate` gates that result through the spec's fact table and throws `self` — one lossless error — when the status isn't expected. The layer that cares decodes the spec's typed error model from `error.data`:
+Every spec also gets a **Responses section** — a pure fact table of the operation's spec-declared statuses (`deleteSpecialEvent` expects 204, `createPets` 201, …). The runtime's `ResponseError.evaluate` gates transport results through it and throws one lossless error; the layer that cares decodes the spec's typed error model from `error.data`:
 
 ```swift
-struct ResponseError: Error {                  // universal, non-generic — from the runtime
-    let data: Data                     // decode APIError/ErrorSchema from this when you need it
-    let response: URLResponse          // everything, once — even a non-HTTP transport result
-    var status: Int? { get }           // projection: nil when the transport didn't speak HTTP
-    init(_ output: (data: Data, response: URLResponse))   // same shape URLSession hands back
-    func evaluate(successStatuses: Set<Int>) throws(ResponseError) -> Data
+struct ResponseError: Error {
+    let data: Data
+    let response: URLResponse
+    var status: Int? { computed from response }
 }
 
 // request → transport → evaluate, each layer separable:
 let op = RedoclyMuseumAPI.Operation.getSpecialEvent(eventId: id)
 let request = try client.request(op)
-let payload = try ResponseError(try await session.data(for: request))
-    .evaluate(successStatuses: RedoclyMuseumAPI.Responses.successStatuses(op))
+let (data, response) = try await session.data(for: request)
+let payload = try ResponseError.evaluate((data, response), successStatuses: RedoclyMuseumAPI.Responses.successStatuses(op))
 ```
 
 Specs that declare `security:` also get a **Security section** — gates and attachment factories generated from the spec, so a client wires everything once:
@@ -264,6 +259,7 @@ Settled over the project's evolution, enforced across every generated file:
 ## Notes & caveats
 
 - Model generation covers the easy tier only — inline object properties, `oneOf`/`anyOf`, and recursion are out of scope and fall back to `String` via the tolerant type mapper (see TODO.md for the hard tail).
+- Declaring an error-model schema is bad API practice — one shape rarely fits every failure. The generator stays neutral: `ResponseError` is lossless, so callers who want the spec's error model decode it from `error.data`, and everyone else loses nothing.
 - Requires the sibling checkout `../swift-declarative-requests` (relative path dependency in `Package.swift`). The e2e test derives the same relative path from its own package root, so the test suite works on any machine (and CI) with the standard sibling-checkout layout.
 - Toolchain: swift-tools-version 6.3, macOS 14+ (matching the DSL package). First build fetches Yams from the network.
 - The initial implementation was hardened by an adversarial review pass that caught and fixed: ignored path-item-level `parameters` (literal `{petId}` left in URLs), unsanitized schema names, non-compiling `String([T])` for array params, empty-`switch` output for operation-less specs, and the `Error` schema shadowing `Swift.Error`.
