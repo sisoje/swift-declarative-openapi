@@ -723,6 +723,21 @@ extension SpecGenerator {
             output += "        public var \(operation.caseName): @Sendable \(signature) async throws -> \(operation.successType)\n"
         }
         output += "\n"
+        // A public struct's memberwise init is internal — without an explicit
+        // one, a consumer can read the fields but never build a client from
+        // scratch (all-stub, no seam).
+        output += "        /// A whole backend that implements nothing: every field traps by name.\n"
+        output += "        /// State the operations under test by assignment, leave the rest to\n"
+        output += "        /// announce themselves. Unreachable in production — `wired` fills every\n"
+        output += "        /// field — so a trap is always a hand-built client missing one.\n"
+        output += "        public static var unimplemented: Client {\n"
+        output += "            Client(\n"
+        for (index, operation) in operations.enumerated() {
+            let comma = index == operations.count - 1 ? "" : ","
+            output += "                \(operation.caseName): ClosureUtilities.unimplemented(\"\(operation.caseName)\")\(comma)\n"
+        }
+        output += "            )\n"
+        output += "        }\n\n"
         output += "        /// Wires the typed surface over the (Operation) → Data seam. Real,\n"
         output += "        /// mocked, or middleware-wrapped is decided entirely by the closures\n"
         output += "        /// passed — no opinion, no defaults. The mechanics live once in the\n"

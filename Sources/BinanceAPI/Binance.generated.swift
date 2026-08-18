@@ -1564,6 +1564,64 @@ public enum BinanceSpotAPI {
         public var getSapiV1SystemStatus: @Sendable () async throws -> GetSapiV1SystemStatusResponse
         public var postSapiV3AssetGetUserAsset: @Sendable (_ asset: String?, _ needBtcValuation: Operation.NeedBtcValuation?, _ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> [String]
 
+        /// A whole backend that implements nothing: every field traps by name.
+        /// State the operations under test by assignment, leave the rest to
+        /// announce themselves. Unreachable in production — `wired` fills every
+        /// field — so a trap is always a hand-built client missing one.
+        public static var unimplemented: Client {
+            Client(
+                getApiV3AggTrades: ClosureUtilities.unimplemented("getApiV3AggTrades"),
+                getApiV3AvgPrice: ClosureUtilities.unimplemented("getApiV3AvgPrice"),
+                getApiV3Depth: ClosureUtilities.unimplemented("getApiV3Depth"),
+                getApiV3ExchangeInfo: ClosureUtilities.unimplemented("getApiV3ExchangeInfo"),
+                getApiV3HistoricalTrades: ClosureUtilities.unimplemented("getApiV3HistoricalTrades"),
+                getApiV3Klines: ClosureUtilities.unimplemented("getApiV3Klines"),
+                getApiV3Ping: ClosureUtilities.unimplemented("getApiV3Ping"),
+                getApiV3Ticker: ClosureUtilities.unimplemented("getApiV3Ticker"),
+                getApiV3Ticker24hr: ClosureUtilities.unimplemented("getApiV3Ticker24hr"),
+                getApiV3TickerBookTicker: ClosureUtilities.unimplemented("getApiV3TickerBookTicker"),
+                getApiV3TickerPrice: ClosureUtilities.unimplemented("getApiV3TickerPrice"),
+                getApiV3TickerTradingDay: ClosureUtilities.unimplemented("getApiV3TickerTradingDay"),
+                getApiV3Time: ClosureUtilities.unimplemented("getApiV3Time"),
+                getApiV3Trades: ClosureUtilities.unimplemented("getApiV3Trades"),
+                getApiV3UiKlines: ClosureUtilities.unimplemented("getApiV3UiKlines"),
+                getSapiV1AccountApiRestrictions: ClosureUtilities.unimplemented("getSapiV1AccountApiRestrictions"),
+                getSapiV1AccountApiTradingStatus: ClosureUtilities.unimplemented("getSapiV1AccountApiTradingStatus"),
+                postSapiV1AccountDisableFastWithdrawSwitch: ClosureUtilities.unimplemented("postSapiV1AccountDisableFastWithdrawSwitch"),
+                postSapiV1AccountEnableFastWithdrawSwitch: ClosureUtilities.unimplemented("postSapiV1AccountEnableFastWithdrawSwitch"),
+                getSapiV1AccountInfo: ClosureUtilities.unimplemented("getSapiV1AccountInfo"),
+                getSapiV1AccountStatus: ClosureUtilities.unimplemented("getSapiV1AccountStatus"),
+                getSapiV1AccountSnapshot: ClosureUtilities.unimplemented("getSapiV1AccountSnapshot"),
+                getSapiV1AssetAssetDetail: ClosureUtilities.unimplemented("getSapiV1AssetAssetDetail"),
+                getSapiV1AssetAssetDividend: ClosureUtilities.unimplemented("getSapiV1AssetAssetDividend"),
+                postSapiV1AssetConvertTransfer: ClosureUtilities.unimplemented("postSapiV1AssetConvertTransfer"),
+                getSapiV1AssetConvertTransferQueryByPage: ClosureUtilities.unimplemented("getSapiV1AssetConvertTransferQueryByPage"),
+                getSapiV1AssetCustodyTransferHistory: ClosureUtilities.unimplemented("getSapiV1AssetCustodyTransferHistory"),
+                getSapiV1AssetDribblet: ClosureUtilities.unimplemented("getSapiV1AssetDribblet"),
+                postSapiV1AssetDust: ClosureUtilities.unimplemented("postSapiV1AssetDust"),
+                postSapiV1AssetDustBtc: ClosureUtilities.unimplemented("postSapiV1AssetDustBtc"),
+                postSapiV1AssetGetFundingAsset: ClosureUtilities.unimplemented("postSapiV1AssetGetFundingAsset"),
+                getSapiV1AssetLedgerTransferCloudMiningQueryByPage: ClosureUtilities.unimplemented("getSapiV1AssetLedgerTransferCloudMiningQueryByPage"),
+                getSapiV1AssetTradeFee: ClosureUtilities.unimplemented("getSapiV1AssetTradeFee"),
+                getSapiV1AssetTransfer: ClosureUtilities.unimplemented("getSapiV1AssetTransfer"),
+                postSapiV1AssetTransfer: ClosureUtilities.unimplemented("postSapiV1AssetTransfer"),
+                getSapiV1AssetWalletBalance: ClosureUtilities.unimplemented("getSapiV1AssetWalletBalance"),
+                getSapiV1CapitalConfigGetall: ClosureUtilities.unimplemented("getSapiV1CapitalConfigGetall"),
+                getSapiV1CapitalContractConvertibleCoins: ClosureUtilities.unimplemented("getSapiV1CapitalContractConvertibleCoins"),
+                postSapiV1CapitalContractConvertibleCoins: ClosureUtilities.unimplemented("postSapiV1CapitalContractConvertibleCoins"),
+                getSapiV1CapitalDepositAddress: ClosureUtilities.unimplemented("getSapiV1CapitalDepositAddress"),
+                getSapiV1CapitalDepositAddressList: ClosureUtilities.unimplemented("getSapiV1CapitalDepositAddressList"),
+                postSapiV1CapitalDepositCreditApply: ClosureUtilities.unimplemented("postSapiV1CapitalDepositCreditApply"),
+                getSapiV1CapitalDepositHisrec: ClosureUtilities.unimplemented("getSapiV1CapitalDepositHisrec"),
+                getSapiV1CapitalWithdrawAddressList: ClosureUtilities.unimplemented("getSapiV1CapitalWithdrawAddressList"),
+                postSapiV1CapitalWithdrawApply: ClosureUtilities.unimplemented("postSapiV1CapitalWithdrawApply"),
+                getSapiV1CapitalWithdrawHistory: ClosureUtilities.unimplemented("getSapiV1CapitalWithdrawHistory"),
+                getSapiV1SpotDelistSchedule: ClosureUtilities.unimplemented("getSapiV1SpotDelistSchedule"),
+                getSapiV1SystemStatus: ClosureUtilities.unimplemented("getSapiV1SystemStatus"),
+                postSapiV3AssetGetUserAsset: ClosureUtilities.unimplemented("postSapiV3AssetGetUserAsset")
+            )
+        }
+
         /// Wires the typed surface over the (Operation) → Data seam. Real,
         /// mocked, or middleware-wrapped is decided entirely by the closures
         /// passed — no opinion, no defaults. The mechanics live once in the

@@ -69,25 +69,18 @@ struct BinanceClient: Sendable {
         .request()
     }
 
-    /// URLSession as the transport closure — this app's transport policy.
-    private func urlSessionTransport(_ request: URLRequest) async throws -> (Data, URLResponse) {
-        try await URLSession.shared.data(for: request)
-    }
-
-    /// Every operation decodes with a plain `JSONDecoder` — this app's decoding policy.
-    private func plainDecoder(_: BinanceSpotAPI.Operation) -> JSONDecoder {
-        JSONDecoder()
-    }
-
     /// Fully typed surface over the signing request path.
-    var api: BinanceSpotAPI.Client {
-        .wired(
-            execute: NetworkExecution(
-                request: request,
-                transport: urlSessionTransport,
-                successStatuses: BinanceSpotAPI.Responses.successStatuses
-            ).execute,
-            decoder: plainDecoder
+    /// The (Operation) → Data seam: this app's request building and transport,
+    /// gated by the generated status table.
+    var execution: NetworkExecution<BinanceSpotAPI.Operation> {
+        NetworkExecution(
+            request: request,
+            transport: { try await URLSession.shared.data(for: $0) },
+            successStatuses: BinanceSpotAPI.Responses.successStatuses
         )
+    }
+
+    var api: BinanceSpotAPI.Client {
+        .wired(execute: execution.execute) { _ in JSONDecoder() }
     }
 }

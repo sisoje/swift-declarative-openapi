@@ -46,8 +46,7 @@ private let baseURL = URL(string: "http://petstore.swagger.io/v1")!
 }
 
 @Test func clientCarriesOnlyEnvironment() throws {
-    let client = PetstoreClient(baseURL: baseURL)
-    let request = try client.request(.showPetById(petId: "42"))
+    let request = try SwaggerPetstore.Operation.showPetById(petId: "42").base(baseURL).request()
     #expect(request.url?.absoluteString == "http://petstore.swagger.io/v1/pets/42")
     #expect(request.allHTTPHeaderFields?.isEmpty ?? true)
 }
@@ -55,7 +54,7 @@ private let baseURL = URL(string: "http://petstore.swagger.io/v1")!
 @Test func typedClientDecodesThroughStubTransport() async throws {
     let api = SwaggerPetstore.Client.wired(
         execute: NetworkExecution(
-            request: PetstoreClient(baseURL: baseURL).request,
+            request: { try $0.base(baseURL).request() },
             transport: { request in
                 (Data(#"{"id":7,"name":"Rex"}"#.utf8),
                  HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: nil)!)
@@ -71,7 +70,7 @@ private let baseURL = URL(string: "http://petstore.swagger.io/v1")!
 
 @Test func typedClientFieldsAreStubbable() async throws {
     var api = SwaggerPetstore.Client.wired(
-        execute: NetworkExecution(request: PetstoreClient(baseURL: baseURL).request,
+        execute: NetworkExecution(request: { try $0.base(baseURL).request() },
         transport: { try await URLSession.shared.data(for: $0) }, successStatuses: SwaggerPetstore.Responses.successStatuses).execute,
         decoder: { _ in JSONDecoder() }
     )

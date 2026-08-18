@@ -19,23 +19,17 @@ struct MuseumClient: Sendable {
             .request()
     }
 
-    // Fully typed surface over this wiring: RedoclyMuseumAPI.Client field per
-    // operation, defaults to the real transport.
-
-    /// URLSession as the transport closure — this app's transport policy.
-    private func urlSessionTransport(_ request: URLRequest) async throws -> (Data, URLResponse) {
-        try await URLSession.shared.data(for: request)
-    }
-
-    /// Every operation decodes with a plain `JSONDecoder` — this app's decoding policy.
-    private func plainDecoder(_: RedoclyMuseumAPI.Operation) -> JSONDecoder {
-        JSONDecoder()
+    /// The (Operation) → Data seam: this app's request building and transport,
+    /// gated by the generated status table.
+    var execution: NetworkExecution<RedoclyMuseumAPI.Operation> {
+        NetworkExecution(
+            request: request,
+            transport: { try await URLSession.shared.data(for: $0) },
+            successStatuses: RedoclyMuseumAPI.Responses.successStatuses
+        )
     }
 
     var api: RedoclyMuseumAPI.Client {
-        .wired(
-            execute: NetworkExecution(request: request, transport: urlSessionTransport, successStatuses: RedoclyMuseumAPI.Responses.successStatuses).execute,
-            decoder: plainDecoder
-        )
+        .wired(execute: execution.execute) { _ in JSONDecoder() }
     }
 }

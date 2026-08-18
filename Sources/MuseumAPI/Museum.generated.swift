@@ -322,6 +322,23 @@ public enum RedoclyMuseumAPI {
         public var buyMuseumTickets: @Sendable (_ body: BuyMuseumTickets) async throws -> MuseumTicketsConfirmation
         public var getTicketCode: @Sendable (_ ticketId: String) async throws -> Data
 
+        /// A whole backend that implements nothing: every field traps by name.
+        /// State the operations under test by assignment, leave the rest to
+        /// announce themselves. Unreachable in production — `wired` fills every
+        /// field — so a trap is always a hand-built client missing one.
+        public static var unimplemented: Client {
+            Client(
+                getMuseumHours: ClosureUtilities.unimplemented("getMuseumHours"),
+                listSpecialEvents: ClosureUtilities.unimplemented("listSpecialEvents"),
+                createSpecialEvent: ClosureUtilities.unimplemented("createSpecialEvent"),
+                getSpecialEvent: ClosureUtilities.unimplemented("getSpecialEvent"),
+                updateSpecialEvent: ClosureUtilities.unimplemented("updateSpecialEvent"),
+                deleteSpecialEvent: ClosureUtilities.unimplemented("deleteSpecialEvent"),
+                buyMuseumTickets: ClosureUtilities.unimplemented("buyMuseumTickets"),
+                getTicketCode: ClosureUtilities.unimplemented("getTicketCode")
+            )
+        }
+
         /// Wires the typed surface over the (Operation) → Data seam. Real,
         /// mocked, or middleware-wrapped is decided entirely by the closures
         /// passed — no opinion, no defaults. The mechanics live once in the

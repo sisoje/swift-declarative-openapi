@@ -1829,6 +1829,49 @@ public enum SupabaseAuthRESTAPI {
         public var getVerify: @Sendable (_ token: String, _ type: Operation.APIType, _ redirectTo: String?) async throws -> Void
         public var postVerify: @Sendable (_ body: PostVerifyBody) async throws -> AccessTokenResponseSchema
 
+        /// A whole backend that implements nothing: every field traps by name.
+        /// State the operations under test by assignment, leave the rest to
+        /// announce themselves. Unreachable in production — `wired` fills every
+        /// field — so a trap is always a hand-built client missing one.
+        public static var unimplemented: Client {
+            Client(
+                getAuthorize: ClosureUtilities.unimplemented("getAuthorize"),
+                getCallback: ClosureUtilities.unimplemented("getCallback"),
+                postCallback: ClosureUtilities.unimplemented("postCallback"),
+                postFactors: ClosureUtilities.unimplemented("postFactors"),
+                deleteFactorsFactorId: ClosureUtilities.unimplemented("deleteFactorsFactorId"),
+                postFactorsFactorIdChallenge: ClosureUtilities.unimplemented("postFactorsFactorIdChallenge"),
+                postFactorsFactorIdVerify: ClosureUtilities.unimplemented("postFactorsFactorIdVerify"),
+                getHealth: ClosureUtilities.unimplemented("getHealth"),
+                postInvite: ClosureUtilities.unimplemented("postInvite"),
+                postLogout: ClosureUtilities.unimplemented("postLogout"),
+                postMagiclink: ClosureUtilities.unimplemented("postMagiclink"),
+                getOauthAuthorizationsAuthorizationId: ClosureUtilities.unimplemented("getOauthAuthorizationsAuthorizationId"),
+                postOauthAuthorizationsAuthorizationIdConsent: ClosureUtilities.unimplemented("postOauthAuthorizationsAuthorizationIdConsent"),
+                getOauthAuthorize: ClosureUtilities.unimplemented("getOauthAuthorize"),
+                postOauthClientsRegister: ClosureUtilities.unimplemented("postOauthClientsRegister"),
+                postOauthToken: ClosureUtilities.unimplemented("postOauthToken"),
+                postOtp: ClosureUtilities.unimplemented("postOtp"),
+                postReauthenticate: ClosureUtilities.unimplemented("postReauthenticate"),
+                postRecover: ClosureUtilities.unimplemented("postRecover"),
+                postResend: ClosureUtilities.unimplemented("postResend"),
+                postSamlAcs: ClosureUtilities.unimplemented("postSamlAcs"),
+                getSamlMetadata: ClosureUtilities.unimplemented("getSamlMetadata"),
+                getSettings: ClosureUtilities.unimplemented("getSettings"),
+                postSignup: ClosureUtilities.unimplemented("postSignup"),
+                postSso: ClosureUtilities.unimplemented("postSso"),
+                postToken: ClosureUtilities.unimplemented("postToken"),
+                getUser: ClosureUtilities.unimplemented("getUser"),
+                putUser: ClosureUtilities.unimplemented("putUser"),
+                getUserIdentitiesAuthorize: ClosureUtilities.unimplemented("getUserIdentitiesAuthorize"),
+                deleteUserIdentitiesIdentityId: ClosureUtilities.unimplemented("deleteUserIdentitiesIdentityId"),
+                getUserOauthGrants: ClosureUtilities.unimplemented("getUserOauthGrants"),
+                deleteUserOauthGrants: ClosureUtilities.unimplemented("deleteUserOauthGrants"),
+                getVerify: ClosureUtilities.unimplemented("getVerify"),
+                postVerify: ClosureUtilities.unimplemented("postVerify")
+            )
+        }
+
         /// Wires the typed surface over the (Operation) → Data seam. Real,
         /// mocked, or middleware-wrapped is decided entirely by the closures
         /// passed — no opinion, no defaults. The mechanics live once in the

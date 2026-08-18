@@ -27,24 +27,14 @@ struct SupabaseAuthClient: Sendable {
             .request()
     }
 
-    /// URLSession as the transport closure — this app's transport policy.
-    private func urlSessionTransport(_ request: URLRequest) async throws -> (Data, URLResponse) {
-        try await URLSession.shared.data(for: request)
-    }
-
-    /// Every operation decodes with a plain `JSONDecoder` — this app's decoding policy.
-    private func plainDecoder(_: SupabaseAuthRESTAPI.Operation) -> JSONDecoder {
-        JSONDecoder()
-    }
-
     /// The (Operation) → Data seam without middleware.
-    private var executeOnce: @Sendable (SupabaseAuthRESTAPI.Operation) async throws -> Data {
-        NetworkExecution(request: request, transport: urlSessionTransport, successStatuses: SupabaseAuthRESTAPI.Responses.successStatuses).execute
+    var executeOnce: @Sendable (SupabaseAuthRESTAPI.Operation) async throws -> Data {
+        NetworkExecution(request: request, transport: { try await URLSession.shared.data(for: $0) }, successStatuses: SupabaseAuthRESTAPI.Responses.successStatuses).execute
     }
 
     /// The refresh work as a Task — `refresh()` wrapped in the single-flight
     /// handle the executor joins on.
-    private func makeRefreshTask() -> Task<Void, Never> {
+    func makeRefreshTask() -> Task<Void, Never> {
         Task { await refresh() }
     }
 
@@ -57,7 +47,7 @@ struct SupabaseAuthClient: Sendable {
     /// Transient failure leaves tokens unchanged, so RefreshingExecutor
     /// throws the original error.
     @MainActor
-    private func refresh() async {
+    func refresh() async {
         do {
             let session = try await api.postToken(.refreshToken, .init(refreshToken: refreshToken))
             accessToken = session.accessToken
@@ -83,6 +73,6 @@ struct SupabaseAuthClient: Sendable {
             isUnauthorized: { $0.status == 401 },
             needsAuth: SupabaseAuthRESTAPI.Security.needsUserAuth
         )
-        return .wired(execute: refreshed.executeWithRefresh, decoder: plainDecoder)
+        return .wired(execute: refreshed.executeWithRefresh) { _ in JSONDecoder() }
     }
 }

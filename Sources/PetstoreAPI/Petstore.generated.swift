@@ -88,6 +88,18 @@ public enum SwaggerPetstore {
         public var createPets: @Sendable (_ body: Pet) async throws -> Void
         public var showPetById: @Sendable (_ petId: String) async throws -> Pet
 
+        /// A whole backend that implements nothing: every field traps by name.
+        /// State the operations under test by assignment, leave the rest to
+        /// announce themselves. Unreachable in production — `wired` fills every
+        /// field — so a trap is always a hand-built client missing one.
+        public static var unimplemented: Client {
+            Client(
+                listPets: ClosureUtilities.unimplemented("listPets"),
+                createPets: ClosureUtilities.unimplemented("createPets"),
+                showPetById: ClosureUtilities.unimplemented("showPetById")
+            )
+        }
+
         /// Wires the typed surface over the (Operation) → Data seam. Real,
         /// mocked, or middleware-wrapped is decided entirely by the closures
         /// passed — no opinion, no defaults. The mechanics live once in the

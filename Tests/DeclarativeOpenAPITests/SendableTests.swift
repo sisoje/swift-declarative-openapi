@@ -67,3 +67,22 @@ private func requiresSendable(_: some Sendable) {}
     let pet = try await api.showPetById("42")
     #expect(pet.id == 1)
 }
+
+/// The whole backend as a value a consumer writes by hand — no seam, no
+/// transport, no protocol. `unimplemented` is a complete client whose fields
+/// all trap by name; state the ones under test by assignment, the idiom this
+/// package already uses for mocking. Only the stated fields are called here,
+/// because the rest would trap.
+@Test func wholeBackendIsAValueYouCanWrite() async throws {
+    var api = SwaggerPetstore.Client.unimplemented
+    api.listPets = { _ in [] }
+    api.showPetById = { SwaggerPetstore.Pet(id: 1, name: "Rex", tag: $0) }
+
+    #expect(try await api.listPets(nil).isEmpty)
+    #expect(try await api.showPetById("42").tag == "42")
+}
+
+/// Request building is wire work — URL composition and JSON body encoding —
+/// so `NetworkExecution.execute` is `@concurrent`: a main-actor caller never
+/// builds a request on the UI thread. The request closure runs inside that
+/// seam, so it witnesses the executor.
