@@ -9,27 +9,28 @@ import SwiftUI
 /// staleness barrier: a call that joined a refresh ran with the fresh token,
 /// so its failure escalates instead of re-refreshing.
 ///
-/// Deliberately minimal — no isolation annotations. Known caveat: as a
-/// nonisolated async function, `executeRefreshed` hops off the caller's
-/// actor (SE-0338), so the nil-gate is not actor-atomic today. Revisit when
-/// `NonisolatedNonsendingByDefault` (SE-0461) lands: nonisolated async will
-/// run on the caller's actor and main-actor callers get exclusivity for free.
-public struct RefreshingExecutor<Operation> {
+/// `executeWithRefresh` is `nonisolated(nonsending)` (SE-0461): it runs on
+/// the caller's actor, and the gate's read-check-set has no suspension
+/// point inside it, so callers sharing one actor — the main-actor UI this
+/// is built for — get an atomic gate. That closes the SE-0338 caveat this
+/// comment used to carry. Callers spread across different isolation
+/// domains still race the gate; single-flight is per-actor, not global.
+public struct RefreshingExecutor<Operation: Sendable>: Sendable {
     @Binding var refreshTask: Task<Void, Never>?
     @Binding var accessToken: String?
 
-    let executeOnce: (Operation) async throws -> Data
-    let makeRefreshTask: () -> Task<Void, Never> // it will update access token
-    let isUnauthorized: (ResponseError) -> Bool
-    let needsAuth: (Operation) -> Bool
+    let executeOnce: @Sendable (Operation) async throws -> Data
+    let makeRefreshTask: @Sendable () -> Task<Void, Never> // it will update access token
+    let isUnauthorized: @Sendable (ResponseError) -> Bool
+    let needsAuth: @Sendable (Operation) -> Bool
 
     public init(
         refreshTask: Binding<Task<Void, Never>?>,
         accessToken: Binding<String?>,
-        executeOnce: @escaping (Operation) async throws -> Data,
-        makeRefreshTask: @escaping () -> Task<Void, Never>,
-        isUnauthorized: @escaping (ResponseError) -> Bool,
-        needsAuth: @escaping (Operation) -> Bool
+        executeOnce: @escaping @Sendable (Operation) async throws -> Data,
+        makeRefreshTask: @escaping @Sendable () -> Task<Void, Never>,
+        isUnauthorized: @escaping @Sendable (ResponseError) -> Bool,
+        needsAuth: @escaping @Sendable (Operation) -> Bool
     ) {
         self._refreshTask = refreshTask
         self._accessToken = accessToken
@@ -39,7 +40,7 @@ public struct RefreshingExecutor<Operation> {
         self.needsAuth = needsAuth
     }
 
-    public func executeWithRefresh(_ operation: Operation) async throws -> Data {
+    nonisolated(nonsending) public func executeWithRefresh(_ operation: Operation) async throws -> Data {
         guard needsAuth(operation) else {
             return try await executeOnce(operation)
         }

@@ -518,7 +518,7 @@ extension SpecGenerator {
     }
 
     func renderStringEnum(_ name: String, cases: [String], indent: String) -> String {
-        var output = "\(indent)public enum \(name): String, Codable {\n"
+        var output = "\(indent)public enum \(name): String, Codable, Sendable {\n"
         for value in cases {
             var caseName = propertyName(value)
             if caseName.first?.isNumber == true {
@@ -543,9 +543,9 @@ extension SpecGenerator {
             return "public typealias \(model.name) = \(type)\n"
         case let .structModel(properties):
             guard !properties.isEmpty else {
-                return "public struct \(model.name): Codable {\n    public init() {}\n}\n"
+                return "public struct \(model.name): Codable, Sendable {\n    public init() {}\n}\n"
             }
-            var output = "public struct \(model.name): Codable {\n"
+            var output = "public struct \(model.name): Codable, Sendable {\n"
             for property in properties {
                 guard let cases = property.enumCases else { continue }
                 output += renderStringEnum(property.type, cases: cases, indent: "    ")
@@ -716,11 +716,11 @@ extension SpecGenerator {
 
         var output = "\n    // MARK: - Client\n\n"
         output += "    /// The backend as one set of typed closures — swap any field to stub.\n"
-        output += "    public struct Client {\n"
+        output += "    public struct Client: Sendable {\n"
         for operation in operations {
             let parameters = clientParameters(operation)
             let signature = "(" + parameters.map { "_ \($0.name): \($0.type)" }.joined(separator: ", ") + ")"
-            output += "        public var \(operation.caseName): \(signature) async throws -> \(operation.successType)\n"
+            output += "        public var \(operation.caseName): @Sendable \(signature) async throws -> \(operation.successType)\n"
         }
         output += "\n"
         output += "        /// Wires the typed surface over the (Operation) → Data seam. Real,\n"
@@ -728,8 +728,8 @@ extension SpecGenerator {
         output += "        /// passed — no opinion, no defaults. The mechanics live once in the\n"
         output += "        /// runtime's ClientBuilder; the table below is pure facts.\n"
         output += "        public static func wired(\n"
-        output += "            execute: @escaping (Operation) async throws -> Data,\n"
-        output += "            decoder: @escaping (Operation) -> JSONDecoder\n"
+        output += "            execute: @escaping @Sendable (Operation) async throws -> Data,\n"
+        output += "            decoder: @escaping @Sendable (Operation) -> JSONDecoder\n"
         output += "        ) -> Client {\n"
         output += "            let build = ClientBuilder(execute: execute, decoder: decoder)\n"
         output += "            return Client(\n"

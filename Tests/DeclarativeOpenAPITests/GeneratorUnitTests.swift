@@ -291,7 +291,7 @@ import Testing
             $ref: "#/components/schemas/thing-request"
     """
     let generated = try SpecGenerator().generate(yaml: yaml)
-    #expect(generated.contains("public struct ThingRequest: Codable {\n        public init() {}\n    }"))
+    #expect(generated.contains("public struct ThingRequest: Codable, Sendable {\n        public init() {}\n    }"))
     #expect(generated.contains("typealias ThingList = [ThingRequest]"))
     #expect(generated.contains("case makeThing(body: ThingRequest)"))
     #expect(!generated.contains("thing-request"))
@@ -311,7 +311,7 @@ import Testing
           type: object
     """
     let generated = try SpecGenerator().generate(yaml: yaml)
-    #expect(generated.contains("public struct APIError: Codable {\n        public init() {}\n    }"))
+    #expect(generated.contains("public struct APIError: Codable, Sendable {\n        public init() {}\n    }"))
     #expect(!generated.contains("struct Error"))
 }
 
@@ -542,7 +542,7 @@ import Testing
                 type: string
     """
     let generated = try SpecGenerator().generate(yaml: yaml)
-    #expect(generated.contains("struct Thing: Codable {"))
+    #expect(generated.contains("struct Thing: Codable, Sendable {"))
     #expect(generated.contains("var id: Int\n"))
     #expect(generated.contains("var displayName: String? = nil"))
     #expect(generated.contains("var tags: [String]? = nil"))
@@ -577,7 +577,7 @@ import Testing
                   type: string
     """
     let generated = try SpecGenerator().generate(yaml: yaml)
-    #expect(generated.contains("public struct Extended: Codable {\n        public var id: String\n        public var note: String\n"))
+    #expect(generated.contains("public struct Extended: Codable, Sendable {\n        public var id: String\n        public var note: String\n"))
 }
 
 // MARK: - String enums
@@ -603,7 +603,7 @@ import Testing
                   - refresh_token
     """
     let generated = try SpecGenerator().generate(yaml: yaml)
-    #expect(generated.contains("enum GrantType: String, Codable {"))
+    #expect(generated.contains("enum GrantType: String, Codable, Sendable {"))
     #expect(generated.contains("case refreshToken = \"refresh_token\""))
     #expect(generated.contains("case issueToken(grantType: GrantType)"))
     #expect(generated.contains("Query(\"grant_type\", grantType.rawValue)"))
@@ -625,7 +625,7 @@ import Testing
             - small
     """
     let generated = try SpecGenerator().generate(yaml: yaml)
-    #expect(generated.contains("enum Kind: String, Codable {"))
+    #expect(generated.contains("enum Kind: String, Codable, Sendable {"))
     #expect(generated.contains("case bigOne = \"big-one\""))
     #expect(generated.contains("case small\n"))
 }
@@ -682,7 +682,7 @@ import Testing
               type: string
     """
     let generated = try SpecGenerator().generate(yaml: yaml)
-    #expect(generated.contains("    public enum Quality: String, Codable {"))
+    #expect(generated.contains("    public enum Quality: String, Codable, Sendable {"))
     #expect(generated.contains("case _1080p = \"1080p\""))
     #expect(generated.contains("var quality: Quality? = nil"))
     #expect(generated.contains("var codec: String? = nil"))
@@ -723,7 +723,7 @@ import Testing
               description: no content
     """
     let generated = try SpecGenerator().generate(yaml: yaml)
-    #expect(generated.contains("var getReport: () async throws -> String"))
+    #expect(generated.contains("var getReport: @Sendable () async throws -> String"))
     #expect(generated.contains("getReport: build.text({ Operation.getReport })"))
     #expect(generated.contains("getName: build.endpoint({ Operation.getName }, String.self)"))
     #expect(generated.contains("ping: build.fire({ Operation.ping })"))

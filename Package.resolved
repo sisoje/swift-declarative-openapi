@@ -6,7 +6,7 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/sisoje/swift-declarative-requests.git",
       "state" : {
-        "revision" : "433584650adb5c6cfd830d6d4e237d0372a01520",
+        "revision" : "31c77b407f1d6536fbe17f674abcaa70ca435be8",
         "version" : "2.0.0"
       }
     },

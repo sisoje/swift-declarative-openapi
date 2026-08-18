@@ -177,6 +177,48 @@ final class RefreshHarness: @unchecked Sendable {
     #expect(h.refreshes == 1)
 }
 
+/// The SE-0461 guarantee: `executeWithRefresh` runs on the caller's actor,
+/// so the nil-gate's read-check-set (no suspension inside) is atomic for
+/// callers sharing one actor. Two concurrent main-actor calls, both holding
+/// an expired token, must produce exactly one refresh in every interleaving.
+@Test @MainActor func refreshingExecutorSingleFlightAcrossConcurrentMainActorCalls() async throws {
+    let h = RefreshHarness()
+    let executor = RefreshingExecutor<SupabaseAuthRESTAPI.Operation>(
+        refreshTask: Binding(get: { h.refreshTask }, set: { h.refreshTask = $0 }),
+        accessToken: Binding(get: { h.accessToken }, set: { h.accessToken = $0 }),
+        executeOnce: { @MainActor operation in
+            h.executions += 1
+            if h.accessToken == "fresh" { return Data("ok".utf8) }
+            throw ResponseError(
+                data: Data(),
+                response: HTTPURLResponse(
+                    url: projectBaseURL, statusCode: 401, httpVersion: nil, headerFields: nil
+                )!
+            )
+        },
+        makeRefreshTask: {
+            Task { @MainActor in
+                h.refreshes += 1
+                h.accessToken = "fresh"
+            }
+        },
+        isUnauthorized: { $0.status == 401 },
+        needsAuth: SupabaseAuthRESTAPI.Security.needsUserAuth
+    )
+
+    // Task { @MainActor in } rather than async let: an async-let child is
+    // nonisolated, and a nonsending function follows its caller — these two
+    // must actually share the main actor for the gate to be under test.
+    let first = Task { @MainActor in try await executor.executeWithRefresh(.getUser) }
+    let second = Task { @MainActor in try await executor.executeWithRefresh(.getUser) }
+    let results = try await (first.value, second.value)
+
+    #expect(String(decoding: results.0, as: UTF8.self) == "ok")
+    #expect(String(decoding: results.1, as: UTF8.self) == "ok")
+    #expect(h.refreshes == 1)     // the gate: never a double refresh
+    #expect(h.executions <= 4)    // at worst two failures + two retries
+}
+
 @Test func refreshingExecutorThrowsOriginalErrorWhenRefreshDoesNotHappen() async {
     let h = RefreshHarness()
     let executor = RefreshingExecutor<SupabaseAuthRESTAPI.Operation>(

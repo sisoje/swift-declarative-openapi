@@ -25,7 +25,7 @@ struct MissingSecretKey: Error {}
 /// append the digest last.
 struct HMACSignature: RequestBuildable {
     let secretKey: String?
-    let now: () -> Date
+    let now: @Sendable () -> Date
 
     var body: some RequestBuildable {
         RequestBlock { state in
@@ -52,7 +52,7 @@ struct HMACSignature: RequestBuildable {
 /// the generated Security section; `secretKey` is demanded lazily — only
 /// when an operation actually carries a signature slot. The clock is
 /// injected policy (`now: Date.init` in an app), so tests pin it.
-struct BinanceClient {
+struct BinanceClient: Sendable {
     let baseURL: URL
     let apiKey: String?
     let secretKey: String?

@@ -10,7 +10,7 @@ public enum RedoclyMuseumAPI {
 
     public typealias APIDate = String
 
-    public struct APIError: Codable {
+    public struct APIError: Codable, Sendable {
         public var title: String? = nil
         public var type: String? = nil
 
@@ -23,7 +23,7 @@ public enum RedoclyMuseumAPI {
         }
     }
 
-    public struct BuyMuseumTickets: Codable {
+    public struct BuyMuseumTickets: Codable, Sendable {
         public var email: Email? = nil
         public var eventId: EventId? = nil
         public var ticketDate: APIDate
@@ -59,7 +59,7 @@ public enum RedoclyMuseumAPI {
 
     public typealias EventPrice = Double
 
-    public struct MuseumDailyHours: Codable {
+    public struct MuseumDailyHours: Codable, Sendable {
         public var date: APIDate
         public var timeClose: String
         public var timeOpen: String
@@ -77,7 +77,7 @@ public enum RedoclyMuseumAPI {
 
     public typealias MuseumHours = [MuseumDailyHours]
 
-    public struct MuseumTicketsConfirmation: Codable {
+    public struct MuseumTicketsConfirmation: Codable, Sendable {
         public var confirmationCode: TicketConfirmation
         public var eventId: EventId? = nil
         public var message: TicketMessage
@@ -102,7 +102,7 @@ public enum RedoclyMuseumAPI {
         }
     }
 
-    public struct SpecialEvent: Codable {
+    public struct SpecialEvent: Codable, Sendable {
         public var dates: EventDates
         public var eventDescription: EventDescription
         public var eventId: EventId? = nil
@@ -129,7 +129,7 @@ public enum RedoclyMuseumAPI {
 
     public typealias SpecialEventCollection = [SpecialEvent]
 
-    public struct SpecialEventFields: Codable {
+    public struct SpecialEventFields: Codable, Sendable {
         public var dates: EventDates? = nil
         public var eventDescription: EventDescription? = nil
         public var location: EventLocation? = nil
@@ -151,7 +151,7 @@ public enum RedoclyMuseumAPI {
         }
     }
 
-    public struct Ticket: Codable {
+    public struct Ticket: Codable, Sendable {
         public var eventId: EventId? = nil
         public var ticketDate: APIDate
         public var ticketId: TicketId? = nil
@@ -178,7 +178,7 @@ public enum RedoclyMuseumAPI {
 
     public typealias TicketMessage = String
 
-    public enum TicketType: String, Codable {
+    public enum TicketType: String, Codable, Sendable {
         case event
         case general
     }
@@ -312,23 +312,23 @@ public enum RedoclyMuseumAPI {
     // MARK: - Client
 
     /// The backend as one set of typed closures — swap any field to stub.
-    public struct Client {
-        public var getMuseumHours: (_ startDate: String?, _ page: Int?, _ limit: Int?) async throws -> MuseumHours
-        public var listSpecialEvents: (_ startDate: String?, _ endDate: String?, _ page: Int?, _ limit: Int?) async throws -> SpecialEventCollection
-        public var createSpecialEvent: (_ body: SpecialEvent) async throws -> SpecialEvent
-        public var getSpecialEvent: (_ eventId: String) async throws -> SpecialEvent
-        public var updateSpecialEvent: (_ eventId: String, _ body: SpecialEventFields) async throws -> SpecialEvent
-        public var deleteSpecialEvent: (_ eventId: String) async throws -> Void
-        public var buyMuseumTickets: (_ body: BuyMuseumTickets) async throws -> MuseumTicketsConfirmation
-        public var getTicketCode: (_ ticketId: String) async throws -> Data
+    public struct Client: Sendable {
+        public var getMuseumHours: @Sendable (_ startDate: String?, _ page: Int?, _ limit: Int?) async throws -> MuseumHours
+        public var listSpecialEvents: @Sendable (_ startDate: String?, _ endDate: String?, _ page: Int?, _ limit: Int?) async throws -> SpecialEventCollection
+        public var createSpecialEvent: @Sendable (_ body: SpecialEvent) async throws -> SpecialEvent
+        public var getSpecialEvent: @Sendable (_ eventId: String) async throws -> SpecialEvent
+        public var updateSpecialEvent: @Sendable (_ eventId: String, _ body: SpecialEventFields) async throws -> SpecialEvent
+        public var deleteSpecialEvent: @Sendable (_ eventId: String) async throws -> Void
+        public var buyMuseumTickets: @Sendable (_ body: BuyMuseumTickets) async throws -> MuseumTicketsConfirmation
+        public var getTicketCode: @Sendable (_ ticketId: String) async throws -> Data
 
         /// Wires the typed surface over the (Operation) → Data seam. Real,
         /// mocked, or middleware-wrapped is decided entirely by the closures
         /// passed — no opinion, no defaults. The mechanics live once in the
         /// runtime's ClientBuilder; the table below is pure facts.
         public static func wired(
-            execute: @escaping (Operation) async throws -> Data,
-            decoder: @escaping (Operation) -> JSONDecoder
+            execute: @escaping @Sendable (Operation) async throws -> Data,
+            decoder: @escaping @Sendable (Operation) -> JSONDecoder
         ) -> Client {
             let build = ClientBuilder(execute: execute, decoder: decoder)
             return Client(

@@ -9,7 +9,7 @@ import Foundation
 public enum SupabaseAuthRESTAPI {
     // MARK: - Schemas (components.schemas)
 
-    public struct AccessTokenResponseSchema: Codable {
+    public struct AccessTokenResponseSchema: Codable, Sendable {
         public var accessToken: String? = nil
         public var expiresAt: Int? = nil
         public var expiresIn: Int? = nil
@@ -47,8 +47,8 @@ public enum SupabaseAuthRESTAPI {
         }
     }
 
-    public struct CredentialCreationOptions: Codable {
-        public enum Attestation: String, Codable {
+    public struct CredentialCreationOptions: Codable, Sendable {
+        public enum Attestation: String, Codable, Sendable {
             case none
             case indirect
             case direct
@@ -94,8 +94,8 @@ public enum SupabaseAuthRESTAPI {
         }
     }
 
-    public struct CredentialRequestOptions: Codable {
-        public enum UserVerification: String, Codable {
+    public struct CredentialRequestOptions: Codable, Sendable {
+        public enum UserVerification: String, Codable, Sendable {
             case required
             case preferred
             case discouraged
@@ -128,8 +128,8 @@ public enum SupabaseAuthRESTAPI {
         }
     }
 
-    public struct CustomOAuthProviderSchema: Codable {
-        public enum ProviderType: String, Codable {
+    public struct CustomOAuthProviderSchema: Codable, Sendable {
+        public enum ProviderType: String, Codable, Sendable {
             case oauth2
             case oidc
         }
@@ -231,7 +231,7 @@ public enum SupabaseAuthRESTAPI {
         }
     }
 
-    public struct DeleteFactorsFactorIdResponse: Codable {
+    public struct DeleteFactorsFactorIdResponse: Codable, Sendable {
         public var id: String? = nil
 
         public init(
@@ -241,11 +241,11 @@ public enum SupabaseAuthRESTAPI {
         }
     }
 
-    public struct DeleteUserIdentitiesIdentityIdResponse: Codable {
+    public struct DeleteUserIdentitiesIdentityIdResponse: Codable, Sendable {
         public init() {}
     }
 
-    public struct ErrorSchema: Codable {
+    public struct ErrorSchema: Codable, Sendable {
         public var code: Int? = nil
         public var error: String? = nil
         public var errorCode: String? = nil
@@ -279,7 +279,7 @@ public enum SupabaseAuthRESTAPI {
         }
     }
 
-    public struct GetHealthResponse: Codable {
+    public struct GetHealthResponse: Codable, Sendable {
         public var description: String? = nil
         public var name: String? = nil
         public var version: String? = nil
@@ -295,7 +295,7 @@ public enum SupabaseAuthRESTAPI {
         }
     }
 
-    public struct GetOauthAuthorizationsAuthorizationIdResponse: Codable {
+    public struct GetOauthAuthorizationsAuthorizationIdResponse: Codable, Sendable {
         public var authorizationId: String? = nil
         public var client: String? = nil
         public var redirectUri: String? = nil
@@ -325,7 +325,7 @@ public enum SupabaseAuthRESTAPI {
         }
     }
 
-    public struct GetSettingsResponse: Codable {
+    public struct GetSettingsResponse: Codable, Sendable {
         public var disableSignup: Bool? = nil
         public var external: String? = nil
         public var mailerAutoconfirm: Bool? = nil
@@ -359,7 +359,7 @@ public enum SupabaseAuthRESTAPI {
         }
     }
 
-    public struct GoTrueSecurity: Codable {
+    public struct GoTrueSecurity: Codable, Sendable {
         public var captchaToken: String? = nil
 
         public init(
@@ -373,7 +373,7 @@ public enum SupabaseAuthRESTAPI {
         }
     }
 
-    public struct IdentitySchema: Codable {
+    public struct IdentitySchema: Codable, Sendable {
         public var createdAt: String? = nil
         public var email: String? = nil
         public var id: String? = nil
@@ -419,7 +419,7 @@ public enum SupabaseAuthRESTAPI {
         }
     }
 
-    public struct MFAFactorSchema: Codable {
+    public struct MFAFactorSchema: Codable, Sendable {
         public var createdAt: String? = nil
         public var factorType: String? = nil
         public var friendlyName: String? = nil
@@ -465,18 +465,18 @@ public enum SupabaseAuthRESTAPI {
         }
     }
 
-    public struct OAuthClientSchema: Codable {
-        public enum ClientType: String, Codable {
+    public struct OAuthClientSchema: Codable, Sendable {
+        public enum ClientType: String, Codable, Sendable {
             case `public` = "public"
             case confidential
         }
 
-        public enum RegistrationType: String, Codable {
+        public enum RegistrationType: String, Codable, Sendable {
             case dynamic
             case manual
         }
 
-        public enum TokenEndpointAuthMethod: String, Codable {
+        public enum TokenEndpointAuthMethod: String, Codable, Sendable {
             case none
             case clientSecretBasic = "client_secret_basic"
             case clientSecretPost = "client_secret_post"
@@ -547,8 +547,8 @@ public enum SupabaseAuthRESTAPI {
         }
     }
 
-    public struct PostFactorsBody: Codable {
-        public enum FactorType: String, Codable {
+    public struct PostFactorsBody: Codable, Sendable {
+        public enum FactorType: String, Codable, Sendable {
             case totp
             case phone
             case webauthn
@@ -579,8 +579,8 @@ public enum SupabaseAuthRESTAPI {
         }
     }
 
-    public struct PostFactorsFactorIdChallengeBody: Codable {
-        public enum Channel: String, Codable {
+    public struct PostFactorsFactorIdChallengeBody: Codable, Sendable {
+        public enum Channel: String, Codable, Sendable {
             case sms
             case whatsapp
         }
@@ -594,7 +594,7 @@ public enum SupabaseAuthRESTAPI {
         }
     }
 
-    public struct PostFactorsFactorIdVerifyBody: Codable {
+    public struct PostFactorsFactorIdVerifyBody: Codable, Sendable {
         public var challengeId: String
         public var code: String? = nil
         public var webauthn: String? = nil
@@ -616,8 +616,8 @@ public enum SupabaseAuthRESTAPI {
         }
     }
 
-    public struct PostFactorsResponse: Codable {
-        public enum APIType: String, Codable {
+    public struct PostFactorsResponse: Codable, Sendable {
+        public enum APIType: String, Codable, Sendable {
             case totp
             case phone
             case webauthn
@@ -641,7 +641,7 @@ public enum SupabaseAuthRESTAPI {
         }
     }
 
-    public struct PostInviteBody: Codable {
+    public struct PostInviteBody: Codable, Sendable {
         public var data: String? = nil
         public var email: String
 
@@ -654,7 +654,7 @@ public enum SupabaseAuthRESTAPI {
         }
     }
 
-    public struct PostMagiclinkBody: Codable {
+    public struct PostMagiclinkBody: Codable, Sendable {
         public var data: String? = nil
         public var email: String
         public var gotrueMetaSecurity: GoTrueSecurity? = nil
@@ -676,12 +676,12 @@ public enum SupabaseAuthRESTAPI {
         }
     }
 
-    public struct PostMagiclinkResponse: Codable {
+    public struct PostMagiclinkResponse: Codable, Sendable {
         public init() {}
     }
 
-    public struct PostOauthAuthorizationsAuthorizationIdConsentBody: Codable {
-        public enum Action: String, Codable {
+    public struct PostOauthAuthorizationsAuthorizationIdConsentBody: Codable, Sendable {
+        public enum Action: String, Codable, Sendable {
             case approve
             case deny
         }
@@ -695,7 +695,7 @@ public enum SupabaseAuthRESTAPI {
         }
     }
 
-    public struct PostOauthAuthorizationsAuthorizationIdConsentResponse: Codable {
+    public struct PostOauthAuthorizationsAuthorizationIdConsentResponse: Codable, Sendable {
         public var redirectUrl: String? = nil
 
         public init(
@@ -709,13 +709,13 @@ public enum SupabaseAuthRESTAPI {
         }
     }
 
-    public struct PostOauthClientsRegisterBody: Codable {
-        public enum ClientType: String, Codable {
+    public struct PostOauthClientsRegisterBody: Codable, Sendable {
+        public enum ClientType: String, Codable, Sendable {
             case `public` = "public"
             case confidential
         }
 
-        public enum TokenEndpointAuthMethod: String, Codable {
+        public enum TokenEndpointAuthMethod: String, Codable, Sendable {
             case none
             case clientSecretBasic = "client_secret_basic"
             case clientSecretPost = "client_secret_post"
@@ -766,7 +766,7 @@ public enum SupabaseAuthRESTAPI {
         }
     }
 
-    public struct PostOauthTokenResponse: Codable {
+    public struct PostOauthTokenResponse: Codable, Sendable {
         public var accessToken: String? = nil
         public var expiresIn: Int? = nil
         public var refreshToken: String? = nil
@@ -796,13 +796,13 @@ public enum SupabaseAuthRESTAPI {
         }
     }
 
-    public struct PostOtpBody: Codable {
-        public enum Channel: String, Codable {
+    public struct PostOtpBody: Codable, Sendable {
+        public enum Channel: String, Codable, Sendable {
             case sms
             case whatsapp
         }
 
-        public enum CodeChallengeMethod: String, Codable {
+        public enum CodeChallengeMethod: String, Codable, Sendable {
             case s256
             case plain
         }
@@ -848,7 +848,7 @@ public enum SupabaseAuthRESTAPI {
         }
     }
 
-    public struct PostOtpResponse: Codable {
+    public struct PostOtpResponse: Codable, Sendable {
         public var messageId: String? = nil
 
         public init(
@@ -862,12 +862,12 @@ public enum SupabaseAuthRESTAPI {
         }
     }
 
-    public struct PostReauthenticateResponse: Codable {
+    public struct PostReauthenticateResponse: Codable, Sendable {
         public init() {}
     }
 
-    public struct PostRecoverBody: Codable {
-        public enum CodeChallengeMethod: String, Codable {
+    public struct PostRecoverBody: Codable, Sendable {
+        public enum CodeChallengeMethod: String, Codable, Sendable {
             case plain
             case s256
         }
@@ -897,12 +897,12 @@ public enum SupabaseAuthRESTAPI {
         }
     }
 
-    public struct PostRecoverResponse: Codable {
+    public struct PostRecoverResponse: Codable, Sendable {
         public init() {}
     }
 
-    public struct PostResendBody: Codable {
-        public enum APIType: String, Codable {
+    public struct PostResendBody: Codable, Sendable {
+        public enum APIType: String, Codable, Sendable {
             case signup
             case emailChange = "email_change"
             case sms
@@ -934,7 +934,7 @@ public enum SupabaseAuthRESTAPI {
         }
     }
 
-    public struct PostResendResponse: Codable {
+    public struct PostResendResponse: Codable, Sendable {
         public var messageId: String? = nil
 
         public init(
@@ -948,13 +948,13 @@ public enum SupabaseAuthRESTAPI {
         }
     }
 
-    public struct PostSignupBody: Codable {
-        public enum Channel: String, Codable {
+    public struct PostSignupBody: Codable, Sendable {
+        public enum Channel: String, Codable, Sendable {
             case sms
             case whatsapp
         }
 
-        public enum CodeChallengeMethod: String, Codable {
+        public enum CodeChallengeMethod: String, Codable, Sendable {
             case plain
             case s256
         }
@@ -1000,8 +1000,8 @@ public enum SupabaseAuthRESTAPI {
         }
     }
 
-    public struct PostSsoBody: Codable {
-        public enum CodeChallengeMethod: String, Codable {
+    public struct PostSsoBody: Codable, Sendable {
+        public enum CodeChallengeMethod: String, Codable, Sendable {
             case plain
             case s256
         }
@@ -1043,7 +1043,7 @@ public enum SupabaseAuthRESTAPI {
         }
     }
 
-    public struct PostSsoResponse: Codable {
+    public struct PostSsoResponse: Codable, Sendable {
         public var url: String? = nil
 
         public init(
@@ -1053,13 +1053,13 @@ public enum SupabaseAuthRESTAPI {
         }
     }
 
-    public struct PostTokenBody: Codable {
-        public enum Chain: String, Codable {
+    public struct PostTokenBody: Codable, Sendable {
+        public enum Chain: String, Codable, Sendable {
             case solana
             case ethereum
         }
 
-        public enum Provider: String, Codable {
+        public enum Provider: String, Codable, Sendable {
             case google
             case apple
             case azure
@@ -1140,8 +1140,8 @@ public enum SupabaseAuthRESTAPI {
         }
     }
 
-    public struct PostVerifyBody: Codable {
-        public enum APIType: String, Codable {
+    public struct PostVerifyBody: Codable, Sendable {
+        public enum APIType: String, Codable, Sendable {
             case signup
             case recovery
             case invite
@@ -1184,8 +1184,8 @@ public enum SupabaseAuthRESTAPI {
         }
     }
 
-    public struct PublicKeyCredentialDescriptor: Codable {
-        public enum APIType: String, Codable {
+    public struct PublicKeyCredentialDescriptor: Codable, Sendable {
+        public enum APIType: String, Codable, Sendable {
             case publicKey = "public-key"
         }
 
@@ -1204,8 +1204,8 @@ public enum SupabaseAuthRESTAPI {
         }
     }
 
-    public struct PutUserBody: Codable {
-        public enum Channel: String, Codable {
+    public struct PutUserBody: Codable, Sendable {
+        public enum Channel: String, Codable, Sendable {
             case sms
             case whatsapp
         }
@@ -1247,7 +1247,7 @@ public enum SupabaseAuthRESTAPI {
         }
     }
 
-    public struct SAMLAttributeMappingSchema: Codable {
+    public struct SAMLAttributeMappingSchema: Codable, Sendable {
         public var keys: String? = nil
 
         public init(
@@ -1257,7 +1257,7 @@ public enum SupabaseAuthRESTAPI {
         }
     }
 
-    public struct SSOProviderSchema: Codable {
+    public struct SSOProviderSchema: Codable, Sendable {
         public var id: String? = nil
         public var saml: String? = nil
         public var ssoDomains: [String]? = nil
@@ -1279,8 +1279,8 @@ public enum SupabaseAuthRESTAPI {
         }
     }
 
-    public struct TOTPPhoneChallengeResponse: Codable {
-        public enum APIType: String, Codable {
+    public struct TOTPPhoneChallengeResponse: Codable, Sendable {
+        public enum APIType: String, Codable, Sendable {
             case totp
             case phone
         }
@@ -1306,7 +1306,7 @@ public enum SupabaseAuthRESTAPI {
         }
     }
 
-    public struct UserSchema: Codable {
+    public struct UserSchema: Codable, Sendable {
         public var appMetadata: String? = nil
         public var aud: String? = nil
         public var bannedUntil: String? = nil
@@ -1416,8 +1416,8 @@ public enum SupabaseAuthRESTAPI {
         }
     }
 
-    public struct WebAuthnChallengeResponse: Codable {
-        public enum APIType: String, Codable {
+    public struct WebAuthnChallengeResponse: Codable, Sendable {
+        public enum APIType: String, Codable, Sendable {
             case webauthn
         }
 
@@ -1450,22 +1450,22 @@ public enum SupabaseAuthRESTAPI {
 
     // each operation IS a block
     public enum Operation: RequestBuildable {
-        public enum CodeChallengeMethod: String, Codable {
+        public enum CodeChallengeMethod: String, Codable, Sendable {
             case plain
             case s256
         }
 
-        public enum Scope: String, Codable {
+        public enum Scope: String, Codable, Sendable {
             case global
             case local
             case others
         }
 
-        public enum ResponseType: String, Codable {
+        public enum ResponseType: String, Codable, Sendable {
             case code
         }
 
-        public enum GrantType: String, Codable {
+        public enum GrantType: String, Codable, Sendable {
             case password
             case refreshToken = "refresh_token"
             case idToken = "id_token"
@@ -1473,7 +1473,7 @@ public enum SupabaseAuthRESTAPI {
             case web3
         }
 
-        public enum APIType: String, Codable {
+        public enum APIType: String, Codable, Sendable {
             case signup
             case invite
             case recovery
@@ -1793,49 +1793,49 @@ public enum SupabaseAuthRESTAPI {
     // MARK: - Client
 
     /// The backend as one set of typed closures — swap any field to stub.
-    public struct Client {
-        public var getAuthorize: (_ provider: String, _ scopes: String, _ inviteToken: String?, _ redirectTo: String?, _ codeChallengeMethod: Operation.CodeChallengeMethod?) async throws -> Void
-        public var getCallback: () async throws -> Void
-        public var postCallback: () async throws -> Void
-        public var postFactors: (_ body: PostFactorsBody) async throws -> PostFactorsResponse
-        public var deleteFactorsFactorId: (_ factorId: String) async throws -> DeleteFactorsFactorIdResponse
-        public var postFactorsFactorIdChallenge: (_ factorId: String, _ body: PostFactorsFactorIdChallengeBody) async throws -> String
-        public var postFactorsFactorIdVerify: (_ factorId: String, _ body: PostFactorsFactorIdVerifyBody) async throws -> AccessTokenResponseSchema
-        public var getHealth: () async throws -> GetHealthResponse
-        public var postInvite: (_ body: PostInviteBody) async throws -> UserSchema
-        public var postLogout: (_ scope: Operation.Scope?) async throws -> Void
-        public var postMagiclink: (_ body: PostMagiclinkBody) async throws -> PostMagiclinkResponse
-        public var getOauthAuthorizationsAuthorizationId: (_ authorizationId: String) async throws -> GetOauthAuthorizationsAuthorizationIdResponse
-        public var postOauthAuthorizationsAuthorizationIdConsent: (_ authorizationId: String, _ body: PostOauthAuthorizationsAuthorizationIdConsentBody) async throws -> PostOauthAuthorizationsAuthorizationIdConsentResponse
-        public var getOauthAuthorize: (_ responseType: Operation.ResponseType, _ clientId: String, _ redirectUri: String, _ scope: String?, _ state: String?, _ codeChallenge: String, _ codeChallengeMethod: String) async throws -> Void
-        public var postOauthClientsRegister: (_ body: PostOauthClientsRegisterBody) async throws -> OAuthClientSchema
-        public var postOauthToken: () async throws -> PostOauthTokenResponse
-        public var postOtp: (_ body: PostOtpBody) async throws -> PostOtpResponse
-        public var postReauthenticate: () async throws -> PostReauthenticateResponse
-        public var postRecover: (_ body: PostRecoverBody) async throws -> PostRecoverResponse
-        public var postResend: (_ body: PostResendBody) async throws -> PostResendResponse
-        public var postSamlAcs: (_ relayState: String?, _ sAMLArt: String?, _ sAMLResponse: String?) async throws -> Void
-        public var getSamlMetadata: (_ download: Bool?) async throws -> Void
-        public var getSettings: () async throws -> GetSettingsResponse
-        public var postSignup: (_ body: PostSignupBody) async throws -> String
-        public var postSso: (_ body: PostSsoBody) async throws -> PostSsoResponse
-        public var postToken: (_ grantType: Operation.GrantType, _ body: PostTokenBody) async throws -> AccessTokenResponseSchema
-        public var getUser: () async throws -> UserSchema
-        public var putUser: (_ body: PutUserBody) async throws -> UserSchema
-        public var getUserIdentitiesAuthorize: (_ provider: String, _ scopes: String, _ redirectTo: String?, _ codeChallengeMethod: Operation.CodeChallengeMethod?) async throws -> Void
-        public var deleteUserIdentitiesIdentityId: (_ identityId: String) async throws -> DeleteUserIdentitiesIdentityIdResponse
-        public var getUserOauthGrants: () async throws -> [String]
-        public var deleteUserOauthGrants: (_ clientId: String) async throws -> Void
-        public var getVerify: (_ token: String, _ type: Operation.APIType, _ redirectTo: String?) async throws -> Void
-        public var postVerify: (_ body: PostVerifyBody) async throws -> AccessTokenResponseSchema
+    public struct Client: Sendable {
+        public var getAuthorize: @Sendable (_ provider: String, _ scopes: String, _ inviteToken: String?, _ redirectTo: String?, _ codeChallengeMethod: Operation.CodeChallengeMethod?) async throws -> Void
+        public var getCallback: @Sendable () async throws -> Void
+        public var postCallback: @Sendable () async throws -> Void
+        public var postFactors: @Sendable (_ body: PostFactorsBody) async throws -> PostFactorsResponse
+        public var deleteFactorsFactorId: @Sendable (_ factorId: String) async throws -> DeleteFactorsFactorIdResponse
+        public var postFactorsFactorIdChallenge: @Sendable (_ factorId: String, _ body: PostFactorsFactorIdChallengeBody) async throws -> String
+        public var postFactorsFactorIdVerify: @Sendable (_ factorId: String, _ body: PostFactorsFactorIdVerifyBody) async throws -> AccessTokenResponseSchema
+        public var getHealth: @Sendable () async throws -> GetHealthResponse
+        public var postInvite: @Sendable (_ body: PostInviteBody) async throws -> UserSchema
+        public var postLogout: @Sendable (_ scope: Operation.Scope?) async throws -> Void
+        public var postMagiclink: @Sendable (_ body: PostMagiclinkBody) async throws -> PostMagiclinkResponse
+        public var getOauthAuthorizationsAuthorizationId: @Sendable (_ authorizationId: String) async throws -> GetOauthAuthorizationsAuthorizationIdResponse
+        public var postOauthAuthorizationsAuthorizationIdConsent: @Sendable (_ authorizationId: String, _ body: PostOauthAuthorizationsAuthorizationIdConsentBody) async throws -> PostOauthAuthorizationsAuthorizationIdConsentResponse
+        public var getOauthAuthorize: @Sendable (_ responseType: Operation.ResponseType, _ clientId: String, _ redirectUri: String, _ scope: String?, _ state: String?, _ codeChallenge: String, _ codeChallengeMethod: String) async throws -> Void
+        public var postOauthClientsRegister: @Sendable (_ body: PostOauthClientsRegisterBody) async throws -> OAuthClientSchema
+        public var postOauthToken: @Sendable () async throws -> PostOauthTokenResponse
+        public var postOtp: @Sendable (_ body: PostOtpBody) async throws -> PostOtpResponse
+        public var postReauthenticate: @Sendable () async throws -> PostReauthenticateResponse
+        public var postRecover: @Sendable (_ body: PostRecoverBody) async throws -> PostRecoverResponse
+        public var postResend: @Sendable (_ body: PostResendBody) async throws -> PostResendResponse
+        public var postSamlAcs: @Sendable (_ relayState: String?, _ sAMLArt: String?, _ sAMLResponse: String?) async throws -> Void
+        public var getSamlMetadata: @Sendable (_ download: Bool?) async throws -> Void
+        public var getSettings: @Sendable () async throws -> GetSettingsResponse
+        public var postSignup: @Sendable (_ body: PostSignupBody) async throws -> String
+        public var postSso: @Sendable (_ body: PostSsoBody) async throws -> PostSsoResponse
+        public var postToken: @Sendable (_ grantType: Operation.GrantType, _ body: PostTokenBody) async throws -> AccessTokenResponseSchema
+        public var getUser: @Sendable () async throws -> UserSchema
+        public var putUser: @Sendable (_ body: PutUserBody) async throws -> UserSchema
+        public var getUserIdentitiesAuthorize: @Sendable (_ provider: String, _ scopes: String, _ redirectTo: String?, _ codeChallengeMethod: Operation.CodeChallengeMethod?) async throws -> Void
+        public var deleteUserIdentitiesIdentityId: @Sendable (_ identityId: String) async throws -> DeleteUserIdentitiesIdentityIdResponse
+        public var getUserOauthGrants: @Sendable () async throws -> [String]
+        public var deleteUserOauthGrants: @Sendable (_ clientId: String) async throws -> Void
+        public var getVerify: @Sendable (_ token: String, _ type: Operation.APIType, _ redirectTo: String?) async throws -> Void
+        public var postVerify: @Sendable (_ body: PostVerifyBody) async throws -> AccessTokenResponseSchema
 
         /// Wires the typed surface over the (Operation) → Data seam. Real,
         /// mocked, or middleware-wrapped is decided entirely by the closures
         /// passed — no opinion, no defaults. The mechanics live once in the
         /// runtime's ClientBuilder; the table below is pure facts.
         public static func wired(
-            execute: @escaping (Operation) async throws -> Data,
-            decoder: @escaping (Operation) -> JSONDecoder
+            execute: @escaping @Sendable (Operation) async throws -> Data,
+            decoder: @escaping @Sendable (Operation) -> JSONDecoder
         ) -> Client {
             let build = ClientBuilder(execute: execute, decoder: decoder)
             return Client(

@@ -3,7 +3,7 @@ import Foundation
 /// One error, nothing lost: payload and the raw response — decode the spec's
 /// error model from `data` in the layer that needs it. Universal and
 /// non-generic; the catching caller already knows which operation it ran.
-public struct ResponseError: Error {
+public struct ResponseError: Error, Sendable {
     public let data: Data
     public let response: URLResponse
 

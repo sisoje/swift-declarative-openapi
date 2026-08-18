@@ -14,7 +14,7 @@ import SwiftUI
 /// section is its rule. Credentials are optional so the client is
 /// constructible before any session exists — a required-but-missing one
 /// fails the build at `request(_:)`.
-struct SupabaseAuthClient {
+struct SupabaseAuthClient: Sendable {
     let baseURL: URL
     @Binding var apikey: String?
     @Binding var accessToken: String?
@@ -38,7 +38,7 @@ struct SupabaseAuthClient {
     }
 
     /// The (Operation) → Data seam without middleware.
-    private var executeOnce: (SupabaseAuthRESTAPI.Operation) async throws -> Data {
+    private var executeOnce: @Sendable (SupabaseAuthRESTAPI.Operation) async throws -> Data {
         NetworkExecution(request: request, transport: urlSessionTransport, successStatuses: SupabaseAuthRESTAPI.Responses.successStatuses).execute
     }
 

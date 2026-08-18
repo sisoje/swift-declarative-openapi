@@ -8,7 +8,7 @@ import Foundation
 public enum SwaggerPetstore {
     // MARK: - Schemas (components.schemas)
 
-    public struct APIError: Codable {
+    public struct APIError: Codable, Sendable {
         public var code: Int
         public var message: String
 
@@ -21,7 +21,7 @@ public enum SwaggerPetstore {
         }
     }
 
-    public struct Pet: Codable {
+    public struct Pet: Codable, Sendable {
         public var id: Int
         public var name: String
         public var tag: String? = nil
@@ -83,18 +83,18 @@ public enum SwaggerPetstore {
     // MARK: - Client
 
     /// The backend as one set of typed closures — swap any field to stub.
-    public struct Client {
-        public var listPets: (_ limit: Int?) async throws -> Pets
-        public var createPets: (_ body: Pet) async throws -> Void
-        public var showPetById: (_ petId: String) async throws -> Pet
+    public struct Client: Sendable {
+        public var listPets: @Sendable (_ limit: Int?) async throws -> Pets
+        public var createPets: @Sendable (_ body: Pet) async throws -> Void
+        public var showPetById: @Sendable (_ petId: String) async throws -> Pet
 
         /// Wires the typed surface over the (Operation) → Data seam. Real,
         /// mocked, or middleware-wrapped is decided entirely by the closures
         /// passed — no opinion, no defaults. The mechanics live once in the
         /// runtime's ClientBuilder; the table below is pure facts.
         public static func wired(
-            execute: @escaping (Operation) async throws -> Data,
-            decoder: @escaping (Operation) -> JSONDecoder
+            execute: @escaping @Sendable (Operation) async throws -> Data,
+            decoder: @escaping @Sendable (Operation) -> JSONDecoder
         ) -> Client {
             let build = ClientBuilder(execute: execute, decoder: decoder)
             return Client(

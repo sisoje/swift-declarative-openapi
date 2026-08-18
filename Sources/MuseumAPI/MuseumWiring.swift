@@ -9,7 +9,7 @@ import Foundation
 /// Session + environment in one place. Credentials are optional so the
 /// client is constructible before any exist — a required-but-missing pair
 /// fails the build at `request(_:)` with the generated scheme error.
-struct MuseumClient {
+struct MuseumClient: Sendable {
     var baseURL: URL
     var credentials: (username: String, password: String)? = nil
 

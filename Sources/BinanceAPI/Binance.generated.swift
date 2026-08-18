@@ -8,7 +8,7 @@ import Foundation
 public enum BinanceSpotAPI {
     // MARK: - Schemas (components.schemas)
 
-    public struct AggTrade: Codable {
+    public struct AggTrade: Codable, Sendable {
         public var M: Bool
         public var t: Bool
         public var a: Int
@@ -50,7 +50,7 @@ public enum BinanceSpotAPI {
         }
     }
 
-    public struct BookTicker: Codable {
+    public struct BookTicker: Codable, Sendable {
         public var askPrice: String
         public var askQty: String
         public var bidPrice: String
@@ -74,7 +74,7 @@ public enum BinanceSpotAPI {
 
     public typealias BookTickerList = [BookTicker]
 
-    public struct DayTicker: Codable {
+    public struct DayTicker: Codable, Sendable {
         public var closeTime: Int
         public var count: Int
         public var firstId: Int
@@ -128,7 +128,7 @@ public enum BinanceSpotAPI {
 
     public typealias DayTickerList = [DayTicker]
 
-    public struct GetApiV3AvgPriceResponse: Codable {
+    public struct GetApiV3AvgPriceResponse: Codable, Sendable {
         public var closeTime: Int
         public var mins: Int
         public var price: String
@@ -144,7 +144,7 @@ public enum BinanceSpotAPI {
         }
     }
 
-    public struct GetApiV3DepthResponse: Codable {
+    public struct GetApiV3DepthResponse: Codable, Sendable {
         public var asks: [[String]]
         public var bids: [[String]]
         public var lastUpdateId: Int
@@ -160,7 +160,7 @@ public enum BinanceSpotAPI {
         }
     }
 
-    public struct GetApiV3ExchangeInfoResponse: Codable {
+    public struct GetApiV3ExchangeInfoResponse: Codable, Sendable {
         public var exchangeFilters: [String]
         public var rateLimits: [String]
         public var serverTime: Int
@@ -182,11 +182,11 @@ public enum BinanceSpotAPI {
         }
     }
 
-    public struct GetApiV3PingResponse: Codable {
+    public struct GetApiV3PingResponse: Codable, Sendable {
         public init() {}
     }
 
-    public struct GetApiV3TickerResponse: Codable {
+    public struct GetApiV3TickerResponse: Codable, Sendable {
         public var closeTime: Int
         public var count: Int
         public var firstId: Int
@@ -238,7 +238,7 @@ public enum BinanceSpotAPI {
         }
     }
 
-    public struct GetApiV3TimeResponse: Codable {
+    public struct GetApiV3TimeResponse: Codable, Sendable {
         public var serverTime: Int
 
         public init(
@@ -248,7 +248,7 @@ public enum BinanceSpotAPI {
         }
     }
 
-    public struct GetSapiV1AccountApiRestrictionsResponse: Codable {
+    public struct GetSapiV1AccountApiRestrictionsResponse: Codable, Sendable {
         public var createTime: Int
         public var enableFutures: Bool
         public var enableInternalTransfer: Bool
@@ -291,7 +291,7 @@ public enum BinanceSpotAPI {
         }
     }
 
-    public struct GetSapiV1AccountApiTradingStatusResponse: Codable {
+    public struct GetSapiV1AccountApiTradingStatusResponse: Codable, Sendable {
         public var data: String
 
         public init(
@@ -301,7 +301,7 @@ public enum BinanceSpotAPI {
         }
     }
 
-    public struct GetSapiV1AccountInfoResponse: Codable {
+    public struct GetSapiV1AccountInfoResponse: Codable, Sendable {
         public var isFutureEnabled: Bool
         public var isMarginEnabled: Bool
         public var vipLevel: Int
@@ -317,7 +317,7 @@ public enum BinanceSpotAPI {
         }
     }
 
-    public struct GetSapiV1AccountStatusResponse: Codable {
+    public struct GetSapiV1AccountStatusResponse: Codable, Sendable {
         public var data: String
 
         public init(
@@ -327,7 +327,7 @@ public enum BinanceSpotAPI {
         }
     }
 
-    public struct GetSapiV1AssetAssetDetailResponse: Codable {
+    public struct GetSapiV1AssetAssetDetailResponse: Codable, Sendable {
         public var cTR: String
 
         public init(
@@ -341,7 +341,7 @@ public enum BinanceSpotAPI {
         }
     }
 
-    public struct GetSapiV1AssetAssetDividendResponse: Codable {
+    public struct GetSapiV1AssetAssetDividendResponse: Codable, Sendable {
         public var rows: [String]
         public var total: Int
 
@@ -354,7 +354,7 @@ public enum BinanceSpotAPI {
         }
     }
 
-    public struct GetSapiV1AssetConvertTransferQueryByPageResponse: Codable {
+    public struct GetSapiV1AssetConvertTransferQueryByPageResponse: Codable, Sendable {
         public var rows: [String]
         public var total: Int
 
@@ -367,7 +367,7 @@ public enum BinanceSpotAPI {
         }
     }
 
-    public struct GetSapiV1AssetCustodyTransferHistoryResponse: Codable {
+    public struct GetSapiV1AssetCustodyTransferHistoryResponse: Codable, Sendable {
         public var rows: [String]
         public var total: Int
 
@@ -380,7 +380,7 @@ public enum BinanceSpotAPI {
         }
     }
 
-    public struct GetSapiV1AssetDribbletResponse: Codable {
+    public struct GetSapiV1AssetDribbletResponse: Codable, Sendable {
         public var total: Int
         public var userAssetDribblets: [String]
 
@@ -393,7 +393,7 @@ public enum BinanceSpotAPI {
         }
     }
 
-    public struct GetSapiV1AssetLedgerTransferCloudMiningQueryByPageResponse: Codable {
+    public struct GetSapiV1AssetLedgerTransferCloudMiningQueryByPageResponse: Codable, Sendable {
         public var rows: [String]
         public var total: Int
 
@@ -406,7 +406,7 @@ public enum BinanceSpotAPI {
         }
     }
 
-    public struct GetSapiV1AssetTransferResponse: Codable {
+    public struct GetSapiV1AssetTransferResponse: Codable, Sendable {
         public var rows: [String]
         public var total: Int
 
@@ -419,7 +419,7 @@ public enum BinanceSpotAPI {
         }
     }
 
-    public struct GetSapiV1CapitalContractConvertibleCoinsResponse: Codable {
+    public struct GetSapiV1CapitalContractConvertibleCoinsResponse: Codable, Sendable {
         public var coins: [String]
         public var convertEnabled: Bool
         public var exchangeRates: String
@@ -435,7 +435,7 @@ public enum BinanceSpotAPI {
         }
     }
 
-    public struct GetSapiV1CapitalDepositAddressResponse: Codable {
+    public struct GetSapiV1CapitalDepositAddressResponse: Codable, Sendable {
         public var address: String
         public var coin: String
         public var tag: String
@@ -454,7 +454,7 @@ public enum BinanceSpotAPI {
         }
     }
 
-    public struct GetSapiV1SystemStatusResponse: Codable {
+    public struct GetSapiV1SystemStatusResponse: Codable, Sendable {
         public var msg: String
         public var status: Int
 
@@ -467,15 +467,15 @@ public enum BinanceSpotAPI {
         }
     }
 
-    public struct PostSapiV1AccountDisableFastWithdrawSwitchResponse: Codable {
+    public struct PostSapiV1AccountDisableFastWithdrawSwitchResponse: Codable, Sendable {
         public init() {}
     }
 
-    public struct PostSapiV1AccountEnableFastWithdrawSwitchResponse: Codable {
+    public struct PostSapiV1AccountEnableFastWithdrawSwitchResponse: Codable, Sendable {
         public init() {}
     }
 
-    public struct PostSapiV1AssetConvertTransferResponse: Codable {
+    public struct PostSapiV1AssetConvertTransferResponse: Codable, Sendable {
         public var status: String
         public var tranId: Int
 
@@ -488,7 +488,7 @@ public enum BinanceSpotAPI {
         }
     }
 
-    public struct PostSapiV1AssetDustBtcResponse: Codable {
+    public struct PostSapiV1AssetDustBtcResponse: Codable, Sendable {
         public var details: [String]
         public var dribbletPercentage: String
         public var totalTransferBNB: String
@@ -507,7 +507,7 @@ public enum BinanceSpotAPI {
         }
     }
 
-    public struct PostSapiV1AssetDustResponse: Codable {
+    public struct PostSapiV1AssetDustResponse: Codable, Sendable {
         public var totalServiceCharge: String
         public var totalTransfered: String
         public var transferResult: [String]
@@ -523,7 +523,7 @@ public enum BinanceSpotAPI {
         }
     }
 
-    public struct PostSapiV1AssetTransferResponse: Codable {
+    public struct PostSapiV1AssetTransferResponse: Codable, Sendable {
         public var tranId: Int
 
         public init(
@@ -533,11 +533,11 @@ public enum BinanceSpotAPI {
         }
     }
 
-    public struct PostSapiV1CapitalContractConvertibleCoinsResponse: Codable {
+    public struct PostSapiV1CapitalContractConvertibleCoinsResponse: Codable, Sendable {
         public init() {}
     }
 
-    public struct PostSapiV1CapitalDepositCreditApplyResponse: Codable {
+    public struct PostSapiV1CapitalDepositCreditApplyResponse: Codable, Sendable {
         public var code: String
         public var data: Bool
         public var message: String
@@ -556,7 +556,7 @@ public enum BinanceSpotAPI {
         }
     }
 
-    public struct PostSapiV1CapitalWithdrawApplyResponse: Codable {
+    public struct PostSapiV1CapitalWithdrawApplyResponse: Codable, Sendable {
         public var id: String
 
         public init(
@@ -566,7 +566,7 @@ public enum BinanceSpotAPI {
         }
     }
 
-    public struct PriceTicker: Codable {
+    public struct PriceTicker: Codable, Sendable {
         public var price: String
         public var symbol: String
 
@@ -581,7 +581,7 @@ public enum BinanceSpotAPI {
 
     public typealias PriceTickerList = [PriceTicker]
 
-    public struct SnapshotFutures: Codable {
+    public struct SnapshotFutures: Codable, Sendable {
         public var code: Int
         public var msg: String
         public var snapshotVos: [String]
@@ -597,7 +597,7 @@ public enum BinanceSpotAPI {
         }
     }
 
-    public struct SnapshotMargin: Codable {
+    public struct SnapshotMargin: Codable, Sendable {
         public var code: Int
         public var msg: String
         public var snapshotVos: [String]
@@ -613,7 +613,7 @@ public enum BinanceSpotAPI {
         }
     }
 
-    public struct SnapshotSpot: Codable {
+    public struct SnapshotSpot: Codable, Sendable {
         public var code: Int
         public var msg: String
         public var snapshotVos: [String]
@@ -629,7 +629,7 @@ public enum BinanceSpotAPI {
         }
     }
 
-    public struct Ticker: Codable {
+    public struct Ticker: Codable, Sendable {
         public var askPrice: String
         public var askQty: String
         public var bidPrice: String
@@ -695,7 +695,7 @@ public enum BinanceSpotAPI {
 
     public typealias TickerList = [Ticker]
 
-    public struct Trade: Codable {
+    public struct Trade: Codable, Sendable {
         public var id: Int
         public var isBestMatch: Bool
         public var isBuyerMaker: Bool
@@ -727,7 +727,7 @@ public enum BinanceSpotAPI {
 
     // each operation IS a block
     public enum Operation: RequestBuildable {
-        public enum Interval: String, Codable {
+        public enum Interval: String, Codable, Sendable {
             case _1s = "1s"
             case _1m = "1m"
             case _3m = "3m"
@@ -746,17 +746,17 @@ public enum BinanceSpotAPI {
             case _1M = "1M"
         }
 
-        public enum APIType: String, Codable {
+        public enum APIType: String, Codable, Sendable {
             case fULL = "FULL"
             case mINI = "MINI"
         }
 
-        public enum AccountType: String, Codable {
+        public enum AccountType: String, Codable, Sendable {
             case mAIN = "MAIN"
             case cARD = "CARD"
         }
 
-        public enum NeedBtcValuation: String, Codable {
+        public enum NeedBtcValuation: String, Codable, Sendable {
             case `true` = "true"
             case `false` = "false"
         }
@@ -1513,64 +1513,64 @@ public enum BinanceSpotAPI {
     // MARK: - Client
 
     /// The backend as one set of typed closures — swap any field to stub.
-    public struct Client {
-        public var getApiV3AggTrades: (_ symbol: String, _ fromId: Int?, _ startTime: Int?, _ endTime: Int?, _ limit: Int?) async throws -> [AggTrade]
-        public var getApiV3AvgPrice: (_ symbol: String) async throws -> GetApiV3AvgPriceResponse
-        public var getApiV3Depth: (_ symbol: String, _ limit: Int?) async throws -> GetApiV3DepthResponse
-        public var getApiV3ExchangeInfo: (_ symbol: String?, _ symbols: String?, _ permissions: String?) async throws -> GetApiV3ExchangeInfoResponse
-        public var getApiV3HistoricalTrades: (_ symbol: String, _ limit: Int?, _ fromId: Int?) async throws -> [Trade]
-        public var getApiV3Klines: (_ symbol: String, _ interval: Operation.Interval, _ startTime: Int?, _ endTime: Int?, _ timeZone: String?, _ limit: Int?) async throws -> [[String]]
-        public var getApiV3Ping: () async throws -> GetApiV3PingResponse
-        public var getApiV3Ticker: (_ symbol: String?, _ symbols: String?, _ windowSize: String?, _ type: String?) async throws -> GetApiV3TickerResponse
-        public var getApiV3Ticker24hr: (_ symbol: String?, _ symbols: String?, _ type: Operation.APIType?) async throws -> String
-        public var getApiV3TickerBookTicker: (_ symbol: String?, _ symbols: String?) async throws -> String
-        public var getApiV3TickerPrice: (_ symbol: String?, _ symbols: String?) async throws -> String
-        public var getApiV3TickerTradingDay: (_ symbol: String?, _ symbols: String?, _ timeZone: String?, _ type: Operation.APIType?) async throws -> String
-        public var getApiV3Time: () async throws -> GetApiV3TimeResponse
-        public var getApiV3Trades: (_ symbol: String, _ limit: Int?) async throws -> [Trade]
-        public var getApiV3UiKlines: (_ symbol: String, _ interval: Operation.Interval, _ startTime: Int?, _ endTime: Int?, _ timeZone: String?, _ limit: Int?) async throws -> [[String]]
-        public var getSapiV1AccountApiRestrictions: (_ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> GetSapiV1AccountApiRestrictionsResponse
-        public var getSapiV1AccountApiTradingStatus: (_ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> GetSapiV1AccountApiTradingStatusResponse
-        public var postSapiV1AccountDisableFastWithdrawSwitch: (_ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> PostSapiV1AccountDisableFastWithdrawSwitchResponse
-        public var postSapiV1AccountEnableFastWithdrawSwitch: (_ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> PostSapiV1AccountEnableFastWithdrawSwitchResponse
-        public var getSapiV1AccountInfo: (_ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> GetSapiV1AccountInfoResponse
-        public var getSapiV1AccountStatus: (_ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> GetSapiV1AccountStatusResponse
-        public var getSapiV1AccountSnapshot: (_ type: String, _ startTime: Int?, _ endTime: Int?, _ limit: Int?, _ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> String
-        public var getSapiV1AssetAssetDetail: (_ asset: String?, _ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> GetSapiV1AssetAssetDetailResponse
-        public var getSapiV1AssetAssetDividend: (_ asset: String?, _ startTime: Int?, _ endTime: Int?, _ limit: Int?, _ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> GetSapiV1AssetAssetDividendResponse
-        public var postSapiV1AssetConvertTransfer: (_ clientTranId: String, _ asset: String, _ amount: Double, _ targetAsset: String, _ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> PostSapiV1AssetConvertTransferResponse
-        public var getSapiV1AssetConvertTransferQueryByPage: (_ tranId: Int?, _ asset: String?, _ startTime: Int, _ endTime: Int, _ accountType: Operation.AccountType?, _ current: Int?, _ size: Int?, _ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> GetSapiV1AssetConvertTransferQueryByPageResponse
-        public var getSapiV1AssetCustodyTransferHistory: (_ email: String, _ startTime: Int, _ endTime: Int, _ type: String?, _ asset: String, _ current: Int?, _ size: Int?, _ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> GetSapiV1AssetCustodyTransferHistoryResponse
-        public var getSapiV1AssetDribblet: (_ accountType: String?, _ startTime: Int?, _ endTime: Int?, _ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> GetSapiV1AssetDribbletResponse
-        public var postSapiV1AssetDust: (_ asset: [String], _ accountType: String?, _ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> PostSapiV1AssetDustResponse
-        public var postSapiV1AssetDustBtc: (_ accountType: String?, _ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> PostSapiV1AssetDustBtcResponse
-        public var postSapiV1AssetGetFundingAsset: (_ asset: String?, _ needBtcValuation: Operation.NeedBtcValuation?, _ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> [String]
-        public var getSapiV1AssetLedgerTransferCloudMiningQueryByPage: (_ tranId: Int?, _ clientTranId: String?, _ asset: String?, _ startTime: Int, _ endTime: Int, _ current: Int?, _ size: Int?, _ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> GetSapiV1AssetLedgerTransferCloudMiningQueryByPageResponse
-        public var getSapiV1AssetTradeFee: (_ symbol: String?, _ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> [String]
-        public var getSapiV1AssetTransfer: (_ type: String, _ startTime: Int?, _ endTime: Int?, _ current: Int?, _ size: Int?, _ fromSymbol: String?, _ toSymbol: String?, _ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> GetSapiV1AssetTransferResponse
-        public var postSapiV1AssetTransfer: (_ type: String, _ asset: String, _ amount: Double, _ fromSymbol: String?, _ toSymbol: String?, _ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> PostSapiV1AssetTransferResponse
-        public var getSapiV1AssetWalletBalance: (_ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> [String]
-        public var getSapiV1CapitalConfigGetall: (_ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> [String]
-        public var getSapiV1CapitalContractConvertibleCoins: () async throws -> GetSapiV1CapitalContractConvertibleCoinsResponse
-        public var postSapiV1CapitalContractConvertibleCoins: (_ coin: String, _ enable: Bool) async throws -> PostSapiV1CapitalContractConvertibleCoinsResponse
-        public var getSapiV1CapitalDepositAddress: (_ coin: String, _ network: String?, _ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> GetSapiV1CapitalDepositAddressResponse
-        public var getSapiV1CapitalDepositAddressList: (_ coin: String, _ network: String?, _ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> [String]
-        public var postSapiV1CapitalDepositCreditApply: (_ depositId: Int?, _ txId: String?, _ subAccountId: Int?, _ subUserId: Int?, _ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> PostSapiV1CapitalDepositCreditApplyResponse
-        public var getSapiV1CapitalDepositHisrec: (_ coin: String?, _ status: Int?, _ startTime: Int?, _ endTime: Int?, _ offset: Int?, _ limit: Int?, _ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> [String]
-        public var getSapiV1CapitalWithdrawAddressList: () async throws -> [String]
-        public var postSapiV1CapitalWithdrawApply: (_ coin: String, _ withdrawOrderId: String?, _ network: String?, _ address: String, _ addressTag: String?, _ amount: Double, _ transactionFeeFlag: Bool?, _ name: String?, _ walletType: Int?, _ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> PostSapiV1CapitalWithdrawApplyResponse
-        public var getSapiV1CapitalWithdrawHistory: (_ coin: String?, _ withdrawOrderId: String?, _ status: Int?, _ startTime: Int?, _ endTime: Int?, _ offset: Int?, _ limit: Int?, _ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> [String]
-        public var getSapiV1SpotDelistSchedule: (_ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> [String]
-        public var getSapiV1SystemStatus: () async throws -> GetSapiV1SystemStatusResponse
-        public var postSapiV3AssetGetUserAsset: (_ asset: String?, _ needBtcValuation: Operation.NeedBtcValuation?, _ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> [String]
+    public struct Client: Sendable {
+        public var getApiV3AggTrades: @Sendable (_ symbol: String, _ fromId: Int?, _ startTime: Int?, _ endTime: Int?, _ limit: Int?) async throws -> [AggTrade]
+        public var getApiV3AvgPrice: @Sendable (_ symbol: String) async throws -> GetApiV3AvgPriceResponse
+        public var getApiV3Depth: @Sendable (_ symbol: String, _ limit: Int?) async throws -> GetApiV3DepthResponse
+        public var getApiV3ExchangeInfo: @Sendable (_ symbol: String?, _ symbols: String?, _ permissions: String?) async throws -> GetApiV3ExchangeInfoResponse
+        public var getApiV3HistoricalTrades: @Sendable (_ symbol: String, _ limit: Int?, _ fromId: Int?) async throws -> [Trade]
+        public var getApiV3Klines: @Sendable (_ symbol: String, _ interval: Operation.Interval, _ startTime: Int?, _ endTime: Int?, _ timeZone: String?, _ limit: Int?) async throws -> [[String]]
+        public var getApiV3Ping: @Sendable () async throws -> GetApiV3PingResponse
+        public var getApiV3Ticker: @Sendable (_ symbol: String?, _ symbols: String?, _ windowSize: String?, _ type: String?) async throws -> GetApiV3TickerResponse
+        public var getApiV3Ticker24hr: @Sendable (_ symbol: String?, _ symbols: String?, _ type: Operation.APIType?) async throws -> String
+        public var getApiV3TickerBookTicker: @Sendable (_ symbol: String?, _ symbols: String?) async throws -> String
+        public var getApiV3TickerPrice: @Sendable (_ symbol: String?, _ symbols: String?) async throws -> String
+        public var getApiV3TickerTradingDay: @Sendable (_ symbol: String?, _ symbols: String?, _ timeZone: String?, _ type: Operation.APIType?) async throws -> String
+        public var getApiV3Time: @Sendable () async throws -> GetApiV3TimeResponse
+        public var getApiV3Trades: @Sendable (_ symbol: String, _ limit: Int?) async throws -> [Trade]
+        public var getApiV3UiKlines: @Sendable (_ symbol: String, _ interval: Operation.Interval, _ startTime: Int?, _ endTime: Int?, _ timeZone: String?, _ limit: Int?) async throws -> [[String]]
+        public var getSapiV1AccountApiRestrictions: @Sendable (_ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> GetSapiV1AccountApiRestrictionsResponse
+        public var getSapiV1AccountApiTradingStatus: @Sendable (_ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> GetSapiV1AccountApiTradingStatusResponse
+        public var postSapiV1AccountDisableFastWithdrawSwitch: @Sendable (_ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> PostSapiV1AccountDisableFastWithdrawSwitchResponse
+        public var postSapiV1AccountEnableFastWithdrawSwitch: @Sendable (_ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> PostSapiV1AccountEnableFastWithdrawSwitchResponse
+        public var getSapiV1AccountInfo: @Sendable (_ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> GetSapiV1AccountInfoResponse
+        public var getSapiV1AccountStatus: @Sendable (_ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> GetSapiV1AccountStatusResponse
+        public var getSapiV1AccountSnapshot: @Sendable (_ type: String, _ startTime: Int?, _ endTime: Int?, _ limit: Int?, _ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> String
+        public var getSapiV1AssetAssetDetail: @Sendable (_ asset: String?, _ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> GetSapiV1AssetAssetDetailResponse
+        public var getSapiV1AssetAssetDividend: @Sendable (_ asset: String?, _ startTime: Int?, _ endTime: Int?, _ limit: Int?, _ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> GetSapiV1AssetAssetDividendResponse
+        public var postSapiV1AssetConvertTransfer: @Sendable (_ clientTranId: String, _ asset: String, _ amount: Double, _ targetAsset: String, _ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> PostSapiV1AssetConvertTransferResponse
+        public var getSapiV1AssetConvertTransferQueryByPage: @Sendable (_ tranId: Int?, _ asset: String?, _ startTime: Int, _ endTime: Int, _ accountType: Operation.AccountType?, _ current: Int?, _ size: Int?, _ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> GetSapiV1AssetConvertTransferQueryByPageResponse
+        public var getSapiV1AssetCustodyTransferHistory: @Sendable (_ email: String, _ startTime: Int, _ endTime: Int, _ type: String?, _ asset: String, _ current: Int?, _ size: Int?, _ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> GetSapiV1AssetCustodyTransferHistoryResponse
+        public var getSapiV1AssetDribblet: @Sendable (_ accountType: String?, _ startTime: Int?, _ endTime: Int?, _ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> GetSapiV1AssetDribbletResponse
+        public var postSapiV1AssetDust: @Sendable (_ asset: [String], _ accountType: String?, _ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> PostSapiV1AssetDustResponse
+        public var postSapiV1AssetDustBtc: @Sendable (_ accountType: String?, _ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> PostSapiV1AssetDustBtcResponse
+        public var postSapiV1AssetGetFundingAsset: @Sendable (_ asset: String?, _ needBtcValuation: Operation.NeedBtcValuation?, _ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> [String]
+        public var getSapiV1AssetLedgerTransferCloudMiningQueryByPage: @Sendable (_ tranId: Int?, _ clientTranId: String?, _ asset: String?, _ startTime: Int, _ endTime: Int, _ current: Int?, _ size: Int?, _ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> GetSapiV1AssetLedgerTransferCloudMiningQueryByPageResponse
+        public var getSapiV1AssetTradeFee: @Sendable (_ symbol: String?, _ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> [String]
+        public var getSapiV1AssetTransfer: @Sendable (_ type: String, _ startTime: Int?, _ endTime: Int?, _ current: Int?, _ size: Int?, _ fromSymbol: String?, _ toSymbol: String?, _ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> GetSapiV1AssetTransferResponse
+        public var postSapiV1AssetTransfer: @Sendable (_ type: String, _ asset: String, _ amount: Double, _ fromSymbol: String?, _ toSymbol: String?, _ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> PostSapiV1AssetTransferResponse
+        public var getSapiV1AssetWalletBalance: @Sendable (_ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> [String]
+        public var getSapiV1CapitalConfigGetall: @Sendable (_ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> [String]
+        public var getSapiV1CapitalContractConvertibleCoins: @Sendable () async throws -> GetSapiV1CapitalContractConvertibleCoinsResponse
+        public var postSapiV1CapitalContractConvertibleCoins: @Sendable (_ coin: String, _ enable: Bool) async throws -> PostSapiV1CapitalContractConvertibleCoinsResponse
+        public var getSapiV1CapitalDepositAddress: @Sendable (_ coin: String, _ network: String?, _ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> GetSapiV1CapitalDepositAddressResponse
+        public var getSapiV1CapitalDepositAddressList: @Sendable (_ coin: String, _ network: String?, _ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> [String]
+        public var postSapiV1CapitalDepositCreditApply: @Sendable (_ depositId: Int?, _ txId: String?, _ subAccountId: Int?, _ subUserId: Int?, _ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> PostSapiV1CapitalDepositCreditApplyResponse
+        public var getSapiV1CapitalDepositHisrec: @Sendable (_ coin: String?, _ status: Int?, _ startTime: Int?, _ endTime: Int?, _ offset: Int?, _ limit: Int?, _ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> [String]
+        public var getSapiV1CapitalWithdrawAddressList: @Sendable () async throws -> [String]
+        public var postSapiV1CapitalWithdrawApply: @Sendable (_ coin: String, _ withdrawOrderId: String?, _ network: String?, _ address: String, _ addressTag: String?, _ amount: Double, _ transactionFeeFlag: Bool?, _ name: String?, _ walletType: Int?, _ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> PostSapiV1CapitalWithdrawApplyResponse
+        public var getSapiV1CapitalWithdrawHistory: @Sendable (_ coin: String?, _ withdrawOrderId: String?, _ status: Int?, _ startTime: Int?, _ endTime: Int?, _ offset: Int?, _ limit: Int?, _ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> [String]
+        public var getSapiV1SpotDelistSchedule: @Sendable (_ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> [String]
+        public var getSapiV1SystemStatus: @Sendable () async throws -> GetSapiV1SystemStatusResponse
+        public var postSapiV3AssetGetUserAsset: @Sendable (_ asset: String?, _ needBtcValuation: Operation.NeedBtcValuation?, _ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> [String]
 
         /// Wires the typed surface over the (Operation) → Data seam. Real,
         /// mocked, or middleware-wrapped is decided entirely by the closures
         /// passed — no opinion, no defaults. The mechanics live once in the
         /// runtime's ClientBuilder; the table below is pure facts.
         public static func wired(
-            execute: @escaping (Operation) async throws -> Data,
-            decoder: @escaping (Operation) -> JSONDecoder
+            execute: @escaping @Sendable (Operation) async throws -> Data,
+            decoder: @escaping @Sendable (Operation) -> JSONDecoder
         ) -> Client {
             let build = ClientBuilder(execute: execute, decoder: decoder)
             return Client(

@@ -5,7 +5,7 @@ import DeclarativeOpenAPIRuntime
 import DeclarativeRequests
 import Foundation
 
-struct PetstoreClient {
+struct PetstoreClient: Sendable {
     var baseURL: URL
 
     func request(_ operation: SwaggerPetstore.Operation) throws -> URLRequest {

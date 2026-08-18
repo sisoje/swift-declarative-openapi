@@ -10,6 +10,7 @@ Turns an OpenAPI document into a compile-checked **BackendSpec** for [swift-decl
 - 🔄 **Token refresh is per operation, not per session**: only operations whose `security:` demands auth ride the 401 → single-flight refresh → retry machinery ([Security](#security))
 - 📋 **Spec facts are generated tables**: statuses, schemes, gates; nothing spec-shaped is hand-maintained ([Design conclusions](#design-conclusions))
 - ✍️ **Even HMAC signing is one more composable block**: Binance's signing slots filled by the wiring, dead values at call sites ([HMAC signing](#hmac-signing-as-a-dsl-block))
+- 🧵 **Zero wire work on the main actor**: URL composition, body encoding, and JSON decoding all run off the caller by `@concurrent` contract — the call site just suspends and receives a model ([Zero wire work](#zero-wire-work-on-the-main-actor))
 
 ## Why
 
@@ -142,6 +143,25 @@ let pet = try await api.showPetById("42")            // Pet — no type stated, 
 ```
 
 `Client.wired(execute:decoder:)` wires the typed surface over the `(Operation) async throws -> Data` seam, with no parameter defaults and no opinion about realness: build the seam with the runtime's `NetworkExecution(request:transport:successStatuses:)`, wrap it in middleware or replace it with a stub — the fields can't tell the difference.
+
+## Zero wire work on the main actor
+
+**Every CPU step of the wire runs off the caller — by contract, not by scheduler luck.** The caller is usually the main actor, and it stays completely relaxed: it constructs an enum case, suspends, and receives a decoded model. Everything between — walking the DSL blocks, composing the URL, `JSONEncoder` on the body, the transport, the status gate, `JSONDecoder` on the payload — happens on the concurrent pool:
+
+```
+MainActor                        concurrent pool
+─────────                        ───────────────
+try await api.showPetById("42")
+    suspends ──────────────────► build URLRequest   (DSL blocks, JSON body encoding)
+                                 transport          (URLSession)
+                                 status gate        (ResponseError.evaluate)
+                                 decode             (JSONDecoder)
+    Pet ◄──────────────────────  done
+```
+
+Most async code gets this off-main behavior by accident of the current language default (SE-0338) — and silently loses it the day a module adopts `NonisolatedNonsendingByDefault`, when plain async closures start inheriting the caller's isolation and a multi-megabyte decode lands on the UI thread mid-scroll. Here both directions carry the guarantee in their declarations (`@concurrent`, SE-0461): `NetworkExecution.execute` owns the outbound half, the `ClientBuilder` decode step owns the inbound half, and the pairing is deliberate — the refresh gate uses the opposite annotation (`nonisolated(nonsending)`) precisely because *its* correctness needs the caller's actor. Stay with the caller where atomicity matters, leave the caller where CPU work lives.
+
+Tests pin both halves from a `@MainActor` caller: the request closure and the decoder factory each execute inside their step and assert they are off the main thread.
 
 Every spec also gets a **Responses section**: a pure fact table of the operation's spec-declared statuses (`deleteSpecialEvent` expects 204, `createPets` 201, …). The runtime's `ResponseError.evaluate` is the evaluate step of the chain up top: it gates transport results through that table and throws one lossless error; the layer that cares decodes the spec's typed error model from `error.data`:
 
