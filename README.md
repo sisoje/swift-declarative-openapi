@@ -277,9 +277,8 @@ Settled over the project's evolution, enforced across every generated file:
 - `Sources/DeclarativeOpenAPICLI`: the `swift-declarative-openapi` executable (plain `CommandLine.arguments`, no argument-parser dependency).
 - `Sources/PetstoreAPI`, `Sources/MuseumAPI`, `Sources/SupabaseAuthAPI`, and `Sources/BinanceAPI`: the **checked-in generated outputs** (plus each backend's hand-written wiring), compiled against DeclarativeRequests on every `swift build`, so compilability of generated code is proven by the build itself.
 - `Specs/`: the canonical spec files.
-- `Tests/DeclarativeOpenAPITests`, 83 tests:
-  - **E2E generate-then-compile** (parameterized over all four specs): generates from the spec, writes a fresh temp SwiftPM package depending on DeclarativeRequests, runs a real `swift build` there, and asserts exit 0 (compiler output is surfaced on failure).
-  - **Golden** (parameterized over all four specs): generator output must equal the checked-in `*.generated.swift` byte-for-byte.
+- `Tests/DeclarativeOpenAPITests`, 82 tests:
+  - **Golden** (parameterized over all four specs): generator output must equal the checked-in `*.generated.swift` byte-for-byte. Those files are the sources of the four `<Name>API` targets, so every `swift build` compiles them against the real DeclarativeRequests dependency — golden equality plus a green build is the end-to-end proof that generator output compiles against the DSL, no temp-package harness needed.
   - **Request shape**: builds actual `URLRequest`s from the generated enums and asserts URLs, methods, query items, headers, and JSON bodies, including the Supabase refresh flow (`POST …/token?grant_type=refresh_token` with the real refresh-token payload and `apikey` header).
   - **Unit**: name sanitization, type mapping, slash stripping, required/optional/array query params, operationId fallback, enum-name override, header-param TODOs, invalid-YAML errors.
 
@@ -287,6 +286,6 @@ Settled over the project's evolution, enforced across every generated file:
 
 - Model generation covers the easy tier only: inline object properties, `oneOf`/`anyOf`, and recursion are out of scope and fall back to `String` via the tolerant type mapper (see TODO.md for the hard tail).
 - Declaring an error-model schema is bad API practice. One shape rarely fits every failure. The generator stays neutral: `ResponseError` is lossless, so callers who want the spec's error model decode it from `error.data`, and everyone else loses nothing.
-- Requires the sibling checkout `../swift-declarative-requests` (relative path dependency in `Package.swift`). The e2e test derives the same relative path from its own package root, so the test suite works on any machine (and CI) with the standard sibling-checkout layout.
-- Toolchain: swift-tools-version 6.3, macOS 14+ (matching the DSL package). First build fetches Yams from the network.
+- Depends on published [swift-declarative-requests](https://github.com/sisoje/swift-declarative-requests) tags (`from: "2.0.0"`), not on a sibling checkout — clone and build anywhere.
+- Toolchain: swift-tools-version 6.3, macOS 14+ (matching the DSL package). First build fetches Yams and DeclarativeRequests from the network.
 - The initial implementation was hardened by an adversarial review pass that caught and fixed: ignored path-item-level `parameters` (literal `{petId}` left in URLs), unsanitized schema names, non-compiling `String([T])` for array params, empty-`switch` output for operation-less specs, and the `Error` schema shadowing `Swift.Error`.

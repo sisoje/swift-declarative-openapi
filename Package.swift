@@ -21,7 +21,7 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/jpsim/Yams.git", from: "5.0.0"),
-        .package(path: "../swift-declarative-requests"),
+        .package(url: "https://github.com/sisoje/swift-declarative-requests.git", from: "2.0.0"),
     ],
     targets: [
         .target(

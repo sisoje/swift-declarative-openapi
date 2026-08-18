@@ -12,7 +12,7 @@ Currently skipped with a `// TODO:` comment in the generated case. The DSL suppo
 
 ## Optional-query codegen simplification (blocked on DSL decision)
 
-If the DSL adopts omit-on-nil for nil-valued `Query` (see `../swift-declarative-requests/TODO.md`), the generator can pass typed optionals straight through (`Query("limit", limit)`) and drop the `if let` wrapping entirely.
+If the DSL adopts omit-on-nil for nil-valued `Query` (tracked in the [swift-declarative-requests](https://github.com/sisoje/swift-declarative-requests) TODO), the generator can pass typed optionals straight through (`Query("limit", limit)`) and drop the `if let` wrapping entirely.
 
 ## Form-urlencoded request bodies
 

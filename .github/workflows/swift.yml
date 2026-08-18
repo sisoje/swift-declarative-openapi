@@ -16,11 +16,5 @@ jobs:
       with:
         xcode-version: 'latest'
     - uses: actions/checkout@v6
-      with:
-        path: swift-declarative-openapi
-    - uses: actions/checkout@v6
-      with:
-        repository: sisoje/swift-declarative-requests
-        path: swift-declarative-requests
     - name: Run tests
-      run: swift test --package-path swift-declarative-openapi
+      run: swift test
