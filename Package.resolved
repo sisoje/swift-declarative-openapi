@@ -2,6 +2,15 @@
   "originHash" : "bb05c15e64f1a17bd2cd0702bd01fdd6c8d279817801300e90d85806e71934b1",
   "pins" : [
     {
+      "identity" : "swift-declarative-requests",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/sisoje/swift-declarative-requests.git",
+      "state" : {
+        "revision" : "433584650adb5c6cfd830d6d4e237d0372a01520",
+        "version" : "2.0.0"
+      }
+    },
+    {
       "identity" : "yams",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/jpsim/Yams.git",
