@@ -6,17 +6,35 @@ import DeclarativeRequests
 import Foundation
 
 // The client-facing slice of the backend in one closed type — sections mirror the OpenAPI document.
-enum SupabaseAuthRESTAPI {
+public enum SupabaseAuthRESTAPI {
     // MARK: - Schemas (components.schemas)
 
-    struct AccessTokenResponseSchema: Codable {
-        var accessToken: String? = nil
-        var expiresAt: Int? = nil
-        var expiresIn: Int? = nil
-        var refreshToken: String? = nil
-        var tokenType: String? = nil
-        var user: UserSchema? = nil
-        var weakPassword: String? = nil
+    public struct AccessTokenResponseSchema: Codable {
+        public var accessToken: String? = nil
+        public var expiresAt: Int? = nil
+        public var expiresIn: Int? = nil
+        public var refreshToken: String? = nil
+        public var tokenType: String? = nil
+        public var user: UserSchema? = nil
+        public var weakPassword: String? = nil
+
+        public init(
+            accessToken: String? = nil,
+            expiresAt: Int? = nil,
+            expiresIn: Int? = nil,
+            refreshToken: String? = nil,
+            tokenType: String? = nil,
+            user: UserSchema? = nil,
+            weakPassword: String? = nil
+        ) {
+            self.accessToken = accessToken
+            self.expiresAt = expiresAt
+            self.expiresIn = expiresIn
+            self.refreshToken = refreshToken
+            self.tokenType = tokenType
+            self.user = user
+            self.weakPassword = weakPassword
+        }
 
         enum CodingKeys: String, CodingKey {
             case accessToken = "access_token"
@@ -29,71 +47,163 @@ enum SupabaseAuthRESTAPI {
         }
     }
 
-    struct CredentialCreationOptions: Codable {
-        enum Attestation: String, Codable {
+    public struct CredentialCreationOptions: Codable {
+        public enum Attestation: String, Codable {
             case none
             case indirect
             case direct
             case enterprise
         }
 
-        var attestation: Attestation? = nil
-        var attestationFormats: [String]? = nil
-        var authenticatorSelection: String? = nil
-        var challenge: String
-        var excludeCredentials: [PublicKeyCredentialDescriptor]? = nil
-        var extensions: String? = nil
-        var hints: [String]? = nil
-        var pubKeyCredParams: [String]
-        var rp: String
-        var timeout: Int? = nil
-        var user: String
+        public var attestation: Attestation? = nil
+        public var attestationFormats: [String]? = nil
+        public var authenticatorSelection: String? = nil
+        public var challenge: String
+        public var excludeCredentials: [PublicKeyCredentialDescriptor]? = nil
+        public var extensions: String? = nil
+        public var hints: [String]? = nil
+        public var pubKeyCredParams: [String]
+        public var rp: String
+        public var timeout: Int? = nil
+        public var user: String
+
+        public init(
+            attestation: Attestation? = nil,
+            attestationFormats: [String]? = nil,
+            authenticatorSelection: String? = nil,
+            challenge: String,
+            excludeCredentials: [PublicKeyCredentialDescriptor]? = nil,
+            extensions: String? = nil,
+            hints: [String]? = nil,
+            pubKeyCredParams: [String],
+            rp: String,
+            timeout: Int? = nil,
+            user: String
+        ) {
+            self.attestation = attestation
+            self.attestationFormats = attestationFormats
+            self.authenticatorSelection = authenticatorSelection
+            self.challenge = challenge
+            self.excludeCredentials = excludeCredentials
+            self.extensions = extensions
+            self.hints = hints
+            self.pubKeyCredParams = pubKeyCredParams
+            self.rp = rp
+            self.timeout = timeout
+            self.user = user
+        }
     }
 
-    struct CredentialRequestOptions: Codable {
-        enum UserVerification: String, Codable {
+    public struct CredentialRequestOptions: Codable {
+        public enum UserVerification: String, Codable {
             case required
             case preferred
             case discouraged
         }
 
-        var allowCredentials: [PublicKeyCredentialDescriptor]? = nil
-        var challenge: String
-        var extensions: String? = nil
-        var hints: [String]? = nil
-        var rpId: String? = nil
-        var timeout: Int? = nil
-        var userVerification: UserVerification? = nil
+        public var allowCredentials: [PublicKeyCredentialDescriptor]? = nil
+        public var challenge: String
+        public var extensions: String? = nil
+        public var hints: [String]? = nil
+        public var rpId: String? = nil
+        public var timeout: Int? = nil
+        public var userVerification: UserVerification? = nil
+
+        public init(
+            allowCredentials: [PublicKeyCredentialDescriptor]? = nil,
+            challenge: String,
+            extensions: String? = nil,
+            hints: [String]? = nil,
+            rpId: String? = nil,
+            timeout: Int? = nil,
+            userVerification: UserVerification? = nil
+        ) {
+            self.allowCredentials = allowCredentials
+            self.challenge = challenge
+            self.extensions = extensions
+            self.hints = hints
+            self.rpId = rpId
+            self.timeout = timeout
+            self.userVerification = userVerification
+        }
     }
 
-    struct CustomOAuthProviderSchema: Codable {
-        enum ProviderType: String, Codable {
+    public struct CustomOAuthProviderSchema: Codable {
+        public enum ProviderType: String, Codable {
             case oauth2
             case oidc
         }
 
-        var acceptableClientIds: [String]? = nil
-        var attributeMapping: String? = nil
-        var authorizationParams: String? = nil
-        var authorizationUrl: String? = nil
-        var clientId: String
-        var createdAt: String? = nil
-        var customClaimsAllowlist: [String]? = nil
-        var discoveryUrl: String? = nil
-        var emailOptional: Bool? = nil
-        var enabled: Bool? = nil
-        var id: String
-        var identifier: String
-        var issuer: String? = nil
-        var jwksUri: String? = nil
-        var name: String
-        var pkceEnabled: Bool? = nil
-        var providerType: ProviderType
-        var scopes: [String]? = nil
-        var skipNonceCheck: Bool? = nil
-        var tokenUrl: String? = nil
-        var updatedAt: String? = nil
-        var userinfoUrl: String? = nil
+        public var acceptableClientIds: [String]? = nil
+        public var attributeMapping: String? = nil
+        public var authorizationParams: String? = nil
+        public var authorizationUrl: String? = nil
+        public var clientId: String
+        public var createdAt: String? = nil
+        public var customClaimsAllowlist: [String]? = nil
+        public var discoveryUrl: String? = nil
+        public var emailOptional: Bool? = nil
+        public var enabled: Bool? = nil
+        public var id: String
+        public var identifier: String
+        public var issuer: String? = nil
+        public var jwksUri: String? = nil
+        public var name: String
+        public var pkceEnabled: Bool? = nil
+        public var providerType: ProviderType
+        public var scopes: [String]? = nil
+        public var skipNonceCheck: Bool? = nil
+        public var tokenUrl: String? = nil
+        public var updatedAt: String? = nil
+        public var userinfoUrl: String? = nil
+
+        public init(
+            acceptableClientIds: [String]? = nil,
+            attributeMapping: String? = nil,
+            authorizationParams: String? = nil,
+            authorizationUrl: String? = nil,
+            clientId: String,
+            createdAt: String? = nil,
+            customClaimsAllowlist: [String]? = nil,
+            discoveryUrl: String? = nil,
+            emailOptional: Bool? = nil,
+            enabled: Bool? = nil,
+            id: String,
+            identifier: String,
+            issuer: String? = nil,
+            jwksUri: String? = nil,
+            name: String,
+            pkceEnabled: Bool? = nil,
+            providerType: ProviderType,
+            scopes: [String]? = nil,
+            skipNonceCheck: Bool? = nil,
+            tokenUrl: String? = nil,
+            updatedAt: String? = nil,
+            userinfoUrl: String? = nil
+        ) {
+            self.acceptableClientIds = acceptableClientIds
+            self.attributeMapping = attributeMapping
+            self.authorizationParams = authorizationParams
+            self.authorizationUrl = authorizationUrl
+            self.clientId = clientId
+            self.createdAt = createdAt
+            self.customClaimsAllowlist = customClaimsAllowlist
+            self.discoveryUrl = discoveryUrl
+            self.emailOptional = emailOptional
+            self.enabled = enabled
+            self.id = id
+            self.identifier = identifier
+            self.issuer = issuer
+            self.jwksUri = jwksUri
+            self.name = name
+            self.pkceEnabled = pkceEnabled
+            self.providerType = providerType
+            self.scopes = scopes
+            self.skipNonceCheck = skipNonceCheck
+            self.tokenUrl = tokenUrl
+            self.updatedAt = updatedAt
+            self.userinfoUrl = userinfoUrl
+        }
 
         enum CodingKeys: String, CodingKey {
             case acceptableClientIds = "acceptable_client_ids"
@@ -121,19 +231,43 @@ enum SupabaseAuthRESTAPI {
         }
     }
 
-    struct DeleteFactorsFactorIdResponse: Codable {
-        var id: String? = nil
+    public struct DeleteFactorsFactorIdResponse: Codable {
+        public var id: String? = nil
+
+        public init(
+            id: String? = nil
+        ) {
+            self.id = id
+        }
     }
 
-    struct DeleteUserIdentitiesIdentityIdResponse: Codable {}
+    public struct DeleteUserIdentitiesIdentityIdResponse: Codable {
+        public init() {}
+    }
 
-    struct ErrorSchema: Codable {
-        var code: Int? = nil
-        var error: String? = nil
-        var errorCode: String? = nil
-        var errorDescription: String? = nil
-        var msg: String? = nil
-        var weakPassword: String? = nil
+    public struct ErrorSchema: Codable {
+        public var code: Int? = nil
+        public var error: String? = nil
+        public var errorCode: String? = nil
+        public var errorDescription: String? = nil
+        public var msg: String? = nil
+        public var weakPassword: String? = nil
+
+        public init(
+            code: Int? = nil,
+            error: String? = nil,
+            errorCode: String? = nil,
+            errorDescription: String? = nil,
+            msg: String? = nil,
+            weakPassword: String? = nil
+        ) {
+            self.code = code
+            self.error = error
+            self.errorCode = errorCode
+            self.errorDescription = errorDescription
+            self.msg = msg
+            self.weakPassword = weakPassword
+        }
 
         enum CodingKeys: String, CodingKey {
             case code
@@ -145,18 +279,42 @@ enum SupabaseAuthRESTAPI {
         }
     }
 
-    struct GetHealthResponse: Codable {
-        var description: String? = nil
-        var name: String? = nil
-        var version: String? = nil
+    public struct GetHealthResponse: Codable {
+        public var description: String? = nil
+        public var name: String? = nil
+        public var version: String? = nil
+
+        public init(
+            description: String? = nil,
+            name: String? = nil,
+            version: String? = nil
+        ) {
+            self.description = description
+            self.name = name
+            self.version = version
+        }
     }
 
-    struct GetOauthAuthorizationsAuthorizationIdResponse: Codable {
-        var authorizationId: String? = nil
-        var client: String? = nil
-        var redirectUri: String? = nil
-        var scope: String? = nil
-        var user: String? = nil
+    public struct GetOauthAuthorizationsAuthorizationIdResponse: Codable {
+        public var authorizationId: String? = nil
+        public var client: String? = nil
+        public var redirectUri: String? = nil
+        public var scope: String? = nil
+        public var user: String? = nil
+
+        public init(
+            authorizationId: String? = nil,
+            client: String? = nil,
+            redirectUri: String? = nil,
+            scope: String? = nil,
+            user: String? = nil
+        ) {
+            self.authorizationId = authorizationId
+            self.client = client
+            self.redirectUri = redirectUri
+            self.scope = scope
+            self.user = user
+        }
 
         enum CodingKeys: String, CodingKey {
             case authorizationId = "authorization_id"
@@ -167,13 +325,29 @@ enum SupabaseAuthRESTAPI {
         }
     }
 
-    struct GetSettingsResponse: Codable {
-        var disableSignup: Bool? = nil
-        var external: String? = nil
-        var mailerAutoconfirm: Bool? = nil
-        var phoneAutoconfirm: Bool? = nil
-        var samlEnabled: Bool? = nil
-        var smsProvider: String? = nil
+    public struct GetSettingsResponse: Codable {
+        public var disableSignup: Bool? = nil
+        public var external: String? = nil
+        public var mailerAutoconfirm: Bool? = nil
+        public var phoneAutoconfirm: Bool? = nil
+        public var samlEnabled: Bool? = nil
+        public var smsProvider: String? = nil
+
+        public init(
+            disableSignup: Bool? = nil,
+            external: String? = nil,
+            mailerAutoconfirm: Bool? = nil,
+            phoneAutoconfirm: Bool? = nil,
+            samlEnabled: Bool? = nil,
+            smsProvider: String? = nil
+        ) {
+            self.disableSignup = disableSignup
+            self.external = external
+            self.mailerAutoconfirm = mailerAutoconfirm
+            self.phoneAutoconfirm = phoneAutoconfirm
+            self.samlEnabled = samlEnabled
+            self.smsProvider = smsProvider
+        }
 
         enum CodingKeys: String, CodingKey {
             case disableSignup = "disable_signup"
@@ -185,24 +359,52 @@ enum SupabaseAuthRESTAPI {
         }
     }
 
-    struct GoTrueSecurity: Codable {
-        var captchaToken: String? = nil
+    public struct GoTrueSecurity: Codable {
+        public var captchaToken: String? = nil
+
+        public init(
+            captchaToken: String? = nil
+        ) {
+            self.captchaToken = captchaToken
+        }
 
         enum CodingKeys: String, CodingKey {
             case captchaToken = "captcha_token"
         }
     }
 
-    struct IdentitySchema: Codable {
-        var createdAt: String? = nil
-        var email: String? = nil
-        var id: String? = nil
-        var identityData: String? = nil
-        var identityId: String? = nil
-        var lastSignInAt: String? = nil
-        var provider: String? = nil
-        var updatedAt: String? = nil
-        var userId: String? = nil
+    public struct IdentitySchema: Codable {
+        public var createdAt: String? = nil
+        public var email: String? = nil
+        public var id: String? = nil
+        public var identityData: String? = nil
+        public var identityId: String? = nil
+        public var lastSignInAt: String? = nil
+        public var provider: String? = nil
+        public var updatedAt: String? = nil
+        public var userId: String? = nil
+
+        public init(
+            createdAt: String? = nil,
+            email: String? = nil,
+            id: String? = nil,
+            identityData: String? = nil,
+            identityId: String? = nil,
+            lastSignInAt: String? = nil,
+            provider: String? = nil,
+            updatedAt: String? = nil,
+            userId: String? = nil
+        ) {
+            self.createdAt = createdAt
+            self.email = email
+            self.id = id
+            self.identityData = identityData
+            self.identityId = identityId
+            self.lastSignInAt = lastSignInAt
+            self.provider = provider
+            self.updatedAt = updatedAt
+            self.userId = userId
+        }
 
         enum CodingKeys: String, CodingKey {
             case createdAt = "created_at"
@@ -217,16 +419,38 @@ enum SupabaseAuthRESTAPI {
         }
     }
 
-    struct MFAFactorSchema: Codable {
-        var createdAt: String? = nil
-        var factorType: String? = nil
-        var friendlyName: String? = nil
-        var id: String? = nil
-        var lastChallengedAt: String? = nil
-        var phone: String? = nil
-        var status: String? = nil
-        var updatedAt: String? = nil
-        var webauthnCredential: String? = nil
+    public struct MFAFactorSchema: Codable {
+        public var createdAt: String? = nil
+        public var factorType: String? = nil
+        public var friendlyName: String? = nil
+        public var id: String? = nil
+        public var lastChallengedAt: String? = nil
+        public var phone: String? = nil
+        public var status: String? = nil
+        public var updatedAt: String? = nil
+        public var webauthnCredential: String? = nil
+
+        public init(
+            createdAt: String? = nil,
+            factorType: String? = nil,
+            friendlyName: String? = nil,
+            id: String? = nil,
+            lastChallengedAt: String? = nil,
+            phone: String? = nil,
+            status: String? = nil,
+            updatedAt: String? = nil,
+            webauthnCredential: String? = nil
+        ) {
+            self.createdAt = createdAt
+            self.factorType = factorType
+            self.friendlyName = friendlyName
+            self.id = id
+            self.lastChallengedAt = lastChallengedAt
+            self.phone = phone
+            self.status = status
+            self.updatedAt = updatedAt
+            self.webauthnCredential = webauthnCredential
+        }
 
         enum CodingKeys: String, CodingKey {
             case createdAt = "created_at"
@@ -241,37 +465,69 @@ enum SupabaseAuthRESTAPI {
         }
     }
 
-    struct OAuthClientSchema: Codable {
-        enum ClientType: String, Codable {
+    public struct OAuthClientSchema: Codable {
+        public enum ClientType: String, Codable {
             case `public` = "public"
             case confidential
         }
 
-        enum RegistrationType: String, Codable {
+        public enum RegistrationType: String, Codable {
             case dynamic
             case manual
         }
 
-        enum TokenEndpointAuthMethod: String, Codable {
+        public enum TokenEndpointAuthMethod: String, Codable {
             case none
             case clientSecretBasic = "client_secret_basic"
             case clientSecretPost = "client_secret_post"
         }
 
-        var clientId: String? = nil
-        var clientName: String? = nil
-        var clientSecret: String? = nil
-        var clientType: ClientType? = nil
-        var clientUri: String? = nil
-        var createdAt: String? = nil
-        var grantTypes: [String]? = nil
-        var logoUri: String? = nil
-        var redirectUris: [String]? = nil
-        var registrationType: RegistrationType? = nil
-        var responseTypes: [String]? = nil
-        var scope: String? = nil
-        var tokenEndpointAuthMethod: TokenEndpointAuthMethod? = nil
-        var updatedAt: String? = nil
+        public var clientId: String? = nil
+        public var clientName: String? = nil
+        public var clientSecret: String? = nil
+        public var clientType: ClientType? = nil
+        public var clientUri: String? = nil
+        public var createdAt: String? = nil
+        public var grantTypes: [String]? = nil
+        public var logoUri: String? = nil
+        public var redirectUris: [String]? = nil
+        public var registrationType: RegistrationType? = nil
+        public var responseTypes: [String]? = nil
+        public var scope: String? = nil
+        public var tokenEndpointAuthMethod: TokenEndpointAuthMethod? = nil
+        public var updatedAt: String? = nil
+
+        public init(
+            clientId: String? = nil,
+            clientName: String? = nil,
+            clientSecret: String? = nil,
+            clientType: ClientType? = nil,
+            clientUri: String? = nil,
+            createdAt: String? = nil,
+            grantTypes: [String]? = nil,
+            logoUri: String? = nil,
+            redirectUris: [String]? = nil,
+            registrationType: RegistrationType? = nil,
+            responseTypes: [String]? = nil,
+            scope: String? = nil,
+            tokenEndpointAuthMethod: TokenEndpointAuthMethod? = nil,
+            updatedAt: String? = nil
+        ) {
+            self.clientId = clientId
+            self.clientName = clientName
+            self.clientSecret = clientSecret
+            self.clientType = clientType
+            self.clientUri = clientUri
+            self.createdAt = createdAt
+            self.grantTypes = grantTypes
+            self.logoUri = logoUri
+            self.redirectUris = redirectUris
+            self.registrationType = registrationType
+            self.responseTypes = responseTypes
+            self.scope = scope
+            self.tokenEndpointAuthMethod = tokenEndpointAuthMethod
+            self.updatedAt = updatedAt
+        }
 
         enum CodingKeys: String, CodingKey {
             case clientId = "client_id"
@@ -291,17 +547,29 @@ enum SupabaseAuthRESTAPI {
         }
     }
 
-    struct PostFactorsBody: Codable {
-        enum FactorType: String, Codable {
+    public struct PostFactorsBody: Codable {
+        public enum FactorType: String, Codable {
             case totp
             case phone
             case webauthn
         }
 
-        var factorType: FactorType
-        var friendlyName: String? = nil
-        var issuer: String? = nil
-        var phone: String? = nil
+        public var factorType: FactorType
+        public var friendlyName: String? = nil
+        public var issuer: String? = nil
+        public var phone: String? = nil
+
+        public init(
+            factorType: FactorType,
+            friendlyName: String? = nil,
+            issuer: String? = nil,
+            phone: String? = nil
+        ) {
+            self.factorType = factorType
+            self.friendlyName = friendlyName
+            self.issuer = issuer
+            self.phone = phone
+        }
 
         enum CodingKeys: String, CodingKey {
             case factorType = "factor_type"
@@ -311,19 +579,35 @@ enum SupabaseAuthRESTAPI {
         }
     }
 
-    struct PostFactorsFactorIdChallengeBody: Codable {
-        enum Channel: String, Codable {
+    public struct PostFactorsFactorIdChallengeBody: Codable {
+        public enum Channel: String, Codable {
             case sms
             case whatsapp
         }
 
-        var channel: Channel? = nil
+        public var channel: Channel? = nil
+
+        public init(
+            channel: Channel? = nil
+        ) {
+            self.channel = channel
+        }
     }
 
-    struct PostFactorsFactorIdVerifyBody: Codable {
-        var challengeId: String
-        var code: String? = nil
-        var webauthn: String? = nil
+    public struct PostFactorsFactorIdVerifyBody: Codable {
+        public var challengeId: String
+        public var code: String? = nil
+        public var webauthn: String? = nil
+
+        public init(
+            challengeId: String,
+            code: String? = nil,
+            webauthn: String? = nil
+        ) {
+            self.challengeId = challengeId
+            self.code = code
+            self.webauthn = webauthn
+        }
 
         enum CodingKeys: String, CodingKey {
             case challengeId = "challenge_id"
@@ -332,28 +616,58 @@ enum SupabaseAuthRESTAPI {
         }
     }
 
-    struct PostFactorsResponse: Codable {
-        enum APIType: String, Codable {
+    public struct PostFactorsResponse: Codable {
+        public enum APIType: String, Codable {
             case totp
             case phone
             case webauthn
         }
 
-        var id: String? = nil
-        var phone: String? = nil
-        var totp: String? = nil
-        var type: APIType? = nil
+        public var id: String? = nil
+        public var phone: String? = nil
+        public var totp: String? = nil
+        public var type: APIType? = nil
+
+        public init(
+            id: String? = nil,
+            phone: String? = nil,
+            totp: String? = nil,
+            type: APIType? = nil
+        ) {
+            self.id = id
+            self.phone = phone
+            self.totp = totp
+            self.type = type
+        }
     }
 
-    struct PostInviteBody: Codable {
-        var data: String? = nil
-        var email: String
+    public struct PostInviteBody: Codable {
+        public var data: String? = nil
+        public var email: String
+
+        public init(
+            data: String? = nil,
+            email: String
+        ) {
+            self.data = data
+            self.email = email
+        }
     }
 
-    struct PostMagiclinkBody: Codable {
-        var data: String? = nil
-        var email: String
-        var gotrueMetaSecurity: GoTrueSecurity? = nil
+    public struct PostMagiclinkBody: Codable {
+        public var data: String? = nil
+        public var email: String
+        public var gotrueMetaSecurity: GoTrueSecurity? = nil
+
+        public init(
+            data: String? = nil,
+            email: String,
+            gotrueMetaSecurity: GoTrueSecurity? = nil
+        ) {
+            self.data = data
+            self.email = email
+            self.gotrueMetaSecurity = gotrueMetaSecurity
+        }
 
         enum CodingKeys: String, CodingKey {
             case data
@@ -362,46 +676,82 @@ enum SupabaseAuthRESTAPI {
         }
     }
 
-    struct PostMagiclinkResponse: Codable {}
+    public struct PostMagiclinkResponse: Codable {
+        public init() {}
+    }
 
-    struct PostOauthAuthorizationsAuthorizationIdConsentBody: Codable {
-        enum Action: String, Codable {
+    public struct PostOauthAuthorizationsAuthorizationIdConsentBody: Codable {
+        public enum Action: String, Codable {
             case approve
             case deny
         }
 
-        var action: Action
+        public var action: Action
+
+        public init(
+            action: Action
+        ) {
+            self.action = action
+        }
     }
 
-    struct PostOauthAuthorizationsAuthorizationIdConsentResponse: Codable {
-        var redirectUrl: String? = nil
+    public struct PostOauthAuthorizationsAuthorizationIdConsentResponse: Codable {
+        public var redirectUrl: String? = nil
+
+        public init(
+            redirectUrl: String? = nil
+        ) {
+            self.redirectUrl = redirectUrl
+        }
 
         enum CodingKeys: String, CodingKey {
             case redirectUrl = "redirect_url"
         }
     }
 
-    struct PostOauthClientsRegisterBody: Codable {
-        enum ClientType: String, Codable {
+    public struct PostOauthClientsRegisterBody: Codable {
+        public enum ClientType: String, Codable {
             case `public` = "public"
             case confidential
         }
 
-        enum TokenEndpointAuthMethod: String, Codable {
+        public enum TokenEndpointAuthMethod: String, Codable {
             case none
             case clientSecretBasic = "client_secret_basic"
             case clientSecretPost = "client_secret_post"
         }
 
-        var clientName: String
-        var clientType: ClientType? = nil
-        var clientUri: String? = nil
-        var grantTypes: [String]? = nil
-        var logoUri: String? = nil
-        var redirectUris: [String]
-        var responseTypes: [String]? = nil
-        var scope: String? = nil
-        var tokenEndpointAuthMethod: TokenEndpointAuthMethod? = nil
+        public var clientName: String
+        public var clientType: ClientType? = nil
+        public var clientUri: String? = nil
+        public var grantTypes: [String]? = nil
+        public var logoUri: String? = nil
+        public var redirectUris: [String]
+        public var responseTypes: [String]? = nil
+        public var scope: String? = nil
+        public var tokenEndpointAuthMethod: TokenEndpointAuthMethod? = nil
+
+        public init(
+            clientName: String,
+            clientType: ClientType? = nil,
+            clientUri: String? = nil,
+            grantTypes: [String]? = nil,
+            logoUri: String? = nil,
+            redirectUris: [String],
+            responseTypes: [String]? = nil,
+            scope: String? = nil,
+            tokenEndpointAuthMethod: TokenEndpointAuthMethod? = nil
+        ) {
+            self.clientName = clientName
+            self.clientType = clientType
+            self.clientUri = clientUri
+            self.grantTypes = grantTypes
+            self.logoUri = logoUri
+            self.redirectUris = redirectUris
+            self.responseTypes = responseTypes
+            self.scope = scope
+            self.tokenEndpointAuthMethod = tokenEndpointAuthMethod
+        }
 
         enum CodingKeys: String, CodingKey {
             case clientName = "client_name"
@@ -416,12 +766,26 @@ enum SupabaseAuthRESTAPI {
         }
     }
 
-    struct PostOauthTokenResponse: Codable {
-        var accessToken: String? = nil
-        var expiresIn: Int? = nil
-        var refreshToken: String? = nil
-        var scope: String? = nil
-        var tokenType: String? = nil
+    public struct PostOauthTokenResponse: Codable {
+        public var accessToken: String? = nil
+        public var expiresIn: Int? = nil
+        public var refreshToken: String? = nil
+        public var scope: String? = nil
+        public var tokenType: String? = nil
+
+        public init(
+            accessToken: String? = nil,
+            expiresIn: Int? = nil,
+            refreshToken: String? = nil,
+            scope: String? = nil,
+            tokenType: String? = nil
+        ) {
+            self.accessToken = accessToken
+            self.expiresIn = expiresIn
+            self.refreshToken = refreshToken
+            self.scope = scope
+            self.tokenType = tokenType
+        }
 
         enum CodingKeys: String, CodingKey {
             case accessToken = "access_token"
@@ -432,25 +796,45 @@ enum SupabaseAuthRESTAPI {
         }
     }
 
-    struct PostOtpBody: Codable {
-        enum Channel: String, Codable {
+    public struct PostOtpBody: Codable {
+        public enum Channel: String, Codable {
             case sms
             case whatsapp
         }
 
-        enum CodeChallengeMethod: String, Codable {
+        public enum CodeChallengeMethod: String, Codable {
             case s256
             case plain
         }
 
-        var channel: Channel? = nil
-        var codeChallenge: String? = nil
-        var codeChallengeMethod: CodeChallengeMethod? = nil
-        var createUser: Bool? = nil
-        var data: String? = nil
-        var email: String? = nil
-        var gotrueMetaSecurity: GoTrueSecurity? = nil
-        var phone: String? = nil
+        public var channel: Channel? = nil
+        public var codeChallenge: String? = nil
+        public var codeChallengeMethod: CodeChallengeMethod? = nil
+        public var createUser: Bool? = nil
+        public var data: String? = nil
+        public var email: String? = nil
+        public var gotrueMetaSecurity: GoTrueSecurity? = nil
+        public var phone: String? = nil
+
+        public init(
+            channel: Channel? = nil,
+            codeChallenge: String? = nil,
+            codeChallengeMethod: CodeChallengeMethod? = nil,
+            createUser: Bool? = nil,
+            data: String? = nil,
+            email: String? = nil,
+            gotrueMetaSecurity: GoTrueSecurity? = nil,
+            phone: String? = nil
+        ) {
+            self.channel = channel
+            self.codeChallenge = codeChallenge
+            self.codeChallengeMethod = codeChallengeMethod
+            self.createUser = createUser
+            self.data = data
+            self.email = email
+            self.gotrueMetaSecurity = gotrueMetaSecurity
+            self.phone = phone
+        }
 
         enum CodingKeys: String, CodingKey {
             case channel
@@ -464,26 +848,46 @@ enum SupabaseAuthRESTAPI {
         }
     }
 
-    struct PostOtpResponse: Codable {
-        var messageId: String? = nil
+    public struct PostOtpResponse: Codable {
+        public var messageId: String? = nil
+
+        public init(
+            messageId: String? = nil
+        ) {
+            self.messageId = messageId
+        }
 
         enum CodingKeys: String, CodingKey {
             case messageId = "message_id"
         }
     }
 
-    struct PostReauthenticateResponse: Codable {}
+    public struct PostReauthenticateResponse: Codable {
+        public init() {}
+    }
 
-    struct PostRecoverBody: Codable {
-        enum CodeChallengeMethod: String, Codable {
+    public struct PostRecoverBody: Codable {
+        public enum CodeChallengeMethod: String, Codable {
             case plain
             case s256
         }
 
-        var codeChallenge: String? = nil
-        var codeChallengeMethod: CodeChallengeMethod? = nil
-        var email: String
-        var gotrueMetaSecurity: GoTrueSecurity? = nil
+        public var codeChallenge: String? = nil
+        public var codeChallengeMethod: CodeChallengeMethod? = nil
+        public var email: String
+        public var gotrueMetaSecurity: GoTrueSecurity? = nil
+
+        public init(
+            codeChallenge: String? = nil,
+            codeChallengeMethod: CodeChallengeMethod? = nil,
+            email: String,
+            gotrueMetaSecurity: GoTrueSecurity? = nil
+        ) {
+            self.codeChallenge = codeChallenge
+            self.codeChallengeMethod = codeChallengeMethod
+            self.email = email
+            self.gotrueMetaSecurity = gotrueMetaSecurity
+        }
 
         enum CodingKeys: String, CodingKey {
             case codeChallenge = "code_challenge"
@@ -493,20 +897,34 @@ enum SupabaseAuthRESTAPI {
         }
     }
 
-    struct PostRecoverResponse: Codable {}
+    public struct PostRecoverResponse: Codable {
+        public init() {}
+    }
 
-    struct PostResendBody: Codable {
-        enum APIType: String, Codable {
+    public struct PostResendBody: Codable {
+        public enum APIType: String, Codable {
             case signup
             case emailChange = "email_change"
             case sms
             case phoneChange = "phone_change"
         }
 
-        var email: String? = nil
-        var gotrueMetaSecurity: GoTrueSecurity? = nil
-        var phone: String? = nil
-        var type: APIType? = nil
+        public var email: String? = nil
+        public var gotrueMetaSecurity: GoTrueSecurity? = nil
+        public var phone: String? = nil
+        public var type: APIType? = nil
+
+        public init(
+            email: String? = nil,
+            gotrueMetaSecurity: GoTrueSecurity? = nil,
+            phone: String? = nil,
+            type: APIType? = nil
+        ) {
+            self.email = email
+            self.gotrueMetaSecurity = gotrueMetaSecurity
+            self.phone = phone
+            self.type = type
+        }
 
         enum CodingKeys: String, CodingKey {
             case email
@@ -516,33 +934,59 @@ enum SupabaseAuthRESTAPI {
         }
     }
 
-    struct PostResendResponse: Codable {
-        var messageId: String? = nil
+    public struct PostResendResponse: Codable {
+        public var messageId: String? = nil
+
+        public init(
+            messageId: String? = nil
+        ) {
+            self.messageId = messageId
+        }
 
         enum CodingKeys: String, CodingKey {
             case messageId = "message_id"
         }
     }
 
-    struct PostSignupBody: Codable {
-        enum Channel: String, Codable {
+    public struct PostSignupBody: Codable {
+        public enum Channel: String, Codable {
             case sms
             case whatsapp
         }
 
-        enum CodeChallengeMethod: String, Codable {
+        public enum CodeChallengeMethod: String, Codable {
             case plain
             case s256
         }
 
-        var channel: Channel? = nil
-        var codeChallenge: String? = nil
-        var codeChallengeMethod: CodeChallengeMethod? = nil
-        var data: String? = nil
-        var email: String? = nil
-        var gotrueMetaSecurity: GoTrueSecurity? = nil
-        var password: String? = nil
-        var phone: String? = nil
+        public var channel: Channel? = nil
+        public var codeChallenge: String? = nil
+        public var codeChallengeMethod: CodeChallengeMethod? = nil
+        public var data: String? = nil
+        public var email: String? = nil
+        public var gotrueMetaSecurity: GoTrueSecurity? = nil
+        public var password: String? = nil
+        public var phone: String? = nil
+
+        public init(
+            channel: Channel? = nil,
+            codeChallenge: String? = nil,
+            codeChallengeMethod: CodeChallengeMethod? = nil,
+            data: String? = nil,
+            email: String? = nil,
+            gotrueMetaSecurity: GoTrueSecurity? = nil,
+            password: String? = nil,
+            phone: String? = nil
+        ) {
+            self.channel = channel
+            self.codeChallenge = codeChallenge
+            self.codeChallengeMethod = codeChallengeMethod
+            self.data = data
+            self.email = email
+            self.gotrueMetaSecurity = gotrueMetaSecurity
+            self.password = password
+            self.phone = phone
+        }
 
         enum CodingKeys: String, CodingKey {
             case channel
@@ -556,19 +1000,37 @@ enum SupabaseAuthRESTAPI {
         }
     }
 
-    struct PostSsoBody: Codable {
-        enum CodeChallengeMethod: String, Codable {
+    public struct PostSsoBody: Codable {
+        public enum CodeChallengeMethod: String, Codable {
             case plain
             case s256
         }
 
-        var codeChallenge: String? = nil
-        var codeChallengeMethod: CodeChallengeMethod? = nil
-        var domain: String? = nil
-        var gotrueMetaSecurity: GoTrueSecurity? = nil
-        var providerId: String? = nil
-        var redirectTo: String? = nil
-        var skipHttpRedirect: Bool? = nil
+        public var codeChallenge: String? = nil
+        public var codeChallengeMethod: CodeChallengeMethod? = nil
+        public var domain: String? = nil
+        public var gotrueMetaSecurity: GoTrueSecurity? = nil
+        public var providerId: String? = nil
+        public var redirectTo: String? = nil
+        public var skipHttpRedirect: Bool? = nil
+
+        public init(
+            codeChallenge: String? = nil,
+            codeChallengeMethod: CodeChallengeMethod? = nil,
+            domain: String? = nil,
+            gotrueMetaSecurity: GoTrueSecurity? = nil,
+            providerId: String? = nil,
+            redirectTo: String? = nil,
+            skipHttpRedirect: Bool? = nil
+        ) {
+            self.codeChallenge = codeChallenge
+            self.codeChallengeMethod = codeChallengeMethod
+            self.domain = domain
+            self.gotrueMetaSecurity = gotrueMetaSecurity
+            self.providerId = providerId
+            self.redirectTo = redirectTo
+            self.skipHttpRedirect = skipHttpRedirect
+        }
 
         enum CodingKeys: String, CodingKey {
             case codeChallenge = "code_challenge"
@@ -581,17 +1043,23 @@ enum SupabaseAuthRESTAPI {
         }
     }
 
-    struct PostSsoResponse: Codable {
-        var url: String? = nil
+    public struct PostSsoResponse: Codable {
+        public var url: String? = nil
+
+        public init(
+            url: String? = nil
+        ) {
+            self.url = url
+        }
     }
 
-    struct PostTokenBody: Codable {
-        enum Chain: String, Codable {
+    public struct PostTokenBody: Codable {
+        public enum Chain: String, Codable {
             case solana
             case ethereum
         }
 
-        enum Provider: String, Codable {
+        public enum Provider: String, Codable {
             case google
             case apple
             case azure
@@ -599,22 +1067,58 @@ enum SupabaseAuthRESTAPI {
             case keycloak
         }
 
-        var accessToken: String? = nil
-        var authCode: String? = nil
-        var chain: Chain? = nil
-        var clientId: String? = nil
-        var codeVerifier: String? = nil
-        var email: String? = nil
-        var gotrueMetaSecurity: GoTrueSecurity? = nil
-        var idToken: String? = nil
-        var issuer: String? = nil
-        var message: String? = nil
-        var nonce: String? = nil
-        var password: String? = nil
-        var phone: String? = nil
-        var provider: Provider? = nil
-        var refreshToken: String? = nil
-        var signature: String? = nil
+        public var accessToken: String? = nil
+        public var authCode: String? = nil
+        public var chain: Chain? = nil
+        public var clientId: String? = nil
+        public var codeVerifier: String? = nil
+        public var email: String? = nil
+        public var gotrueMetaSecurity: GoTrueSecurity? = nil
+        public var idToken: String? = nil
+        public var issuer: String? = nil
+        public var message: String? = nil
+        public var nonce: String? = nil
+        public var password: String? = nil
+        public var phone: String? = nil
+        public var provider: Provider? = nil
+        public var refreshToken: String? = nil
+        public var signature: String? = nil
+
+        public init(
+            accessToken: String? = nil,
+            authCode: String? = nil,
+            chain: Chain? = nil,
+            clientId: String? = nil,
+            codeVerifier: String? = nil,
+            email: String? = nil,
+            gotrueMetaSecurity: GoTrueSecurity? = nil,
+            idToken: String? = nil,
+            issuer: String? = nil,
+            message: String? = nil,
+            nonce: String? = nil,
+            password: String? = nil,
+            phone: String? = nil,
+            provider: Provider? = nil,
+            refreshToken: String? = nil,
+            signature: String? = nil
+        ) {
+            self.accessToken = accessToken
+            self.authCode = authCode
+            self.chain = chain
+            self.clientId = clientId
+            self.codeVerifier = codeVerifier
+            self.email = email
+            self.gotrueMetaSecurity = gotrueMetaSecurity
+            self.idToken = idToken
+            self.issuer = issuer
+            self.message = message
+            self.nonce = nonce
+            self.password = password
+            self.phone = phone
+            self.provider = provider
+            self.refreshToken = refreshToken
+            self.signature = signature
+        }
 
         enum CodingKeys: String, CodingKey {
             case accessToken = "access_token"
@@ -636,8 +1140,8 @@ enum SupabaseAuthRESTAPI {
         }
     }
 
-    struct PostVerifyBody: Codable {
-        enum APIType: String, Codable {
+    public struct PostVerifyBody: Codable {
+        public enum APIType: String, Codable {
             case signup
             case recovery
             case invite
@@ -647,12 +1151,28 @@ enum SupabaseAuthRESTAPI {
             case phoneChange = "phone_change"
         }
 
-        var email: String? = nil
-        var phone: String? = nil
-        var redirectTo: String? = nil
-        var token: String? = nil
-        var tokenHash: String? = nil
-        var type: APIType? = nil
+        public var email: String? = nil
+        public var phone: String? = nil
+        public var redirectTo: String? = nil
+        public var token: String? = nil
+        public var tokenHash: String? = nil
+        public var type: APIType? = nil
+
+        public init(
+            email: String? = nil,
+            phone: String? = nil,
+            redirectTo: String? = nil,
+            token: String? = nil,
+            tokenHash: String? = nil,
+            type: APIType? = nil
+        ) {
+            self.email = email
+            self.phone = phone
+            self.redirectTo = redirectTo
+            self.token = token
+            self.tokenHash = tokenHash
+            self.type = type
+        }
 
         enum CodingKeys: String, CodingKey {
             case email
@@ -664,29 +1184,57 @@ enum SupabaseAuthRESTAPI {
         }
     }
 
-    struct PublicKeyCredentialDescriptor: Codable {
-        enum APIType: String, Codable {
+    public struct PublicKeyCredentialDescriptor: Codable {
+        public enum APIType: String, Codable {
             case publicKey = "public-key"
         }
 
-        var id: String
-        var transports: [String]? = nil
-        var type: APIType
+        public var id: String
+        public var transports: [String]? = nil
+        public var type: APIType
+
+        public init(
+            id: String,
+            transports: [String]? = nil,
+            type: APIType
+        ) {
+            self.id = id
+            self.transports = transports
+            self.type = type
+        }
     }
 
-    struct PutUserBody: Codable {
-        enum Channel: String, Codable {
+    public struct PutUserBody: Codable {
+        public enum Channel: String, Codable {
             case sms
             case whatsapp
         }
 
-        var appMetadata: String? = nil
-        var channel: Channel? = nil
-        var data: String? = nil
-        var email: String? = nil
-        var nonce: String? = nil
-        var password: String? = nil
-        var phone: String? = nil
+        public var appMetadata: String? = nil
+        public var channel: Channel? = nil
+        public var data: String? = nil
+        public var email: String? = nil
+        public var nonce: String? = nil
+        public var password: String? = nil
+        public var phone: String? = nil
+
+        public init(
+            appMetadata: String? = nil,
+            channel: Channel? = nil,
+            data: String? = nil,
+            email: String? = nil,
+            nonce: String? = nil,
+            password: String? = nil,
+            phone: String? = nil
+        ) {
+            self.appMetadata = appMetadata
+            self.channel = channel
+            self.data = data
+            self.email = email
+            self.nonce = nonce
+            self.password = password
+            self.phone = phone
+        }
 
         enum CodingKeys: String, CodingKey {
             case appMetadata = "app_metadata"
@@ -699,14 +1247,30 @@ enum SupabaseAuthRESTAPI {
         }
     }
 
-    struct SAMLAttributeMappingSchema: Codable {
-        var keys: String? = nil
+    public struct SAMLAttributeMappingSchema: Codable {
+        public var keys: String? = nil
+
+        public init(
+            keys: String? = nil
+        ) {
+            self.keys = keys
+        }
     }
 
-    struct SSOProviderSchema: Codable {
-        var id: String? = nil
-        var saml: String? = nil
-        var ssoDomains: [String]? = nil
+    public struct SSOProviderSchema: Codable {
+        public var id: String? = nil
+        public var saml: String? = nil
+        public var ssoDomains: [String]? = nil
+
+        public init(
+            id: String? = nil,
+            saml: String? = nil,
+            ssoDomains: [String]? = nil
+        ) {
+            self.id = id
+            self.saml = saml
+            self.ssoDomains = ssoDomains
+        }
 
         enum CodingKeys: String, CodingKey {
             case id
@@ -715,15 +1279,25 @@ enum SupabaseAuthRESTAPI {
         }
     }
 
-    struct TOTPPhoneChallengeResponse: Codable {
-        enum APIType: String, Codable {
+    public struct TOTPPhoneChallengeResponse: Codable {
+        public enum APIType: String, Codable {
             case totp
             case phone
         }
 
-        var expiresAt: Int
-        var id: String
-        var type: APIType
+        public var expiresAt: Int
+        public var id: String
+        public var type: APIType
+
+        public init(
+            expiresAt: Int,
+            id: String,
+            type: APIType
+        ) {
+            self.expiresAt = expiresAt
+            self.id = id
+            self.type = type
+        }
 
         enum CodingKeys: String, CodingKey {
             case expiresAt = "expires_at"
@@ -732,32 +1306,86 @@ enum SupabaseAuthRESTAPI {
         }
     }
 
-    struct UserSchema: Codable {
-        var appMetadata: String? = nil
-        var aud: String? = nil
-        var bannedUntil: String? = nil
-        var confirmationSentAt: String? = nil
-        var confirmedAt: String? = nil
-        var createdAt: String? = nil
-        var deletedAt: String? = nil
-        var email: String? = nil
-        var emailChangeSentAt: String? = nil
-        var emailConfirmedAt: String? = nil
-        var factors: [MFAFactorSchema]? = nil
-        var id: String? = nil
-        var identities: [IdentitySchema]? = nil
-        var isAnonymous: Bool? = nil
-        var lastSignInAt: String? = nil
-        var newEmail: String? = nil
-        var newPhone: String? = nil
-        var phone: String? = nil
-        var phoneChangeSentAt: String? = nil
-        var phoneConfirmedAt: String? = nil
-        var reauthenticationSentAt: String? = nil
-        var recoverySentAt: String? = nil
-        var role: String? = nil
-        var updatedAt: String? = nil
-        var userMetadata: String? = nil
+    public struct UserSchema: Codable {
+        public var appMetadata: String? = nil
+        public var aud: String? = nil
+        public var bannedUntil: String? = nil
+        public var confirmationSentAt: String? = nil
+        public var confirmedAt: String? = nil
+        public var createdAt: String? = nil
+        public var deletedAt: String? = nil
+        public var email: String? = nil
+        public var emailChangeSentAt: String? = nil
+        public var emailConfirmedAt: String? = nil
+        public var factors: [MFAFactorSchema]? = nil
+        public var id: String? = nil
+        public var identities: [IdentitySchema]? = nil
+        public var isAnonymous: Bool? = nil
+        public var lastSignInAt: String? = nil
+        public var newEmail: String? = nil
+        public var newPhone: String? = nil
+        public var phone: String? = nil
+        public var phoneChangeSentAt: String? = nil
+        public var phoneConfirmedAt: String? = nil
+        public var reauthenticationSentAt: String? = nil
+        public var recoverySentAt: String? = nil
+        public var role: String? = nil
+        public var updatedAt: String? = nil
+        public var userMetadata: String? = nil
+
+        public init(
+            appMetadata: String? = nil,
+            aud: String? = nil,
+            bannedUntil: String? = nil,
+            confirmationSentAt: String? = nil,
+            confirmedAt: String? = nil,
+            createdAt: String? = nil,
+            deletedAt: String? = nil,
+            email: String? = nil,
+            emailChangeSentAt: String? = nil,
+            emailConfirmedAt: String? = nil,
+            factors: [MFAFactorSchema]? = nil,
+            id: String? = nil,
+            identities: [IdentitySchema]? = nil,
+            isAnonymous: Bool? = nil,
+            lastSignInAt: String? = nil,
+            newEmail: String? = nil,
+            newPhone: String? = nil,
+            phone: String? = nil,
+            phoneChangeSentAt: String? = nil,
+            phoneConfirmedAt: String? = nil,
+            reauthenticationSentAt: String? = nil,
+            recoverySentAt: String? = nil,
+            role: String? = nil,
+            updatedAt: String? = nil,
+            userMetadata: String? = nil
+        ) {
+            self.appMetadata = appMetadata
+            self.aud = aud
+            self.bannedUntil = bannedUntil
+            self.confirmationSentAt = confirmationSentAt
+            self.confirmedAt = confirmedAt
+            self.createdAt = createdAt
+            self.deletedAt = deletedAt
+            self.email = email
+            self.emailChangeSentAt = emailChangeSentAt
+            self.emailConfirmedAt = emailConfirmedAt
+            self.factors = factors
+            self.id = id
+            self.identities = identities
+            self.isAnonymous = isAnonymous
+            self.lastSignInAt = lastSignInAt
+            self.newEmail = newEmail
+            self.newPhone = newPhone
+            self.phone = phone
+            self.phoneChangeSentAt = phoneChangeSentAt
+            self.phoneConfirmedAt = phoneConfirmedAt
+            self.reauthenticationSentAt = reauthenticationSentAt
+            self.recoverySentAt = recoverySentAt
+            self.role = role
+            self.updatedAt = updatedAt
+            self.userMetadata = userMetadata
+        }
 
         enum CodingKeys: String, CodingKey {
             case appMetadata = "app_metadata"
@@ -788,15 +1416,27 @@ enum SupabaseAuthRESTAPI {
         }
     }
 
-    struct WebAuthnChallengeResponse: Codable {
-        enum APIType: String, Codable {
+    public struct WebAuthnChallengeResponse: Codable {
+        public enum APIType: String, Codable {
             case webauthn
         }
 
-        var expiresAt: Int? = nil
-        var id: String
-        var type: APIType
-        var webauthn: String
+        public var expiresAt: Int? = nil
+        public var id: String
+        public var type: APIType
+        public var webauthn: String
+
+        public init(
+            expiresAt: Int? = nil,
+            id: String,
+            type: APIType,
+            webauthn: String
+        ) {
+            self.expiresAt = expiresAt
+            self.id = id
+            self.type = type
+            self.webauthn = webauthn
+        }
 
         enum CodingKeys: String, CodingKey {
             case expiresAt = "expires_at"
@@ -809,23 +1449,23 @@ enum SupabaseAuthRESTAPI {
     // MARK: - Operations (paths)
 
     // each operation IS a block
-    enum Operation: RequestBuildable {
-        enum CodeChallengeMethod: String, Codable {
+    public enum Operation: RequestBuildable {
+        public enum CodeChallengeMethod: String, Codable {
             case plain
             case s256
         }
 
-        enum Scope: String, Codable {
+        public enum Scope: String, Codable {
             case global
             case local
             case others
         }
 
-        enum ResponseType: String, Codable {
+        public enum ResponseType: String, Codable {
             case code
         }
 
-        enum GrantType: String, Codable {
+        public enum GrantType: String, Codable {
             case password
             case refreshToken = "refresh_token"
             case idToken = "id_token"
@@ -833,7 +1473,7 @@ enum SupabaseAuthRESTAPI {
             case web3
         }
 
-        enum APIType: String, Codable {
+        public enum APIType: String, Codable {
             case signup
             case invite
             case recovery
@@ -876,7 +1516,7 @@ enum SupabaseAuthRESTAPI {
         case getVerify(token: String, type: APIType, redirectTo: String?)
         case postVerify(body: PostVerifyBody)
 
-        var body: some RequestBuildable {
+        public var body: some RequestBuildable {
             switch self {
             case let .getAuthorize(provider, scopes, inviteToken, redirectTo, codeChallengeMethod):
                 Method.GET
@@ -1053,9 +1693,9 @@ enum SupabaseAuthRESTAPI {
 
     // MARK: - Responses (responses)
 
-    enum Responses {
+    public enum Responses {
         /// Statuses the spec declares below 400 for the operation.
-        static func successStatuses(_ operation: Operation) -> Set<Int> {
+        public static func successStatuses(_ operation: Operation) -> Set<Int> {
             switch operation {
             case .getAuthorize, .getCallback, .postCallback, .getOauthAuthorize, .postSamlAcs,
                 .getUserIdentitiesAuthorize, .getVerify:
@@ -1078,10 +1718,10 @@ enum SupabaseAuthRESTAPI {
 
     // MARK: - Security (securitySchemes)
 
-    enum Security {
+    public enum Security {
         /// Scheme names the spec requires for an operation
         /// (OR-alternatives flattened into one set).
-        static func schemes(_ operation: Operation) -> Set<String> {
+        public static func schemes(_ operation: Operation) -> Set<String> {
             switch operation {
             case .getAuthorize, .getCallback, .getHealth, .postInvite, .postMagiclink,
                 .postOtp, .postRecover, .postResend, .getSamlMetadata, .getSettings,
@@ -1097,32 +1737,36 @@ enum SupabaseAuthRESTAPI {
         }
 
         /// Whether the spec requires `APIKeyAuth` for the operation.
-        static func needsAPIKeyAuth(_ operation: Operation) -> Bool {
+        public static func needsAPIKeyAuth(_ operation: Operation) -> Bool {
             schemes(operation).contains("APIKeyAuth")
         }
 
         /// Whether the spec requires `UserAuth` for the operation.
-        static func needsUserAuth(_ operation: Operation) -> Bool {
+        public static func needsUserAuth(_ operation: Operation) -> Bool {
             schemes(operation).contains("UserAuth")
         }
 
-        static func apiKeyAuth(_ value: String) -> some RequestBuildable {
+        public static func apiKeyAuth(_ value: String) -> some RequestBuildable {
             Header.custom("apikey").setValue(value)
         }
 
-        static func userAuth(token: String) -> some RequestBuildable {
+        public static func userAuth(token: String) -> some RequestBuildable {
             Authorization.bearer(token)
         }
     }
 
     // MARK: - Authorized
 
-    struct MissingAPIKeyAuth: Error {}
-    struct MissingUserAuth: Error {}
+    public struct MissingAPIKeyAuth: Error {
+        public init() {}
+    }
+    public struct MissingUserAuth: Error {
+        public init() {}
+    }
 
     /// Operation + spec-required credentials as one block; apply the
     /// environment last: `.base(url).request()`.
-    static func authorized(
+    public static func authorized(
         _ operation: Operation,
         apiKeyAuth: String?,
         userAuth: String?
@@ -1149,47 +1793,47 @@ enum SupabaseAuthRESTAPI {
     // MARK: - Client
 
     /// The backend as one set of typed closures — swap any field to stub.
-    struct Client {
-        var getAuthorize: (_ provider: String, _ scopes: String, _ inviteToken: String?, _ redirectTo: String?, _ codeChallengeMethod: Operation.CodeChallengeMethod?) async throws -> Void
-        var getCallback: () async throws -> Void
-        var postCallback: () async throws -> Void
-        var postFactors: (_ body: PostFactorsBody) async throws -> PostFactorsResponse
-        var deleteFactorsFactorId: (_ factorId: String) async throws -> DeleteFactorsFactorIdResponse
-        var postFactorsFactorIdChallenge: (_ factorId: String, _ body: PostFactorsFactorIdChallengeBody) async throws -> String
-        var postFactorsFactorIdVerify: (_ factorId: String, _ body: PostFactorsFactorIdVerifyBody) async throws -> AccessTokenResponseSchema
-        var getHealth: () async throws -> GetHealthResponse
-        var postInvite: (_ body: PostInviteBody) async throws -> UserSchema
-        var postLogout: (_ scope: Operation.Scope?) async throws -> Void
-        var postMagiclink: (_ body: PostMagiclinkBody) async throws -> PostMagiclinkResponse
-        var getOauthAuthorizationsAuthorizationId: (_ authorizationId: String) async throws -> GetOauthAuthorizationsAuthorizationIdResponse
-        var postOauthAuthorizationsAuthorizationIdConsent: (_ authorizationId: String, _ body: PostOauthAuthorizationsAuthorizationIdConsentBody) async throws -> PostOauthAuthorizationsAuthorizationIdConsentResponse
-        var getOauthAuthorize: (_ responseType: Operation.ResponseType, _ clientId: String, _ redirectUri: String, _ scope: String?, _ state: String?, _ codeChallenge: String, _ codeChallengeMethod: String) async throws -> Void
-        var postOauthClientsRegister: (_ body: PostOauthClientsRegisterBody) async throws -> OAuthClientSchema
-        var postOauthToken: () async throws -> PostOauthTokenResponse
-        var postOtp: (_ body: PostOtpBody) async throws -> PostOtpResponse
-        var postReauthenticate: () async throws -> PostReauthenticateResponse
-        var postRecover: (_ body: PostRecoverBody) async throws -> PostRecoverResponse
-        var postResend: (_ body: PostResendBody) async throws -> PostResendResponse
-        var postSamlAcs: (_ relayState: String?, _ sAMLArt: String?, _ sAMLResponse: String?) async throws -> Void
-        var getSamlMetadata: (_ download: Bool?) async throws -> Void
-        var getSettings: () async throws -> GetSettingsResponse
-        var postSignup: (_ body: PostSignupBody) async throws -> String
-        var postSso: (_ body: PostSsoBody) async throws -> PostSsoResponse
-        var postToken: (_ grantType: Operation.GrantType, _ body: PostTokenBody) async throws -> AccessTokenResponseSchema
-        var getUser: () async throws -> UserSchema
-        var putUser: (_ body: PutUserBody) async throws -> UserSchema
-        var getUserIdentitiesAuthorize: (_ provider: String, _ scopes: String, _ redirectTo: String?, _ codeChallengeMethod: Operation.CodeChallengeMethod?) async throws -> Void
-        var deleteUserIdentitiesIdentityId: (_ identityId: String) async throws -> DeleteUserIdentitiesIdentityIdResponse
-        var getUserOauthGrants: () async throws -> [String]
-        var deleteUserOauthGrants: (_ clientId: String) async throws -> Void
-        var getVerify: (_ token: String, _ type: Operation.APIType, _ redirectTo: String?) async throws -> Void
-        var postVerify: (_ body: PostVerifyBody) async throws -> AccessTokenResponseSchema
+    public struct Client {
+        public var getAuthorize: (_ provider: String, _ scopes: String, _ inviteToken: String?, _ redirectTo: String?, _ codeChallengeMethod: Operation.CodeChallengeMethod?) async throws -> Void
+        public var getCallback: () async throws -> Void
+        public var postCallback: () async throws -> Void
+        public var postFactors: (_ body: PostFactorsBody) async throws -> PostFactorsResponse
+        public var deleteFactorsFactorId: (_ factorId: String) async throws -> DeleteFactorsFactorIdResponse
+        public var postFactorsFactorIdChallenge: (_ factorId: String, _ body: PostFactorsFactorIdChallengeBody) async throws -> String
+        public var postFactorsFactorIdVerify: (_ factorId: String, _ body: PostFactorsFactorIdVerifyBody) async throws -> AccessTokenResponseSchema
+        public var getHealth: () async throws -> GetHealthResponse
+        public var postInvite: (_ body: PostInviteBody) async throws -> UserSchema
+        public var postLogout: (_ scope: Operation.Scope?) async throws -> Void
+        public var postMagiclink: (_ body: PostMagiclinkBody) async throws -> PostMagiclinkResponse
+        public var getOauthAuthorizationsAuthorizationId: (_ authorizationId: String) async throws -> GetOauthAuthorizationsAuthorizationIdResponse
+        public var postOauthAuthorizationsAuthorizationIdConsent: (_ authorizationId: String, _ body: PostOauthAuthorizationsAuthorizationIdConsentBody) async throws -> PostOauthAuthorizationsAuthorizationIdConsentResponse
+        public var getOauthAuthorize: (_ responseType: Operation.ResponseType, _ clientId: String, _ redirectUri: String, _ scope: String?, _ state: String?, _ codeChallenge: String, _ codeChallengeMethod: String) async throws -> Void
+        public var postOauthClientsRegister: (_ body: PostOauthClientsRegisterBody) async throws -> OAuthClientSchema
+        public var postOauthToken: () async throws -> PostOauthTokenResponse
+        public var postOtp: (_ body: PostOtpBody) async throws -> PostOtpResponse
+        public var postReauthenticate: () async throws -> PostReauthenticateResponse
+        public var postRecover: (_ body: PostRecoverBody) async throws -> PostRecoverResponse
+        public var postResend: (_ body: PostResendBody) async throws -> PostResendResponse
+        public var postSamlAcs: (_ relayState: String?, _ sAMLArt: String?, _ sAMLResponse: String?) async throws -> Void
+        public var getSamlMetadata: (_ download: Bool?) async throws -> Void
+        public var getSettings: () async throws -> GetSettingsResponse
+        public var postSignup: (_ body: PostSignupBody) async throws -> String
+        public var postSso: (_ body: PostSsoBody) async throws -> PostSsoResponse
+        public var postToken: (_ grantType: Operation.GrantType, _ body: PostTokenBody) async throws -> AccessTokenResponseSchema
+        public var getUser: () async throws -> UserSchema
+        public var putUser: (_ body: PutUserBody) async throws -> UserSchema
+        public var getUserIdentitiesAuthorize: (_ provider: String, _ scopes: String, _ redirectTo: String?, _ codeChallengeMethod: Operation.CodeChallengeMethod?) async throws -> Void
+        public var deleteUserIdentitiesIdentityId: (_ identityId: String) async throws -> DeleteUserIdentitiesIdentityIdResponse
+        public var getUserOauthGrants: () async throws -> [String]
+        public var deleteUserOauthGrants: (_ clientId: String) async throws -> Void
+        public var getVerify: (_ token: String, _ type: Operation.APIType, _ redirectTo: String?) async throws -> Void
+        public var postVerify: (_ body: PostVerifyBody) async throws -> AccessTokenResponseSchema
 
         /// Wires the typed surface over the (Operation) → Data seam. Real,
         /// mocked, or middleware-wrapped is decided entirely by the closures
         /// passed — no opinion, no defaults. The mechanics live once in the
         /// runtime's ClientBuilder; the table below is pure facts.
-        static func wired(
+        public static func wired(
             execute: @escaping (Operation) async throws -> Data,
             decoder: @escaping (Operation) -> JSONDecoder
         ) -> Client {

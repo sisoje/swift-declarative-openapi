@@ -5,18 +5,38 @@ import DeclarativeRequests
 import Foundation
 
 // The whole backend in one closed type — sections mirror the OpenAPI document.
-enum BinanceSpotAPI {
+public enum BinanceSpotAPI {
     // MARK: - Schemas (components.schemas)
 
-    struct AggTrade: Codable {
-        var M: Bool
-        var t: Bool
-        var a: Int
-        var f: Int
-        var l: Int
-        var m: Bool
-        var p: String
-        var q: String
+    public struct AggTrade: Codable {
+        public var M: Bool
+        public var t: Bool
+        public var a: Int
+        public var f: Int
+        public var l: Int
+        public var m: Bool
+        public var p: String
+        public var q: String
+
+        public init(
+            M: Bool,
+            t: Bool,
+            a: Int,
+            f: Int,
+            l: Int,
+            m: Bool,
+            p: String,
+            q: String
+        ) {
+            self.M = M
+            self.t = t
+            self.a = a
+            self.f = f
+            self.l = l
+            self.m = m
+            self.p = p
+            self.q = q
+        }
 
         enum CodingKeys: String, CodingKey {
             case M
@@ -30,268 +50,684 @@ enum BinanceSpotAPI {
         }
     }
 
-    struct BookTicker: Codable {
-        var askPrice: String
-        var askQty: String
-        var bidPrice: String
-        var bidQty: String
-        var symbol: String
+    public struct BookTicker: Codable {
+        public var askPrice: String
+        public var askQty: String
+        public var bidPrice: String
+        public var bidQty: String
+        public var symbol: String
+
+        public init(
+            askPrice: String,
+            askQty: String,
+            bidPrice: String,
+            bidQty: String,
+            symbol: String
+        ) {
+            self.askPrice = askPrice
+            self.askQty = askQty
+            self.bidPrice = bidPrice
+            self.bidQty = bidQty
+            self.symbol = symbol
+        }
     }
 
-    typealias BookTickerList = [BookTicker]
+    public typealias BookTickerList = [BookTicker]
 
-    struct DayTicker: Codable {
-        var closeTime: Int
-        var count: Int
-        var firstId: Int
-        var highPrice: String
-        var lastId: Int
-        var lastPrice: String
-        var lowPrice: String
-        var openPrice: String
-        var openTime: Int
-        var priceChange: String
-        var priceChangePercent: String
-        var quoteVolume: String
-        var symbol: String
-        var volume: String
-        var weightedAvgPrice: String
+    public struct DayTicker: Codable {
+        public var closeTime: Int
+        public var count: Int
+        public var firstId: Int
+        public var highPrice: String
+        public var lastId: Int
+        public var lastPrice: String
+        public var lowPrice: String
+        public var openPrice: String
+        public var openTime: Int
+        public var priceChange: String
+        public var priceChangePercent: String
+        public var quoteVolume: String
+        public var symbol: String
+        public var volume: String
+        public var weightedAvgPrice: String
+
+        public init(
+            closeTime: Int,
+            count: Int,
+            firstId: Int,
+            highPrice: String,
+            lastId: Int,
+            lastPrice: String,
+            lowPrice: String,
+            openPrice: String,
+            openTime: Int,
+            priceChange: String,
+            priceChangePercent: String,
+            quoteVolume: String,
+            symbol: String,
+            volume: String,
+            weightedAvgPrice: String
+        ) {
+            self.closeTime = closeTime
+            self.count = count
+            self.firstId = firstId
+            self.highPrice = highPrice
+            self.lastId = lastId
+            self.lastPrice = lastPrice
+            self.lowPrice = lowPrice
+            self.openPrice = openPrice
+            self.openTime = openTime
+            self.priceChange = priceChange
+            self.priceChangePercent = priceChangePercent
+            self.quoteVolume = quoteVolume
+            self.symbol = symbol
+            self.volume = volume
+            self.weightedAvgPrice = weightedAvgPrice
+        }
     }
 
-    typealias DayTickerList = [DayTicker]
+    public typealias DayTickerList = [DayTicker]
 
-    struct GetApiV3AvgPriceResponse: Codable {
-        var closeTime: Int
-        var mins: Int
-        var price: String
+    public struct GetApiV3AvgPriceResponse: Codable {
+        public var closeTime: Int
+        public var mins: Int
+        public var price: String
+
+        public init(
+            closeTime: Int,
+            mins: Int,
+            price: String
+        ) {
+            self.closeTime = closeTime
+            self.mins = mins
+            self.price = price
+        }
     }
 
-    struct GetApiV3DepthResponse: Codable {
-        var asks: [[String]]
-        var bids: [[String]]
-        var lastUpdateId: Int
+    public struct GetApiV3DepthResponse: Codable {
+        public var asks: [[String]]
+        public var bids: [[String]]
+        public var lastUpdateId: Int
+
+        public init(
+            asks: [[String]],
+            bids: [[String]],
+            lastUpdateId: Int
+        ) {
+            self.asks = asks
+            self.bids = bids
+            self.lastUpdateId = lastUpdateId
+        }
     }
 
-    struct GetApiV3ExchangeInfoResponse: Codable {
-        var exchangeFilters: [String]
-        var rateLimits: [String]
-        var serverTime: Int
-        var symbols: [String]
-        var timezone: String
+    public struct GetApiV3ExchangeInfoResponse: Codable {
+        public var exchangeFilters: [String]
+        public var rateLimits: [String]
+        public var serverTime: Int
+        public var symbols: [String]
+        public var timezone: String
+
+        public init(
+            exchangeFilters: [String],
+            rateLimits: [String],
+            serverTime: Int,
+            symbols: [String],
+            timezone: String
+        ) {
+            self.exchangeFilters = exchangeFilters
+            self.rateLimits = rateLimits
+            self.serverTime = serverTime
+            self.symbols = symbols
+            self.timezone = timezone
+        }
     }
 
-    struct GetApiV3PingResponse: Codable {}
-
-    struct GetApiV3TickerResponse: Codable {
-        var closeTime: Int
-        var count: Int
-        var firstId: Int
-        var highPrice: String
-        var lastId: Int
-        var lastPrice: String
-        var lowPrice: String
-        var openPrice: String
-        var openTime: Int
-        var priceChange: String
-        var priceChangePercent: String
-        var quoteVolume: String
-        var symbol: String
-        var volume: String
-        var weightedAvgPrice: String
+    public struct GetApiV3PingResponse: Codable {
+        public init() {}
     }
 
-    struct GetApiV3TimeResponse: Codable {
-        var serverTime: Int
+    public struct GetApiV3TickerResponse: Codable {
+        public var closeTime: Int
+        public var count: Int
+        public var firstId: Int
+        public var highPrice: String
+        public var lastId: Int
+        public var lastPrice: String
+        public var lowPrice: String
+        public var openPrice: String
+        public var openTime: Int
+        public var priceChange: String
+        public var priceChangePercent: String
+        public var quoteVolume: String
+        public var symbol: String
+        public var volume: String
+        public var weightedAvgPrice: String
+
+        public init(
+            closeTime: Int,
+            count: Int,
+            firstId: Int,
+            highPrice: String,
+            lastId: Int,
+            lastPrice: String,
+            lowPrice: String,
+            openPrice: String,
+            openTime: Int,
+            priceChange: String,
+            priceChangePercent: String,
+            quoteVolume: String,
+            symbol: String,
+            volume: String,
+            weightedAvgPrice: String
+        ) {
+            self.closeTime = closeTime
+            self.count = count
+            self.firstId = firstId
+            self.highPrice = highPrice
+            self.lastId = lastId
+            self.lastPrice = lastPrice
+            self.lowPrice = lowPrice
+            self.openPrice = openPrice
+            self.openTime = openTime
+            self.priceChange = priceChange
+            self.priceChangePercent = priceChangePercent
+            self.quoteVolume = quoteVolume
+            self.symbol = symbol
+            self.volume = volume
+            self.weightedAvgPrice = weightedAvgPrice
+        }
     }
 
-    struct GetSapiV1AccountApiRestrictionsResponse: Codable {
-        var createTime: Int
-        var enableFutures: Bool
-        var enableInternalTransfer: Bool
-        var enableMargin: Bool
-        var enablePortfolioMarginTrading: Bool? = nil
-        var enableReading: Bool
-        var enableSpotAndMarginTrading: Bool
-        var enableVanillaOptions: Bool
-        var enableWithdrawals: Bool
-        var ipRestrict: Bool
-        var permitsUniversalTransfer: Bool
-        var tradingAuthorityExpirationTime: Int
+    public struct GetApiV3TimeResponse: Codable {
+        public var serverTime: Int
+
+        public init(
+            serverTime: Int
+        ) {
+            self.serverTime = serverTime
+        }
     }
 
-    struct GetSapiV1AccountApiTradingStatusResponse: Codable {
-        var data: String
+    public struct GetSapiV1AccountApiRestrictionsResponse: Codable {
+        public var createTime: Int
+        public var enableFutures: Bool
+        public var enableInternalTransfer: Bool
+        public var enableMargin: Bool
+        public var enablePortfolioMarginTrading: Bool? = nil
+        public var enableReading: Bool
+        public var enableSpotAndMarginTrading: Bool
+        public var enableVanillaOptions: Bool
+        public var enableWithdrawals: Bool
+        public var ipRestrict: Bool
+        public var permitsUniversalTransfer: Bool
+        public var tradingAuthorityExpirationTime: Int
+
+        public init(
+            createTime: Int,
+            enableFutures: Bool,
+            enableInternalTransfer: Bool,
+            enableMargin: Bool,
+            enablePortfolioMarginTrading: Bool? = nil,
+            enableReading: Bool,
+            enableSpotAndMarginTrading: Bool,
+            enableVanillaOptions: Bool,
+            enableWithdrawals: Bool,
+            ipRestrict: Bool,
+            permitsUniversalTransfer: Bool,
+            tradingAuthorityExpirationTime: Int
+        ) {
+            self.createTime = createTime
+            self.enableFutures = enableFutures
+            self.enableInternalTransfer = enableInternalTransfer
+            self.enableMargin = enableMargin
+            self.enablePortfolioMarginTrading = enablePortfolioMarginTrading
+            self.enableReading = enableReading
+            self.enableSpotAndMarginTrading = enableSpotAndMarginTrading
+            self.enableVanillaOptions = enableVanillaOptions
+            self.enableWithdrawals = enableWithdrawals
+            self.ipRestrict = ipRestrict
+            self.permitsUniversalTransfer = permitsUniversalTransfer
+            self.tradingAuthorityExpirationTime = tradingAuthorityExpirationTime
+        }
     }
 
-    struct GetSapiV1AccountInfoResponse: Codable {
-        var isFutureEnabled: Bool
-        var isMarginEnabled: Bool
-        var vipLevel: Int
+    public struct GetSapiV1AccountApiTradingStatusResponse: Codable {
+        public var data: String
+
+        public init(
+            data: String
+        ) {
+            self.data = data
+        }
     }
 
-    struct GetSapiV1AccountStatusResponse: Codable {
-        var data: String
+    public struct GetSapiV1AccountInfoResponse: Codable {
+        public var isFutureEnabled: Bool
+        public var isMarginEnabled: Bool
+        public var vipLevel: Int
+
+        public init(
+            isFutureEnabled: Bool,
+            isMarginEnabled: Bool,
+            vipLevel: Int
+        ) {
+            self.isFutureEnabled = isFutureEnabled
+            self.isMarginEnabled = isMarginEnabled
+            self.vipLevel = vipLevel
+        }
     }
 
-    struct GetSapiV1AssetAssetDetailResponse: Codable {
-        var cTR: String
+    public struct GetSapiV1AccountStatusResponse: Codable {
+        public var data: String
+
+        public init(
+            data: String
+        ) {
+            self.data = data
+        }
+    }
+
+    public struct GetSapiV1AssetAssetDetailResponse: Codable {
+        public var cTR: String
+
+        public init(
+            cTR: String
+        ) {
+            self.cTR = cTR
+        }
 
         enum CodingKeys: String, CodingKey {
             case cTR = "CTR"
         }
     }
 
-    struct GetSapiV1AssetAssetDividendResponse: Codable {
-        var rows: [String]
-        var total: Int
+    public struct GetSapiV1AssetAssetDividendResponse: Codable {
+        public var rows: [String]
+        public var total: Int
+
+        public init(
+            rows: [String],
+            total: Int
+        ) {
+            self.rows = rows
+            self.total = total
+        }
     }
 
-    struct GetSapiV1AssetConvertTransferQueryByPageResponse: Codable {
-        var rows: [String]
-        var total: Int
+    public struct GetSapiV1AssetConvertTransferQueryByPageResponse: Codable {
+        public var rows: [String]
+        public var total: Int
+
+        public init(
+            rows: [String],
+            total: Int
+        ) {
+            self.rows = rows
+            self.total = total
+        }
     }
 
-    struct GetSapiV1AssetCustodyTransferHistoryResponse: Codable {
-        var rows: [String]
-        var total: Int
+    public struct GetSapiV1AssetCustodyTransferHistoryResponse: Codable {
+        public var rows: [String]
+        public var total: Int
+
+        public init(
+            rows: [String],
+            total: Int
+        ) {
+            self.rows = rows
+            self.total = total
+        }
     }
 
-    struct GetSapiV1AssetDribbletResponse: Codable {
-        var total: Int
-        var userAssetDribblets: [String]
+    public struct GetSapiV1AssetDribbletResponse: Codable {
+        public var total: Int
+        public var userAssetDribblets: [String]
+
+        public init(
+            total: Int,
+            userAssetDribblets: [String]
+        ) {
+            self.total = total
+            self.userAssetDribblets = userAssetDribblets
+        }
     }
 
-    struct GetSapiV1AssetLedgerTransferCloudMiningQueryByPageResponse: Codable {
-        var rows: [String]
-        var total: Int
+    public struct GetSapiV1AssetLedgerTransferCloudMiningQueryByPageResponse: Codable {
+        public var rows: [String]
+        public var total: Int
+
+        public init(
+            rows: [String],
+            total: Int
+        ) {
+            self.rows = rows
+            self.total = total
+        }
     }
 
-    struct GetSapiV1AssetTransferResponse: Codable {
-        var rows: [String]
-        var total: Int
+    public struct GetSapiV1AssetTransferResponse: Codable {
+        public var rows: [String]
+        public var total: Int
+
+        public init(
+            rows: [String],
+            total: Int
+        ) {
+            self.rows = rows
+            self.total = total
+        }
     }
 
-    struct GetSapiV1CapitalContractConvertibleCoinsResponse: Codable {
-        var coins: [String]
-        var convertEnabled: Bool
-        var exchangeRates: String
+    public struct GetSapiV1CapitalContractConvertibleCoinsResponse: Codable {
+        public var coins: [String]
+        public var convertEnabled: Bool
+        public var exchangeRates: String
+
+        public init(
+            coins: [String],
+            convertEnabled: Bool,
+            exchangeRates: String
+        ) {
+            self.coins = coins
+            self.convertEnabled = convertEnabled
+            self.exchangeRates = exchangeRates
+        }
     }
 
-    struct GetSapiV1CapitalDepositAddressResponse: Codable {
-        var address: String
-        var coin: String
-        var tag: String
-        var url: String
+    public struct GetSapiV1CapitalDepositAddressResponse: Codable {
+        public var address: String
+        public var coin: String
+        public var tag: String
+        public var url: String
+
+        public init(
+            address: String,
+            coin: String,
+            tag: String,
+            url: String
+        ) {
+            self.address = address
+            self.coin = coin
+            self.tag = tag
+            self.url = url
+        }
     }
 
-    struct GetSapiV1SystemStatusResponse: Codable {
-        var msg: String
-        var status: Int
+    public struct GetSapiV1SystemStatusResponse: Codable {
+        public var msg: String
+        public var status: Int
+
+        public init(
+            msg: String,
+            status: Int
+        ) {
+            self.msg = msg
+            self.status = status
+        }
     }
 
-    struct PostSapiV1AccountDisableFastWithdrawSwitchResponse: Codable {}
-
-    struct PostSapiV1AccountEnableFastWithdrawSwitchResponse: Codable {}
-
-    struct PostSapiV1AssetConvertTransferResponse: Codable {
-        var status: String
-        var tranId: Int
+    public struct PostSapiV1AccountDisableFastWithdrawSwitchResponse: Codable {
+        public init() {}
     }
 
-    struct PostSapiV1AssetDustBtcResponse: Codable {
-        var details: [String]
-        var dribbletPercentage: String
-        var totalTransferBNB: String
-        var totalTransferBtc: String
+    public struct PostSapiV1AccountEnableFastWithdrawSwitchResponse: Codable {
+        public init() {}
     }
 
-    struct PostSapiV1AssetDustResponse: Codable {
-        var totalServiceCharge: String
-        var totalTransfered: String
-        var transferResult: [String]
+    public struct PostSapiV1AssetConvertTransferResponse: Codable {
+        public var status: String
+        public var tranId: Int
+
+        public init(
+            status: String,
+            tranId: Int
+        ) {
+            self.status = status
+            self.tranId = tranId
+        }
     }
 
-    struct PostSapiV1AssetTransferResponse: Codable {
-        var tranId: Int
+    public struct PostSapiV1AssetDustBtcResponse: Codable {
+        public var details: [String]
+        public var dribbletPercentage: String
+        public var totalTransferBNB: String
+        public var totalTransferBtc: String
+
+        public init(
+            details: [String],
+            dribbletPercentage: String,
+            totalTransferBNB: String,
+            totalTransferBtc: String
+        ) {
+            self.details = details
+            self.dribbletPercentage = dribbletPercentage
+            self.totalTransferBNB = totalTransferBNB
+            self.totalTransferBtc = totalTransferBtc
+        }
     }
 
-    struct PostSapiV1CapitalContractConvertibleCoinsResponse: Codable {}
+    public struct PostSapiV1AssetDustResponse: Codable {
+        public var totalServiceCharge: String
+        public var totalTransfered: String
+        public var transferResult: [String]
 
-    struct PostSapiV1CapitalDepositCreditApplyResponse: Codable {
-        var code: String
-        var data: Bool
-        var message: String
-        var success: Bool
+        public init(
+            totalServiceCharge: String,
+            totalTransfered: String,
+            transferResult: [String]
+        ) {
+            self.totalServiceCharge = totalServiceCharge
+            self.totalTransfered = totalTransfered
+            self.transferResult = transferResult
+        }
     }
 
-    struct PostSapiV1CapitalWithdrawApplyResponse: Codable {
-        var id: String
+    public struct PostSapiV1AssetTransferResponse: Codable {
+        public var tranId: Int
+
+        public init(
+            tranId: Int
+        ) {
+            self.tranId = tranId
+        }
     }
 
-    struct PriceTicker: Codable {
-        var price: String
-        var symbol: String
+    public struct PostSapiV1CapitalContractConvertibleCoinsResponse: Codable {
+        public init() {}
     }
 
-    typealias PriceTickerList = [PriceTicker]
+    public struct PostSapiV1CapitalDepositCreditApplyResponse: Codable {
+        public var code: String
+        public var data: Bool
+        public var message: String
+        public var success: Bool
 
-    struct SnapshotFutures: Codable {
-        var code: Int
-        var msg: String
-        var snapshotVos: [String]
+        public init(
+            code: String,
+            data: Bool,
+            message: String,
+            success: Bool
+        ) {
+            self.code = code
+            self.data = data
+            self.message = message
+            self.success = success
+        }
     }
 
-    struct SnapshotMargin: Codable {
-        var code: Int
-        var msg: String
-        var snapshotVos: [String]
+    public struct PostSapiV1CapitalWithdrawApplyResponse: Codable {
+        public var id: String
+
+        public init(
+            id: String
+        ) {
+            self.id = id
+        }
     }
 
-    struct SnapshotSpot: Codable {
-        var code: Int
-        var msg: String
-        var snapshotVos: [String]
+    public struct PriceTicker: Codable {
+        public var price: String
+        public var symbol: String
+
+        public init(
+            price: String,
+            symbol: String
+        ) {
+            self.price = price
+            self.symbol = symbol
+        }
     }
 
-    struct Ticker: Codable {
-        var askPrice: String
-        var askQty: String
-        var bidPrice: String
-        var bidQty: String
-        var closeTime: Int
-        var count: Int
-        var firstId: Int
-        var highPrice: String
-        var lastId: Int
-        var lastPrice: String
-        var lowPrice: String
-        var openPrice: String
-        var openTime: Int
-        var prevClosePrice: String
-        var priceChange: String
-        var priceChangePercent: String
-        var quoteVolume: String
-        var symbol: String
-        var volume: String
+    public typealias PriceTickerList = [PriceTicker]
+
+    public struct SnapshotFutures: Codable {
+        public var code: Int
+        public var msg: String
+        public var snapshotVos: [String]
+
+        public init(
+            code: Int,
+            msg: String,
+            snapshotVos: [String]
+        ) {
+            self.code = code
+            self.msg = msg
+            self.snapshotVos = snapshotVos
+        }
     }
 
-    typealias TickerList = [Ticker]
+    public struct SnapshotMargin: Codable {
+        public var code: Int
+        public var msg: String
+        public var snapshotVos: [String]
 
-    struct Trade: Codable {
-        var id: Int
-        var isBestMatch: Bool
-        var isBuyerMaker: Bool
-        var price: String
-        var qty: String
-        var quoteQty: String
-        var time: Int
+        public init(
+            code: Int,
+            msg: String,
+            snapshotVos: [String]
+        ) {
+            self.code = code
+            self.msg = msg
+            self.snapshotVos = snapshotVos
+        }
+    }
+
+    public struct SnapshotSpot: Codable {
+        public var code: Int
+        public var msg: String
+        public var snapshotVos: [String]
+
+        public init(
+            code: Int,
+            msg: String,
+            snapshotVos: [String]
+        ) {
+            self.code = code
+            self.msg = msg
+            self.snapshotVos = snapshotVos
+        }
+    }
+
+    public struct Ticker: Codable {
+        public var askPrice: String
+        public var askQty: String
+        public var bidPrice: String
+        public var bidQty: String
+        public var closeTime: Int
+        public var count: Int
+        public var firstId: Int
+        public var highPrice: String
+        public var lastId: Int
+        public var lastPrice: String
+        public var lowPrice: String
+        public var openPrice: String
+        public var openTime: Int
+        public var prevClosePrice: String
+        public var priceChange: String
+        public var priceChangePercent: String
+        public var quoteVolume: String
+        public var symbol: String
+        public var volume: String
+
+        public init(
+            askPrice: String,
+            askQty: String,
+            bidPrice: String,
+            bidQty: String,
+            closeTime: Int,
+            count: Int,
+            firstId: Int,
+            highPrice: String,
+            lastId: Int,
+            lastPrice: String,
+            lowPrice: String,
+            openPrice: String,
+            openTime: Int,
+            prevClosePrice: String,
+            priceChange: String,
+            priceChangePercent: String,
+            quoteVolume: String,
+            symbol: String,
+            volume: String
+        ) {
+            self.askPrice = askPrice
+            self.askQty = askQty
+            self.bidPrice = bidPrice
+            self.bidQty = bidQty
+            self.closeTime = closeTime
+            self.count = count
+            self.firstId = firstId
+            self.highPrice = highPrice
+            self.lastId = lastId
+            self.lastPrice = lastPrice
+            self.lowPrice = lowPrice
+            self.openPrice = openPrice
+            self.openTime = openTime
+            self.prevClosePrice = prevClosePrice
+            self.priceChange = priceChange
+            self.priceChangePercent = priceChangePercent
+            self.quoteVolume = quoteVolume
+            self.symbol = symbol
+            self.volume = volume
+        }
+    }
+
+    public typealias TickerList = [Ticker]
+
+    public struct Trade: Codable {
+        public var id: Int
+        public var isBestMatch: Bool
+        public var isBuyerMaker: Bool
+        public var price: String
+        public var qty: String
+        public var quoteQty: String
+        public var time: Int
+
+        public init(
+            id: Int,
+            isBestMatch: Bool,
+            isBuyerMaker: Bool,
+            price: String,
+            qty: String,
+            quoteQty: String,
+            time: Int
+        ) {
+            self.id = id
+            self.isBestMatch = isBestMatch
+            self.isBuyerMaker = isBuyerMaker
+            self.price = price
+            self.qty = qty
+            self.quoteQty = quoteQty
+            self.time = time
+        }
     }
 
     // MARK: - Operations (paths)
 
     // each operation IS a block
-    enum Operation: RequestBuildable {
-        enum Interval: String, Codable {
+    public enum Operation: RequestBuildable {
+        public enum Interval: String, Codable {
             case _1s = "1s"
             case _1m = "1m"
             case _3m = "3m"
@@ -310,17 +746,17 @@ enum BinanceSpotAPI {
             case _1M = "1M"
         }
 
-        enum APIType: String, Codable {
+        public enum APIType: String, Codable {
             case fULL = "FULL"
             case mINI = "MINI"
         }
 
-        enum AccountType: String, Codable {
+        public enum AccountType: String, Codable {
             case mAIN = "MAIN"
             case cARD = "CARD"
         }
 
-        enum NeedBtcValuation: String, Codable {
+        public enum NeedBtcValuation: String, Codable {
             case `true` = "true"
             case `false` = "false"
         }
@@ -375,7 +811,7 @@ enum BinanceSpotAPI {
         case getSapiV1SystemStatus
         case postSapiV3AssetGetUserAsset(asset: String?, needBtcValuation: NeedBtcValuation?, recvWindow: Int?, timestamp: Int, signature: String)
 
-        var body: some RequestBuildable {
+        public var body: some RequestBuildable {
             switch self {
             case let .getApiV3AggTrades(symbol, fromId, startTime, endTime, limit):
                 Method.GET
@@ -1010,19 +1446,19 @@ enum BinanceSpotAPI {
 
     // MARK: - Responses (responses)
 
-    enum Responses {
+    public enum Responses {
         /// Statuses the spec declares below 400 for the operation.
-        static func successStatuses(_ operation: Operation) -> Set<Int> {
+        public static func successStatuses(_ operation: Operation) -> Set<Int> {
             [200]
         }
     }
 
     // MARK: - Security (securitySchemes)
 
-    enum Security {
+    public enum Security {
         /// Scheme names the spec requires for an operation
         /// (OR-alternatives flattened into one set).
-        static func schemes(_ operation: Operation) -> Set<String> {
+        public static func schemes(_ operation: Operation) -> Set<String> {
             switch operation {
             case .getApiV3AggTrades, .getApiV3AvgPrice, .getApiV3Depth, .getApiV3ExchangeInfo, .getApiV3HistoricalTrades,
                 .getApiV3Klines, .getApiV3Ping, .getApiV3Ticker, .getApiV3Ticker24hr, .getApiV3TickerBookTicker,
@@ -1041,22 +1477,24 @@ enum BinanceSpotAPI {
         }
 
         /// Whether the spec requires `ApiKeyAuth` for the operation.
-        static func needsApiKeyAuth(_ operation: Operation) -> Bool {
+        public static func needsApiKeyAuth(_ operation: Operation) -> Bool {
             schemes(operation).contains("ApiKeyAuth")
         }
 
-        static func apiKeyAuth(_ value: String) -> some RequestBuildable {
+        public static func apiKeyAuth(_ value: String) -> some RequestBuildable {
             Header.custom("X-MBX-APIKEY").setValue(value)
         }
     }
 
     // MARK: - Authorized
 
-    struct MissingApiKeyAuth: Error {}
+    public struct MissingApiKeyAuth: Error {
+        public init() {}
+    }
 
     /// Operation + spec-required credentials as one block; apply the
     /// environment last: `.base(url).request()`.
-    static func authorized(
+    public static func authorized(
         _ operation: Operation,
         apiKeyAuth: String?
     ) -> some RequestBuildable {
@@ -1075,62 +1513,62 @@ enum BinanceSpotAPI {
     // MARK: - Client
 
     /// The backend as one set of typed closures — swap any field to stub.
-    struct Client {
-        var getApiV3AggTrades: (_ symbol: String, _ fromId: Int?, _ startTime: Int?, _ endTime: Int?, _ limit: Int?) async throws -> [AggTrade]
-        var getApiV3AvgPrice: (_ symbol: String) async throws -> GetApiV3AvgPriceResponse
-        var getApiV3Depth: (_ symbol: String, _ limit: Int?) async throws -> GetApiV3DepthResponse
-        var getApiV3ExchangeInfo: (_ symbol: String?, _ symbols: String?, _ permissions: String?) async throws -> GetApiV3ExchangeInfoResponse
-        var getApiV3HistoricalTrades: (_ symbol: String, _ limit: Int?, _ fromId: Int?) async throws -> [Trade]
-        var getApiV3Klines: (_ symbol: String, _ interval: Operation.Interval, _ startTime: Int?, _ endTime: Int?, _ timeZone: String?, _ limit: Int?) async throws -> [[String]]
-        var getApiV3Ping: () async throws -> GetApiV3PingResponse
-        var getApiV3Ticker: (_ symbol: String?, _ symbols: String?, _ windowSize: String?, _ type: String?) async throws -> GetApiV3TickerResponse
-        var getApiV3Ticker24hr: (_ symbol: String?, _ symbols: String?, _ type: Operation.APIType?) async throws -> String
-        var getApiV3TickerBookTicker: (_ symbol: String?, _ symbols: String?) async throws -> String
-        var getApiV3TickerPrice: (_ symbol: String?, _ symbols: String?) async throws -> String
-        var getApiV3TickerTradingDay: (_ symbol: String?, _ symbols: String?, _ timeZone: String?, _ type: Operation.APIType?) async throws -> String
-        var getApiV3Time: () async throws -> GetApiV3TimeResponse
-        var getApiV3Trades: (_ symbol: String, _ limit: Int?) async throws -> [Trade]
-        var getApiV3UiKlines: (_ symbol: String, _ interval: Operation.Interval, _ startTime: Int?, _ endTime: Int?, _ timeZone: String?, _ limit: Int?) async throws -> [[String]]
-        var getSapiV1AccountApiRestrictions: (_ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> GetSapiV1AccountApiRestrictionsResponse
-        var getSapiV1AccountApiTradingStatus: (_ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> GetSapiV1AccountApiTradingStatusResponse
-        var postSapiV1AccountDisableFastWithdrawSwitch: (_ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> PostSapiV1AccountDisableFastWithdrawSwitchResponse
-        var postSapiV1AccountEnableFastWithdrawSwitch: (_ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> PostSapiV1AccountEnableFastWithdrawSwitchResponse
-        var getSapiV1AccountInfo: (_ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> GetSapiV1AccountInfoResponse
-        var getSapiV1AccountStatus: (_ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> GetSapiV1AccountStatusResponse
-        var getSapiV1AccountSnapshot: (_ type: String, _ startTime: Int?, _ endTime: Int?, _ limit: Int?, _ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> String
-        var getSapiV1AssetAssetDetail: (_ asset: String?, _ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> GetSapiV1AssetAssetDetailResponse
-        var getSapiV1AssetAssetDividend: (_ asset: String?, _ startTime: Int?, _ endTime: Int?, _ limit: Int?, _ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> GetSapiV1AssetAssetDividendResponse
-        var postSapiV1AssetConvertTransfer: (_ clientTranId: String, _ asset: String, _ amount: Double, _ targetAsset: String, _ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> PostSapiV1AssetConvertTransferResponse
-        var getSapiV1AssetConvertTransferQueryByPage: (_ tranId: Int?, _ asset: String?, _ startTime: Int, _ endTime: Int, _ accountType: Operation.AccountType?, _ current: Int?, _ size: Int?, _ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> GetSapiV1AssetConvertTransferQueryByPageResponse
-        var getSapiV1AssetCustodyTransferHistory: (_ email: String, _ startTime: Int, _ endTime: Int, _ type: String?, _ asset: String, _ current: Int?, _ size: Int?, _ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> GetSapiV1AssetCustodyTransferHistoryResponse
-        var getSapiV1AssetDribblet: (_ accountType: String?, _ startTime: Int?, _ endTime: Int?, _ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> GetSapiV1AssetDribbletResponse
-        var postSapiV1AssetDust: (_ asset: [String], _ accountType: String?, _ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> PostSapiV1AssetDustResponse
-        var postSapiV1AssetDustBtc: (_ accountType: String?, _ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> PostSapiV1AssetDustBtcResponse
-        var postSapiV1AssetGetFundingAsset: (_ asset: String?, _ needBtcValuation: Operation.NeedBtcValuation?, _ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> [String]
-        var getSapiV1AssetLedgerTransferCloudMiningQueryByPage: (_ tranId: Int?, _ clientTranId: String?, _ asset: String?, _ startTime: Int, _ endTime: Int, _ current: Int?, _ size: Int?, _ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> GetSapiV1AssetLedgerTransferCloudMiningQueryByPageResponse
-        var getSapiV1AssetTradeFee: (_ symbol: String?, _ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> [String]
-        var getSapiV1AssetTransfer: (_ type: String, _ startTime: Int?, _ endTime: Int?, _ current: Int?, _ size: Int?, _ fromSymbol: String?, _ toSymbol: String?, _ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> GetSapiV1AssetTransferResponse
-        var postSapiV1AssetTransfer: (_ type: String, _ asset: String, _ amount: Double, _ fromSymbol: String?, _ toSymbol: String?, _ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> PostSapiV1AssetTransferResponse
-        var getSapiV1AssetWalletBalance: (_ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> [String]
-        var getSapiV1CapitalConfigGetall: (_ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> [String]
-        var getSapiV1CapitalContractConvertibleCoins: () async throws -> GetSapiV1CapitalContractConvertibleCoinsResponse
-        var postSapiV1CapitalContractConvertibleCoins: (_ coin: String, _ enable: Bool) async throws -> PostSapiV1CapitalContractConvertibleCoinsResponse
-        var getSapiV1CapitalDepositAddress: (_ coin: String, _ network: String?, _ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> GetSapiV1CapitalDepositAddressResponse
-        var getSapiV1CapitalDepositAddressList: (_ coin: String, _ network: String?, _ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> [String]
-        var postSapiV1CapitalDepositCreditApply: (_ depositId: Int?, _ txId: String?, _ subAccountId: Int?, _ subUserId: Int?, _ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> PostSapiV1CapitalDepositCreditApplyResponse
-        var getSapiV1CapitalDepositHisrec: (_ coin: String?, _ status: Int?, _ startTime: Int?, _ endTime: Int?, _ offset: Int?, _ limit: Int?, _ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> [String]
-        var getSapiV1CapitalWithdrawAddressList: () async throws -> [String]
-        var postSapiV1CapitalWithdrawApply: (_ coin: String, _ withdrawOrderId: String?, _ network: String?, _ address: String, _ addressTag: String?, _ amount: Double, _ transactionFeeFlag: Bool?, _ name: String?, _ walletType: Int?, _ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> PostSapiV1CapitalWithdrawApplyResponse
-        var getSapiV1CapitalWithdrawHistory: (_ coin: String?, _ withdrawOrderId: String?, _ status: Int?, _ startTime: Int?, _ endTime: Int?, _ offset: Int?, _ limit: Int?, _ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> [String]
-        var getSapiV1SpotDelistSchedule: (_ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> [String]
-        var getSapiV1SystemStatus: () async throws -> GetSapiV1SystemStatusResponse
-        var postSapiV3AssetGetUserAsset: (_ asset: String?, _ needBtcValuation: Operation.NeedBtcValuation?, _ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> [String]
+    public struct Client {
+        public var getApiV3AggTrades: (_ symbol: String, _ fromId: Int?, _ startTime: Int?, _ endTime: Int?, _ limit: Int?) async throws -> [AggTrade]
+        public var getApiV3AvgPrice: (_ symbol: String) async throws -> GetApiV3AvgPriceResponse
+        public var getApiV3Depth: (_ symbol: String, _ limit: Int?) async throws -> GetApiV3DepthResponse
+        public var getApiV3ExchangeInfo: (_ symbol: String?, _ symbols: String?, _ permissions: String?) async throws -> GetApiV3ExchangeInfoResponse
+        public var getApiV3HistoricalTrades: (_ symbol: String, _ limit: Int?, _ fromId: Int?) async throws -> [Trade]
+        public var getApiV3Klines: (_ symbol: String, _ interval: Operation.Interval, _ startTime: Int?, _ endTime: Int?, _ timeZone: String?, _ limit: Int?) async throws -> [[String]]
+        public var getApiV3Ping: () async throws -> GetApiV3PingResponse
+        public var getApiV3Ticker: (_ symbol: String?, _ symbols: String?, _ windowSize: String?, _ type: String?) async throws -> GetApiV3TickerResponse
+        public var getApiV3Ticker24hr: (_ symbol: String?, _ symbols: String?, _ type: Operation.APIType?) async throws -> String
+        public var getApiV3TickerBookTicker: (_ symbol: String?, _ symbols: String?) async throws -> String
+        public var getApiV3TickerPrice: (_ symbol: String?, _ symbols: String?) async throws -> String
+        public var getApiV3TickerTradingDay: (_ symbol: String?, _ symbols: String?, _ timeZone: String?, _ type: Operation.APIType?) async throws -> String
+        public var getApiV3Time: () async throws -> GetApiV3TimeResponse
+        public var getApiV3Trades: (_ symbol: String, _ limit: Int?) async throws -> [Trade]
+        public var getApiV3UiKlines: (_ symbol: String, _ interval: Operation.Interval, _ startTime: Int?, _ endTime: Int?, _ timeZone: String?, _ limit: Int?) async throws -> [[String]]
+        public var getSapiV1AccountApiRestrictions: (_ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> GetSapiV1AccountApiRestrictionsResponse
+        public var getSapiV1AccountApiTradingStatus: (_ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> GetSapiV1AccountApiTradingStatusResponse
+        public var postSapiV1AccountDisableFastWithdrawSwitch: (_ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> PostSapiV1AccountDisableFastWithdrawSwitchResponse
+        public var postSapiV1AccountEnableFastWithdrawSwitch: (_ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> PostSapiV1AccountEnableFastWithdrawSwitchResponse
+        public var getSapiV1AccountInfo: (_ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> GetSapiV1AccountInfoResponse
+        public var getSapiV1AccountStatus: (_ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> GetSapiV1AccountStatusResponse
+        public var getSapiV1AccountSnapshot: (_ type: String, _ startTime: Int?, _ endTime: Int?, _ limit: Int?, _ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> String
+        public var getSapiV1AssetAssetDetail: (_ asset: String?, _ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> GetSapiV1AssetAssetDetailResponse
+        public var getSapiV1AssetAssetDividend: (_ asset: String?, _ startTime: Int?, _ endTime: Int?, _ limit: Int?, _ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> GetSapiV1AssetAssetDividendResponse
+        public var postSapiV1AssetConvertTransfer: (_ clientTranId: String, _ asset: String, _ amount: Double, _ targetAsset: String, _ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> PostSapiV1AssetConvertTransferResponse
+        public var getSapiV1AssetConvertTransferQueryByPage: (_ tranId: Int?, _ asset: String?, _ startTime: Int, _ endTime: Int, _ accountType: Operation.AccountType?, _ current: Int?, _ size: Int?, _ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> GetSapiV1AssetConvertTransferQueryByPageResponse
+        public var getSapiV1AssetCustodyTransferHistory: (_ email: String, _ startTime: Int, _ endTime: Int, _ type: String?, _ asset: String, _ current: Int?, _ size: Int?, _ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> GetSapiV1AssetCustodyTransferHistoryResponse
+        public var getSapiV1AssetDribblet: (_ accountType: String?, _ startTime: Int?, _ endTime: Int?, _ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> GetSapiV1AssetDribbletResponse
+        public var postSapiV1AssetDust: (_ asset: [String], _ accountType: String?, _ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> PostSapiV1AssetDustResponse
+        public var postSapiV1AssetDustBtc: (_ accountType: String?, _ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> PostSapiV1AssetDustBtcResponse
+        public var postSapiV1AssetGetFundingAsset: (_ asset: String?, _ needBtcValuation: Operation.NeedBtcValuation?, _ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> [String]
+        public var getSapiV1AssetLedgerTransferCloudMiningQueryByPage: (_ tranId: Int?, _ clientTranId: String?, _ asset: String?, _ startTime: Int, _ endTime: Int, _ current: Int?, _ size: Int?, _ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> GetSapiV1AssetLedgerTransferCloudMiningQueryByPageResponse
+        public var getSapiV1AssetTradeFee: (_ symbol: String?, _ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> [String]
+        public var getSapiV1AssetTransfer: (_ type: String, _ startTime: Int?, _ endTime: Int?, _ current: Int?, _ size: Int?, _ fromSymbol: String?, _ toSymbol: String?, _ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> GetSapiV1AssetTransferResponse
+        public var postSapiV1AssetTransfer: (_ type: String, _ asset: String, _ amount: Double, _ fromSymbol: String?, _ toSymbol: String?, _ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> PostSapiV1AssetTransferResponse
+        public var getSapiV1AssetWalletBalance: (_ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> [String]
+        public var getSapiV1CapitalConfigGetall: (_ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> [String]
+        public var getSapiV1CapitalContractConvertibleCoins: () async throws -> GetSapiV1CapitalContractConvertibleCoinsResponse
+        public var postSapiV1CapitalContractConvertibleCoins: (_ coin: String, _ enable: Bool) async throws -> PostSapiV1CapitalContractConvertibleCoinsResponse
+        public var getSapiV1CapitalDepositAddress: (_ coin: String, _ network: String?, _ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> GetSapiV1CapitalDepositAddressResponse
+        public var getSapiV1CapitalDepositAddressList: (_ coin: String, _ network: String?, _ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> [String]
+        public var postSapiV1CapitalDepositCreditApply: (_ depositId: Int?, _ txId: String?, _ subAccountId: Int?, _ subUserId: Int?, _ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> PostSapiV1CapitalDepositCreditApplyResponse
+        public var getSapiV1CapitalDepositHisrec: (_ coin: String?, _ status: Int?, _ startTime: Int?, _ endTime: Int?, _ offset: Int?, _ limit: Int?, _ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> [String]
+        public var getSapiV1CapitalWithdrawAddressList: () async throws -> [String]
+        public var postSapiV1CapitalWithdrawApply: (_ coin: String, _ withdrawOrderId: String?, _ network: String?, _ address: String, _ addressTag: String?, _ amount: Double, _ transactionFeeFlag: Bool?, _ name: String?, _ walletType: Int?, _ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> PostSapiV1CapitalWithdrawApplyResponse
+        public var getSapiV1CapitalWithdrawHistory: (_ coin: String?, _ withdrawOrderId: String?, _ status: Int?, _ startTime: Int?, _ endTime: Int?, _ offset: Int?, _ limit: Int?, _ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> [String]
+        public var getSapiV1SpotDelistSchedule: (_ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> [String]
+        public var getSapiV1SystemStatus: () async throws -> GetSapiV1SystemStatusResponse
+        public var postSapiV3AssetGetUserAsset: (_ asset: String?, _ needBtcValuation: Operation.NeedBtcValuation?, _ recvWindow: Int?, _ timestamp: Int, _ signature: String) async throws -> [String]
 
         /// Wires the typed surface over the (Operation) → Data seam. Real,
         /// mocked, or middleware-wrapped is decided entirely by the closures
         /// passed — no opinion, no defaults. The mechanics live once in the
         /// runtime's ClientBuilder; the table below is pure facts.
-        static func wired(
+        public static func wired(
             execute: @escaping (Operation) async throws -> Data,
             decoder: @escaping (Operation) -> JSONDecoder
         ) -> Client {
@@ -1189,5 +1627,5 @@ enum BinanceSpotAPI {
         }
     }
 
-    static let defaultBaseURL = URL(string: "https://api.binance.com")
+    public static let defaultBaseURL = URL(string: "https://api.binance.com")
 }

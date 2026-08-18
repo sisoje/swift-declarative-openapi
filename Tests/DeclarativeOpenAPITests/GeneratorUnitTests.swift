@@ -291,7 +291,7 @@ import Testing
             $ref: "#/components/schemas/thing-request"
     """
     let generated = try SpecGenerator().generate(yaml: yaml)
-    #expect(generated.contains("struct ThingRequest: Codable {}"))
+    #expect(generated.contains("public struct ThingRequest: Codable {\n        public init() {}\n    }"))
     #expect(generated.contains("typealias ThingList = [ThingRequest]"))
     #expect(generated.contains("case makeThing(body: ThingRequest)"))
     #expect(!generated.contains("thing-request"))
@@ -311,7 +311,7 @@ import Testing
           type: object
     """
     let generated = try SpecGenerator().generate(yaml: yaml)
-    #expect(generated.contains("struct APIError: Codable {}"))
+    #expect(generated.contains("public struct APIError: Codable {\n        public init() {}\n    }"))
     #expect(!generated.contains("struct Error"))
 }
 
@@ -577,7 +577,7 @@ import Testing
                   type: string
     """
     let generated = try SpecGenerator().generate(yaml: yaml)
-    #expect(generated.contains("struct Extended: Codable {\n        var id: String\n        var note: String\n    }"))
+    #expect(generated.contains("public struct Extended: Codable {\n        public var id: String\n        public var note: String\n"))
 }
 
 // MARK: - String enums
@@ -682,7 +682,7 @@ import Testing
               type: string
     """
     let generated = try SpecGenerator().generate(yaml: yaml)
-    #expect(generated.contains("    enum Quality: String, Codable {"))
+    #expect(generated.contains("    public enum Quality: String, Codable {"))
     #expect(generated.contains("case _1080p = \"1080p\""))
     #expect(generated.contains("var quality: Quality? = nil"))
     #expect(generated.contains("var codec: String? = nil"))
@@ -771,7 +771,7 @@ import Testing
           name: x-key
     """
     let generated = try SpecGenerator().generate(yaml: yaml)
-    #expect(generated.contains("struct MissingKeyAuth: Error {}"))
+    #expect(generated.contains("public struct MissingKeyAuth: Error {\n        public init() {}\n    }"))
     #expect(generated.contains("static func authorized("))
     #expect(generated.contains("keyAuth: String?"))
     #expect(!generated.contains("baseURL"))

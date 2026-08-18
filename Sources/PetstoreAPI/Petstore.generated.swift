@@ -5,31 +5,49 @@ import DeclarativeRequests
 import Foundation
 
 // The whole backend in one closed type — sections mirror the OpenAPI document.
-enum SwaggerPetstore {
+public enum SwaggerPetstore {
     // MARK: - Schemas (components.schemas)
 
-    struct APIError: Codable {
-        var code: Int
-        var message: String
+    public struct APIError: Codable {
+        public var code: Int
+        public var message: String
+
+        public init(
+            code: Int,
+            message: String
+        ) {
+            self.code = code
+            self.message = message
+        }
     }
 
-    struct Pet: Codable {
-        var id: Int
-        var name: String
-        var tag: String? = nil
+    public struct Pet: Codable {
+        public var id: Int
+        public var name: String
+        public var tag: String? = nil
+
+        public init(
+            id: Int,
+            name: String,
+            tag: String? = nil
+        ) {
+            self.id = id
+            self.name = name
+            self.tag = tag
+        }
     }
 
-    typealias Pets = [Pet]
+    public typealias Pets = [Pet]
 
     // MARK: - Operations (paths)
 
     // each operation IS a block
-    enum Operation: RequestBuildable {
+    public enum Operation: RequestBuildable {
         case listPets(limit: Int?)
         case createPets(body: Pet)
         case showPetById(petId: String)
 
-        var body: some RequestBuildable {
+        public var body: some RequestBuildable {
             switch self {
             case let .listPets(limit):
                 Method.GET
@@ -50,9 +68,9 @@ enum SwaggerPetstore {
 
     // MARK: - Responses (responses)
 
-    enum Responses {
+    public enum Responses {
         /// Statuses the spec declares below 400 for the operation.
-        static func successStatuses(_ operation: Operation) -> Set<Int> {
+        public static func successStatuses(_ operation: Operation) -> Set<Int> {
             switch operation {
             case .listPets, .showPetById:
                 [200]
@@ -65,16 +83,16 @@ enum SwaggerPetstore {
     // MARK: - Client
 
     /// The backend as one set of typed closures — swap any field to stub.
-    struct Client {
-        var listPets: (_ limit: Int?) async throws -> Pets
-        var createPets: (_ body: Pet) async throws -> Void
-        var showPetById: (_ petId: String) async throws -> Pet
+    public struct Client {
+        public var listPets: (_ limit: Int?) async throws -> Pets
+        public var createPets: (_ body: Pet) async throws -> Void
+        public var showPetById: (_ petId: String) async throws -> Pet
 
         /// Wires the typed surface over the (Operation) → Data seam. Real,
         /// mocked, or middleware-wrapped is decided entirely by the closures
         /// passed — no opinion, no defaults. The mechanics live once in the
         /// runtime's ClientBuilder; the table below is pure facts.
-        static func wired(
+        public static func wired(
             execute: @escaping (Operation) async throws -> Data,
             decoder: @escaping (Operation) -> JSONDecoder
         ) -> Client {
@@ -87,5 +105,5 @@ enum SwaggerPetstore {
         }
     }
 
-    static let defaultBaseURL = URL(string: "http://petstore.swagger.io/v1")
+    public static let defaultBaseURL = URL(string: "http://petstore.swagger.io/v1")
 }

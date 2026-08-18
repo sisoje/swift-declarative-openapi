@@ -442,7 +442,7 @@ extension SpecGenerator {
         output += excludedSchemes.isEmpty
             ? "// The whole backend in one closed type — sections mirror the OpenAPI document.\n"
             : "// The client-facing slice of the backend in one closed type — sections mirror the OpenAPI document.\n"
-        output += "enum \(enumName) {\n"
+        output += "public enum \(enumName) {\n"
 
         if !models.isEmpty {
             output += "    // MARK: - Schemas (components.schemas)\n\n"
@@ -465,7 +465,7 @@ extension SpecGenerator {
                 // resolvable URL — record it, let the caller supply the base.
                 output += "    /// Server URL is templated — supply a resolved base URL: `\(baseURL)`\n"
             } else {
-                output += "    static let defaultBaseURL = URL(string: \"\(baseURL)\")\n"
+                output += "    public static let defaultBaseURL = URL(string: \"\(baseURL)\")\n"
             }
         }
         output += "}\n"
@@ -485,7 +485,7 @@ extension SpecGenerator {
         parameterEnums: [(name: String, cases: [String])]
     ) -> String {
         var output = "// each operation IS a block\n"
-        output += "enum Operation: RequestBuildable {\n"
+        output += "public enum Operation: RequestBuildable {\n"
         for parameterEnum in parameterEnums {
             output += renderStringEnum(parameterEnum.name, cases: parameterEnum.cases, indent: "    ")
             output += "\n"
@@ -500,12 +500,12 @@ extension SpecGenerator {
             // A result-builder-transformed `switch self {}` with zero cases
             // does not compile, so emit a placeholder body instead. The enum
             // has no cases, so this body can never actually run.
-            output += "    var body: some RequestBuildable {\n"
+            output += "    public var body: some RequestBuildable {\n"
             output += "        // Spec contains no operations.\n"
             output += "        Method.GET\n"
             output += "    }\n"
         } else {
-            output += "    var body: some RequestBuildable {\n"
+            output += "    public var body: some RequestBuildable {\n"
             output += "        switch self {\n"
             for operation in operations {
                 output += renderSwitchCase(operation)
@@ -518,7 +518,7 @@ extension SpecGenerator {
     }
 
     func renderStringEnum(_ name: String, cases: [String], indent: String) -> String {
-        var output = "\(indent)enum \(name): String, Codable {\n"
+        var output = "\(indent)public enum \(name): String, Codable {\n"
         for value in cases {
             var caseName = propertyName(value)
             if caseName.first?.isNumber == true {
@@ -538,20 +538,36 @@ extension SpecGenerator {
         case let .stringEnum(cases):
             return renderStringEnum(model.name, cases: cases, indent: "")
         case let .arrayAlias(element):
-            return "typealias \(model.name) = [\(element)]\n"
+            return "public typealias \(model.name) = [\(element)]\n"
         case let .scalarAlias(type):
-            return "typealias \(model.name) = \(type)\n"
+            return "public typealias \(model.name) = \(type)\n"
         case let .structModel(properties):
-            guard !properties.isEmpty else { return "struct \(model.name): Codable {}\n" }
-            var output = "struct \(model.name): Codable {\n"
+            guard !properties.isEmpty else {
+                return "public struct \(model.name): Codable {\n    public init() {}\n}\n"
+            }
+            var output = "public struct \(model.name): Codable {\n"
             for property in properties {
                 guard let cases = property.enumCases else { continue }
                 output += renderStringEnum(property.type, cases: cases, indent: "    ")
                 output += "\n"
             }
             for property in properties {
-                output += "    var \(property.swiftName): \(property.type)\(property.isOptional ? "? = nil" : "")\n"
+                output += "    public var \(property.swiftName): \(property.type)\(property.isOptional ? "? = nil" : "")\n"
             }
+            // A public struct's memberwise init is internal — without an
+            // explicit one, no consumer of a generated module can construct a
+            // request body.
+            output += "\n    public init(\n"
+            for (index, property) in properties.enumerated() {
+                let comma = index == properties.count - 1 ? "" : ","
+                output += "        \(property.swiftName): \(property.type)\(property.isOptional ? "? = nil" : "")\(comma)\n"
+            }
+            output += "    ) {\n"
+            for property in properties {
+                output += "        self.\(property.swiftName) = \(property.swiftName)\n"
+            }
+            output += "    }\n"
+
             // CodingKeys only when a raw name isn't already a clean Swift name.
             if properties.contains(where: { $0.swiftName != $0.rawName }) {
                 output += "\n    enum CodingKeys: String, CodingKey {\n"
@@ -575,9 +591,9 @@ extension SpecGenerator {
         guard !operations.isEmpty else { return "" }
 
         var output = "\n    // MARK: - Responses (responses)\n\n"
-        output += "    enum Responses {\n"
+        output += "    public enum Responses {\n"
         output += "        /// Statuses the spec declares below 400 for the operation.\n"
-        output += "        static func successStatuses(_ operation: Operation) -> Set<Int> {\n"
+        output += "        public static func successStatuses(_ operation: Operation) -> Set<Int> {\n"
 
         var groups: [(statuses: [Int], caseNames: [String])] = []
         for operation in operations {
@@ -663,12 +679,12 @@ extension SpecGenerator {
 
         var output = "\n    // MARK: - Authorized\n\n"
         for binding in bindings {
-            output += "    struct \(binding.error): Error {}\n"
+            output += "    public struct \(binding.error): Error {\n        public init() {}\n    }\n"
         }
         output += "\n"
         output += "    /// Operation + spec-required credentials as one block; apply the\n"
         output += "    /// environment last: `.base(url).request()`.\n"
-        output += "    static func authorized(\n"
+        output += "    public static func authorized(\n"
         output += "        _ operation: Operation,\n"
         for (index, binding) in bindings.enumerated() {
             let comma = index == bindings.count - 1 ? "" : ","
@@ -700,18 +716,18 @@ extension SpecGenerator {
 
         var output = "\n    // MARK: - Client\n\n"
         output += "    /// The backend as one set of typed closures — swap any field to stub.\n"
-        output += "    struct Client {\n"
+        output += "    public struct Client {\n"
         for operation in operations {
             let parameters = clientParameters(operation)
             let signature = "(" + parameters.map { "_ \($0.name): \($0.type)" }.joined(separator: ", ") + ")"
-            output += "        var \(operation.caseName): \(signature) async throws -> \(operation.successType)\n"
+            output += "        public var \(operation.caseName): \(signature) async throws -> \(operation.successType)\n"
         }
         output += "\n"
         output += "        /// Wires the typed surface over the (Operation) → Data seam. Real,\n"
         output += "        /// mocked, or middleware-wrapped is decided entirely by the closures\n"
         output += "        /// passed — no opinion, no defaults. The mechanics live once in the\n"
         output += "        /// runtime's ClientBuilder; the table below is pure facts.\n"
-        output += "        static func wired(\n"
+        output += "        public static func wired(\n"
         output += "            execute: @escaping (Operation) async throws -> Data,\n"
         output += "            decoder: @escaping (Operation) -> JSONDecoder\n"
         output += "        ) -> Client {\n"
@@ -755,10 +771,10 @@ extension SpecGenerator {
         }
 
         var output = "\n    // MARK: - Security (securitySchemes)\n\n"
-        output += "    enum Security {\n"
+        output += "    public enum Security {\n"
         output += "        /// Scheme names the spec requires for an operation\n"
         output += "        /// (OR-alternatives flattened into one set).\n"
-        output += "        static func schemes(_ operation: Operation) -> Set<String> {\n"
+        output += "        public static func schemes(_ operation: Operation) -> Set<String> {\n"
 
         // Group cases sharing a scheme set, in first-occurrence order.
         var groups: [(schemes: [String], caseNames: [String])] = []
@@ -791,7 +807,7 @@ extension SpecGenerator {
         let allSchemes = Set(operations.flatMap(\.securitySchemes)).sorted()
         for scheme in allSchemes {
             output += "\n        /// Whether the spec requires `\(scheme)` for the operation.\n"
-            output += "        static func needs\(pascalIdentifier(scheme))(_ operation: Operation) -> Bool {\n"
+            output += "        public static func needs\(pascalIdentifier(scheme))(_ operation: Operation) -> Bool {\n"
             output += "            schemes(operation).contains(\"\(scheme)\")\n"
             output += "        }\n"
         }
@@ -813,14 +829,14 @@ extension SpecGenerator {
         switch (definition["type"] as? String, definition["scheme"] as? String) {
         case ("http", "bearer"):
             return """
-                    static func \(name)(token: String) -> some RequestBuildable {
+                    public static func \(name)(token: String) -> some RequestBuildable {
                         Authorization.bearer(token)
                     }
 
             """
         case ("http", "basic"):
             return """
-                    static func \(name)(username: String, password: String) -> some RequestBuildable {
+                    public static func \(name)(username: String, password: String) -> some RequestBuildable {
                         Authorization.basic(username: username, password: password)
                     }
 
@@ -830,14 +846,14 @@ extension SpecGenerator {
             switch definition["in"] as? String {
             case "header":
                 return """
-                        static func \(name)(_ value: String) -> some RequestBuildable {
+                        public static func \(name)(_ value: String) -> some RequestBuildable {
                             Header.custom("\(keyName)").setValue(value)
                         }
 
                 """
             case "query":
                 return """
-                        static func \(name)(_ value: String) -> some RequestBuildable {
+                        public static func \(name)(_ value: String) -> some RequestBuildable {
                             Query("\(keyName)", value)
                         }
 

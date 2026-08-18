@@ -5,90 +5,180 @@ import DeclarativeRequests
 import Foundation
 
 // The whole backend in one closed type — sections mirror the OpenAPI document.
-enum RedoclyMuseumAPI {
+public enum RedoclyMuseumAPI {
     // MARK: - Schemas (components.schemas)
 
-    typealias APIDate = String
+    public typealias APIDate = String
 
-    struct APIError: Codable {
-        var title: String? = nil
-        var type: String? = nil
+    public struct APIError: Codable {
+        public var title: String? = nil
+        public var type: String? = nil
+
+        public init(
+            title: String? = nil,
+            type: String? = nil
+        ) {
+            self.title = title
+            self.type = type
+        }
     }
 
-    struct BuyMuseumTickets: Codable {
-        var email: Email? = nil
-        var eventId: EventId? = nil
-        var ticketDate: APIDate
-        var ticketId: TicketId? = nil
-        var ticketType: TicketType
+    public struct BuyMuseumTickets: Codable {
+        public var email: Email? = nil
+        public var eventId: EventId? = nil
+        public var ticketDate: APIDate
+        public var ticketId: TicketId? = nil
+        public var ticketType: TicketType
+
+        public init(
+            email: Email? = nil,
+            eventId: EventId? = nil,
+            ticketDate: APIDate,
+            ticketId: TicketId? = nil,
+            ticketType: TicketType
+        ) {
+            self.email = email
+            self.eventId = eventId
+            self.ticketDate = ticketDate
+            self.ticketId = ticketId
+            self.ticketType = ticketType
+        }
     }
 
-    typealias Email = String
+    public typealias Email = String
 
-    typealias EventDates = [APIDate]
+    public typealias EventDates = [APIDate]
 
-    typealias EventDescription = String
+    public typealias EventDescription = String
 
-    typealias EventId = String
+    public typealias EventId = String
 
-    typealias EventLocation = String
+    public typealias EventLocation = String
 
-    typealias EventName = String
+    public typealias EventName = String
 
-    typealias EventPrice = Double
+    public typealias EventPrice = Double
 
-    struct MuseumDailyHours: Codable {
-        var date: APIDate
-        var timeClose: String
-        var timeOpen: String
+    public struct MuseumDailyHours: Codable {
+        public var date: APIDate
+        public var timeClose: String
+        public var timeOpen: String
+
+        public init(
+            date: APIDate,
+            timeClose: String,
+            timeOpen: String
+        ) {
+            self.date = date
+            self.timeClose = timeClose
+            self.timeOpen = timeOpen
+        }
     }
 
-    typealias MuseumHours = [MuseumDailyHours]
+    public typealias MuseumHours = [MuseumDailyHours]
 
-    struct MuseumTicketsConfirmation: Codable {
-        var confirmationCode: TicketConfirmation
-        var eventId: EventId? = nil
-        var message: TicketMessage
-        var ticketDate: APIDate
-        var ticketId: TicketId? = nil
-        var ticketType: TicketType
+    public struct MuseumTicketsConfirmation: Codable {
+        public var confirmationCode: TicketConfirmation
+        public var eventId: EventId? = nil
+        public var message: TicketMessage
+        public var ticketDate: APIDate
+        public var ticketId: TicketId? = nil
+        public var ticketType: TicketType
+
+        public init(
+            confirmationCode: TicketConfirmation,
+            eventId: EventId? = nil,
+            message: TicketMessage,
+            ticketDate: APIDate,
+            ticketId: TicketId? = nil,
+            ticketType: TicketType
+        ) {
+            self.confirmationCode = confirmationCode
+            self.eventId = eventId
+            self.message = message
+            self.ticketDate = ticketDate
+            self.ticketId = ticketId
+            self.ticketType = ticketType
+        }
     }
 
-    struct SpecialEvent: Codable {
-        var dates: EventDates
-        var eventDescription: EventDescription
-        var eventId: EventId? = nil
-        var location: EventLocation
-        var name: EventName
-        var price: EventPrice
+    public struct SpecialEvent: Codable {
+        public var dates: EventDates
+        public var eventDescription: EventDescription
+        public var eventId: EventId? = nil
+        public var location: EventLocation
+        public var name: EventName
+        public var price: EventPrice
+
+        public init(
+            dates: EventDates,
+            eventDescription: EventDescription,
+            eventId: EventId? = nil,
+            location: EventLocation,
+            name: EventName,
+            price: EventPrice
+        ) {
+            self.dates = dates
+            self.eventDescription = eventDescription
+            self.eventId = eventId
+            self.location = location
+            self.name = name
+            self.price = price
+        }
     }
 
-    typealias SpecialEventCollection = [SpecialEvent]
+    public typealias SpecialEventCollection = [SpecialEvent]
 
-    struct SpecialEventFields: Codable {
-        var dates: EventDates? = nil
-        var eventDescription: EventDescription? = nil
-        var location: EventLocation? = nil
-        var name: EventName? = nil
-        var price: EventPrice? = nil
+    public struct SpecialEventFields: Codable {
+        public var dates: EventDates? = nil
+        public var eventDescription: EventDescription? = nil
+        public var location: EventLocation? = nil
+        public var name: EventName? = nil
+        public var price: EventPrice? = nil
+
+        public init(
+            dates: EventDates? = nil,
+            eventDescription: EventDescription? = nil,
+            location: EventLocation? = nil,
+            name: EventName? = nil,
+            price: EventPrice? = nil
+        ) {
+            self.dates = dates
+            self.eventDescription = eventDescription
+            self.location = location
+            self.name = name
+            self.price = price
+        }
     }
 
-    struct Ticket: Codable {
-        var eventId: EventId? = nil
-        var ticketDate: APIDate
-        var ticketId: TicketId? = nil
-        var ticketType: TicketType
+    public struct Ticket: Codable {
+        public var eventId: EventId? = nil
+        public var ticketDate: APIDate
+        public var ticketId: TicketId? = nil
+        public var ticketType: TicketType
+
+        public init(
+            eventId: EventId? = nil,
+            ticketDate: APIDate,
+            ticketId: TicketId? = nil,
+            ticketType: TicketType
+        ) {
+            self.eventId = eventId
+            self.ticketDate = ticketDate
+            self.ticketId = ticketId
+            self.ticketType = ticketType
+        }
     }
 
-    typealias TicketCodeImage = Data
+    public typealias TicketCodeImage = Data
 
-    typealias TicketConfirmation = String
+    public typealias TicketConfirmation = String
 
-    typealias TicketId = String
+    public typealias TicketId = String
 
-    typealias TicketMessage = String
+    public typealias TicketMessage = String
 
-    enum TicketType: String, Codable {
+    public enum TicketType: String, Codable {
         case event
         case general
     }
@@ -96,7 +186,7 @@ enum RedoclyMuseumAPI {
     // MARK: - Operations (paths)
 
     // each operation IS a block
-    enum Operation: RequestBuildable {
+    public enum Operation: RequestBuildable {
         case getMuseumHours(startDate: String?, page: Int?, limit: Int?)
         case listSpecialEvents(startDate: String?, endDate: String?, page: Int?, limit: Int?)
         case createSpecialEvent(body: SpecialEvent)
@@ -106,7 +196,7 @@ enum RedoclyMuseumAPI {
         case buyMuseumTickets(body: BuyMuseumTickets)
         case getTicketCode(ticketId: String)
 
-        var body: some RequestBuildable {
+        public var body: some RequestBuildable {
             switch self {
             case let .getMuseumHours(startDate, page, limit):
                 Method.GET
@@ -162,9 +252,9 @@ enum RedoclyMuseumAPI {
 
     // MARK: - Responses (responses)
 
-    enum Responses {
+    public enum Responses {
         /// Statuses the spec declares below 400 for the operation.
-        static func successStatuses(_ operation: Operation) -> Set<Int> {
+        public static func successStatuses(_ operation: Operation) -> Set<Int> {
             switch operation {
             case .getMuseumHours, .listSpecialEvents, .getSpecialEvent, .updateSpecialEvent, .getTicketCode:
                 [200]
@@ -178,30 +268,32 @@ enum RedoclyMuseumAPI {
 
     // MARK: - Security (securitySchemes)
 
-    enum Security {
+    public enum Security {
         /// Scheme names the spec requires for an operation
         /// (OR-alternatives flattened into one set).
-        static func schemes(_ operation: Operation) -> Set<String> {
+        public static func schemes(_ operation: Operation) -> Set<String> {
             ["MuseumPlaceholderAuth"]
         }
 
         /// Whether the spec requires `MuseumPlaceholderAuth` for the operation.
-        static func needsMuseumPlaceholderAuth(_ operation: Operation) -> Bool {
+        public static func needsMuseumPlaceholderAuth(_ operation: Operation) -> Bool {
             schemes(operation).contains("MuseumPlaceholderAuth")
         }
 
-        static func museumPlaceholderAuth(username: String, password: String) -> some RequestBuildable {
+        public static func museumPlaceholderAuth(username: String, password: String) -> some RequestBuildable {
             Authorization.basic(username: username, password: password)
         }
     }
 
     // MARK: - Authorized
 
-    struct MissingMuseumPlaceholderAuth: Error {}
+    public struct MissingMuseumPlaceholderAuth: Error {
+        public init() {}
+    }
 
     /// Operation + spec-required credentials as one block; apply the
     /// environment last: `.base(url).request()`.
-    static func authorized(
+    public static func authorized(
         _ operation: Operation,
         museumPlaceholderAuth: (username: String, password: String)?
     ) -> some RequestBuildable {
@@ -220,21 +312,21 @@ enum RedoclyMuseumAPI {
     // MARK: - Client
 
     /// The backend as one set of typed closures — swap any field to stub.
-    struct Client {
-        var getMuseumHours: (_ startDate: String?, _ page: Int?, _ limit: Int?) async throws -> MuseumHours
-        var listSpecialEvents: (_ startDate: String?, _ endDate: String?, _ page: Int?, _ limit: Int?) async throws -> SpecialEventCollection
-        var createSpecialEvent: (_ body: SpecialEvent) async throws -> SpecialEvent
-        var getSpecialEvent: (_ eventId: String) async throws -> SpecialEvent
-        var updateSpecialEvent: (_ eventId: String, _ body: SpecialEventFields) async throws -> SpecialEvent
-        var deleteSpecialEvent: (_ eventId: String) async throws -> Void
-        var buyMuseumTickets: (_ body: BuyMuseumTickets) async throws -> MuseumTicketsConfirmation
-        var getTicketCode: (_ ticketId: String) async throws -> Data
+    public struct Client {
+        public var getMuseumHours: (_ startDate: String?, _ page: Int?, _ limit: Int?) async throws -> MuseumHours
+        public var listSpecialEvents: (_ startDate: String?, _ endDate: String?, _ page: Int?, _ limit: Int?) async throws -> SpecialEventCollection
+        public var createSpecialEvent: (_ body: SpecialEvent) async throws -> SpecialEvent
+        public var getSpecialEvent: (_ eventId: String) async throws -> SpecialEvent
+        public var updateSpecialEvent: (_ eventId: String, _ body: SpecialEventFields) async throws -> SpecialEvent
+        public var deleteSpecialEvent: (_ eventId: String) async throws -> Void
+        public var buyMuseumTickets: (_ body: BuyMuseumTickets) async throws -> MuseumTicketsConfirmation
+        public var getTicketCode: (_ ticketId: String) async throws -> Data
 
         /// Wires the typed surface over the (Operation) → Data seam. Real,
         /// mocked, or middleware-wrapped is decided entirely by the closures
         /// passed — no opinion, no defaults. The mechanics live once in the
         /// runtime's ClientBuilder; the table below is pure facts.
-        static func wired(
+        public static func wired(
             execute: @escaping (Operation) async throws -> Data,
             decoder: @escaping (Operation) -> JSONDecoder
         ) -> Client {
@@ -252,5 +344,5 @@ enum RedoclyMuseumAPI {
         }
     }
 
-    static let defaultBaseURL = URL(string: "https://redocly.com/_mock/docs/openapi/museum-api")
+    public static let defaultBaseURL = URL(string: "https://redocly.com/_mock/docs/openapi/museum-api")
 }
