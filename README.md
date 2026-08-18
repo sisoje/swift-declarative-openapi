@@ -159,7 +159,7 @@ try await api.showPetById("42")
     Pet ◄──────────────────────  done
 ```
 
-Most async code gets this off-main behavior by accident of the current language default (SE-0338) — and silently loses it the day a module adopts `NonisolatedNonsendingByDefault`, when plain async closures start inheriting the caller's isolation and a multi-megabyte decode lands on the UI thread mid-scroll. Here both directions carry the guarantee in their declarations (`@concurrent`, SE-0461): `NetworkExecution.execute` owns the outbound half, the `ClientBuilder` decode step owns the inbound half, and the pairing is deliberate — the refresh gate uses the opposite annotation (`nonisolated(nonsending)`) precisely because *its* correctness needs the caller's actor. Stay with the caller where atomicity matters, leave the caller where CPU work lives.
+Most async code gets this off-main behavior by accident of the current language default (SE-0338) — and silently loses it the day a module adopts `NonisolatedNonsendingByDefault`, when plain async closures start inheriting the caller's isolation and a multi-megabyte decode lands on the UI thread mid-scroll. Here both directions carry the guarantee in their declarations (`@concurrent`, SE-0461): `NetworkExecution.execute` owns the outbound half, the `ClientBuilder` decode step owns the inbound half, and the pairing is deliberate — the refresh gate goes the opposite way: it hops to the actor the executor was *constructed* on (`#isolation` captured at init, the same trick `Task {}` and SwiftUI's `Binding(get:set:)` use), because *its* correctness needs the actor that hosts the token bindings. Leave the caller where CPU work lives, come home where state lives.
 
 Tests pin both halves from a `@MainActor` caller: the request closure and the decoder factory each execute inside their step and assert they are off the main thread.
 
@@ -201,6 +201,8 @@ let data = try await refreshing.executeWithRefresh(operation)
 ```
 
 That `needsAuth` gate is the difference from transport-level refresh: URLSession's challenge delegate, or a blanket interceptor retrying every 401. Those hooks fire per request, blind to what the request is: every call pays the refresh machinery, and any stray 401 triggers a refresh nobody needed. Here whether an operation refreshes at all is a spec fact, generated from its `security:` declaration — a public operation doesn't join an in-flight refresh, doesn't retry, doesn't even read the token. A test pins the bypass.
+
+The gate is also pinned to *where the tokens live*: the executor captures `#isolation` at construction and runs the gate there, so an executor built on the main actor keeps its single-flight check and every binding access on main **no matter which thread fires the call** — a background `Task` calling through the typed client still refreshes on main. This matters because SwiftUI bindings enforce their construction actor at runtime (a main-built binding traps when touched off-main); a witness test drives the full 401 → refresh → retry path from a detached task and asserts every token touch lands on main.
 
 ## Usage
 

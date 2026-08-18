@@ -219,6 +219,82 @@ final class RefreshHarness: @unchecked Sendable {
     #expect(h.executions <= 4)    // at worst two failures + two retries
 }
 
+/// The `nonisolated(nonsending)` contract: the refresh logic — gate and
+/// token bindings — runs on the caller's actor. Constructed on main and
+/// called on main (the SwiftUI shape), every touch of the token state is
+/// witnessed on the main thread, through the full 401 → refresh → retry
+/// path. The wire work (`executeOnce`) still leaves the actor.
+/// Construction-pinned isolation, end to end: executor built on MainActor
+/// (`#isolation` captured at init), fired from a background task through the
+/// full typed client — and every touch of the gate and token state still
+/// lands on main, witnessed inside the bindings. Before the capture this
+/// exact test SIGTRAPPED: a Binding built on MainActor traps off-main
+/// (`@_inheritActorContext` + `@isolated(any)` in the SwiftUICore interface).
+@Test @MainActor func refreshLogicHopsToConstructionActorFromBackgroundCallers() async throws {
+    final class Box: @unchecked Sendable {
+        var token: String? = "expired"
+        var task: Task<Void, Never>?
+    }
+    let b = Box()
+    let witness: @Sendable () -> Void = { #expect(Thread.isMainThread) }
+
+    let refreshed = RefreshingExecutor<SupabaseAuthRESTAPI.Operation>(
+        refreshTask: Binding(get: { witness(); return b.task }, set: { witness(); b.task = $0 }),
+        accessToken: Binding(get: { witness(); return b.token }, set: { witness(); b.token = $0 }),
+        executeOnce: { _ in
+            if b.token == "fresh" { return Data(#"{"id": "u"}"#.utf8) }
+            throw ResponseError(
+                data: Data(),
+                response: HTTPURLResponse(
+                    url: projectBaseURL, statusCode: 401, httpVersion: nil, headerFields: nil
+                )!
+            )
+        },
+        makeRefreshTask: {
+            witness()
+            return Task { @MainActor in b.token = "fresh" }
+        },
+        isUnauthorized: { $0.status == 401 },
+        needsAuth: SupabaseAuthRESTAPI.Security.needsUserAuth
+    )
+    let api = SupabaseAuthRESTAPI.Client.wired(execute: refreshed.executeWithRefresh, decoder: { _ in JSONDecoder() })
+
+    let user = try await Task.detached { try await api.getUser() }.value
+    #expect(user.id == "u")
+}
+
+@Test @MainActor func refreshLogicStaysOnTheCallersActor() async throws {
+    final class Box: @unchecked Sendable {
+        var token: String? = "expired"
+        var task: Task<Void, Never>?
+    }
+    let b = Box()
+    let witness: @Sendable () -> Void = { #expect(Thread.isMainThread) }
+
+    let executor = RefreshingExecutor<SupabaseAuthRESTAPI.Operation>(
+        refreshTask: Binding(get: { witness(); return b.task }, set: { witness(); b.task = $0 }),
+        accessToken: Binding(get: { witness(); return b.token }, set: { witness(); b.token = $0 }),
+        executeOnce: { _ in
+            if b.token == "fresh" { return Data("ok".utf8) }
+            throw ResponseError(
+                data: Data(),
+                response: HTTPURLResponse(
+                    url: projectBaseURL, statusCode: 401, httpVersion: nil, headerFields: nil
+                )!
+            )
+        },
+        makeRefreshTask: {
+            witness()
+            return Task { @MainActor in b.token = "fresh" }
+        },
+        isUnauthorized: { $0.status == 401 },
+        needsAuth: SupabaseAuthRESTAPI.Security.needsUserAuth
+    )
+
+    let data = try await executor.executeWithRefresh(.getUser)
+    #expect(String(decoding: data, as: UTF8.self) == "ok")
+}
+
 @Test func refreshingExecutorThrowsOriginalErrorWhenRefreshDoesNotHappen() async {
     let h = RefreshHarness()
     let executor = RefreshingExecutor<SupabaseAuthRESTAPI.Operation>(

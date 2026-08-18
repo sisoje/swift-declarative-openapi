@@ -49,3 +49,15 @@ Model generation covers the easy tier (properties/required, `allOf` flattening, 
 ## Signing-slot parameters leak into the typed Client
 
 Binance's `timestamp`/`signature` slots are spec facts, so they rightly appear as case parameters — but that means the generated Client field signatures carry them too (`getSapiV1AccountInfo(_ recvWindow:, _ timestamp:, _ signature:)`), and callers pass dead placeholders the wiring overwrites. Lifting them out would need the generator to be told which parameters are wiring-filled slots (there's no structural OpenAPI marker — a `--slot-param <name>` flag per spec is the plausible shape: drop the parameter from the case and Client signature, emit the query key with an empty value so the wiring's structural detection still fires). Worth it only if a second signing-style spec shows up.
+
+## NonisolatedNonsendingByDefault — blocked on a Swift 6.4 SILGen crash
+
+The refresh gate no longer needs this (it pins to its construction isolation
+via `#isolation`), but adopting the upcoming feature is still where the
+ecosystem is heading. Blocked: swiftlang-6.4.0.30.4 segfaults compiling
+`ClientBuilder.endpoint` under the flag — signal 11 in
+`FunctionInputGenerator::projectPackComponent` emitting the parameter-pack
+closure's prologue; only when all four runtime files compile together, any
+three pass. Retry on each new toolchain by adding
+`swiftSettings: [.enableUpcomingFeature("NonisolatedNonsendingByDefault")]`
+to the runtime, API, and test targets.

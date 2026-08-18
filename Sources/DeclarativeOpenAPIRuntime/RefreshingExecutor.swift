@@ -9,12 +9,15 @@ import SwiftUI
 /// staleness barrier: a call that joined a refresh ran with the fresh token,
 /// so its failure escalates instead of re-refreshing.
 ///
-/// `executeWithRefresh` is `nonisolated(nonsending)` (SE-0461): it runs on
-/// the caller's actor, and the gate's read-check-set has no suspension
-/// point inside it, so callers sharing one actor — the main-actor UI this
-/// is built for — get an atomic gate. That closes the SE-0338 caveat this
-/// comment used to carry. Callers spread across different isolation
-/// domains still race the gate; single-flight is per-actor, not global.
+/// The gate is pinned to the isolation the executor was CONSTRUCTED in
+/// (`#isolation` captured at init, the same trick SwiftUI's
+/// `Binding(get:set:)` uses via `@_inheritActorContext`): every caller,
+/// main or background, hops to that actor for the gate's read-check-set
+/// (no suspension point inside it), so single-flight is global and the
+/// bindings are only ever touched where they live — a binding built on
+/// MainActor traps if touched anywhere else. Built in a nonisolated
+/// context, `home` is nil and the gate degrades to caller-following.
+/// The wire work stays off the actor: executeOnce leaves it when awaited.
 public struct RefreshingExecutor<Operation: Sendable>: Sendable {
     @Binding var refreshTask: Task<Void, Never>?
     @Binding var accessToken: String?
@@ -24,13 +27,17 @@ public struct RefreshingExecutor<Operation: Sendable>: Sendable {
     let isUnauthorized: @Sendable (ResponseError) -> Bool
     let needsAuth: @Sendable (Operation) -> Bool
 
+    /// The isolation the gate runs on, captured from the construction site.
+    let home: (any Actor)?
+
     public init(
         refreshTask: Binding<Task<Void, Never>?>,
         accessToken: Binding<String?>,
         executeOnce: @escaping @Sendable (Operation) async throws -> Data,
         makeRefreshTask: @escaping @Sendable () -> Task<Void, Never>,
         isUnauthorized: @escaping @Sendable (ResponseError) -> Bool,
-        needsAuth: @escaping @Sendable (Operation) -> Bool
+        needsAuth: @escaping @Sendable (Operation) -> Bool,
+        isolation: isolated (any Actor)? = #isolation
     ) {
         self._refreshTask = refreshTask
         self._accessToken = accessToken
@@ -38,12 +45,18 @@ public struct RefreshingExecutor<Operation: Sendable>: Sendable {
         self.makeRefreshTask = makeRefreshTask
         self.isUnauthorized = isUnauthorized
         self.needsAuth = needsAuth
+        self.home = isolation
     }
 
-    nonisolated(nonsending) public func executeWithRefresh(_ operation: Operation) async throws -> Data {
+    public func executeWithRefresh(_ operation: Operation) async throws -> Data {
         guard needsAuth(operation) else {
             return try await executeOnce(operation)
         }
+        return try await gate(operation, on: home)
+    }
+
+    /// The refresh gate, isolated to the construction actor by parameter.
+    private func gate(_ operation: Operation, on home: isolated (any Actor)?) async throws -> Data {
         let oldToken = accessToken
         var alreadyRefreshing = false
         if let refreshTask {
