@@ -28,7 +28,7 @@ public struct RefreshingExecutor<Operation: Sendable>: Sendable {
     let needsAuth: @Sendable (Operation) -> Bool
 
     /// The isolation the gate runs on, captured from the construction site.
-    let home: (any Actor)?
+    let initIsolation: (any Actor)?
 
     public init(
         refreshTask: Binding<Task<Void, Never>?>,
@@ -45,18 +45,18 @@ public struct RefreshingExecutor<Operation: Sendable>: Sendable {
         self.makeRefreshTask = makeRefreshTask
         self.isUnauthorized = isUnauthorized
         self.needsAuth = needsAuth
-        self.home = isolation
+        self.initIsolation = isolation
     }
 
     public func executeWithRefresh(_ operation: Operation) async throws -> Data {
         guard needsAuth(operation) else {
             return try await executeOnce(operation)
         }
-        return try await gate(operation, on: home)
+        return try await gate(operation, isolation: initIsolation)
     }
 
     /// The refresh gate, isolated to the construction actor by parameter.
-    private func gate(_ operation: Operation, on home: isolated (any Actor)?) async throws -> Data {
+    private func gate(_ operation: Operation, isolation: isolated (any Actor)?) async throws -> Data {
         let oldToken = accessToken
         var alreadyRefreshing = false
         if let refreshTask {
